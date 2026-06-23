@@ -1,0 +1,32 @@
+.rabbit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.rabbitFace {
+  font-size: 110px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+.moodHappy .rabbitFace,
+.moodEat .rabbitFace {
+  transform: scale(1.08);
+}
+.moodCheer .rabbitFace {
+  animation: bounce 0.6s ease infinite alternate;
+}
+@keyframes bounce {
+  to {
+    transform: translateY(-12px) scale(1.1);
+  }
+}
+.rabbitBubble {
+  margin-top: 0.5rem;
+  background: #fff;
+  border: 2px solid var(--farm-green);
+  color: var(--farm-green-d);
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600;
+  min-height: 1.2em;
+}

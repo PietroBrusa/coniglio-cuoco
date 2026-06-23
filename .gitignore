@@ -1,0 +1,31 @@
+# OS / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.sw?
+
+# Log
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Variabili d'ambiente (usare .env.example come riferimento)
+.env
+.env.*
+!.env.example
+
+# Strumenti / assistenti locali
+.claude/
+CLAUDE.md
+.cursor/
+.aider*
+.continue/

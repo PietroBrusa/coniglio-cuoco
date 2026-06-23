@@ -1,0 +1,143 @@
+@use './tokens' as t;
+
+.wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.screen {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
+}
+
+.card {
+  width: 100%;
+  background: var(--card-bg);
+  border-radius: 18px;
+  padding: 1.25rem 1.5rem;
+  box-sizing: border-box;
+  box-shadow: 0 8px 20px rgba(85, 139, 47, 0.15);
+}
+
+.btn {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.7rem 1.4rem;
+  border: none;
+  border-radius: 999px;
+  background: #eceff1;
+  color: #455a64;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+.btnPrimary {
+  background: var(--farm-green);
+  color: #fff;
+  box-shadow: 0 6px 0 var(--farm-green-d);
+
+  &:active {
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 var(--farm-green-d);
+  }
+}
+.btnDanger {
+  background: t.$danger-bg;
+  color: t.$danger;
+
+  &:hover {
+    background: t.$danger-bg-hover;
+  }
+}
+
+.setupForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  text-align: left;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-weight: 600;
+    color: var(--farm-brown);
+  }
+  input {
+    font-size: 1rem;
+    padding: 0.6rem 0.8rem;
+    border: 2px solid t.$border;
+    border-radius: 10px;
+    outline: none;
+
+    &:focus {
+      border-color: var(--farm-green);
+    }
+  }
+}
+
+.foodChipEmoji {
+  font-size: 1.3rem;
+}
+
+.metricsSummary {
+  text-align: left;
+}
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem 1.2rem;
+  margin: 0;
+}
+.metric {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #e0e6d6;
+
+  dt {
+    font-size: 0.85rem;
+    color: t.$text-muted;
+  }
+  dd {
+    margin: 0.15rem 0 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--farm-brown);
+  }
+}
+
+.rewardActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+}
+
+.saveStatus {
+  font-weight: 600;
+}
+.saveOk {
+  color: var(--farm-green-d);
+}
+.saveErr {
+  color: t.$danger;
+}
