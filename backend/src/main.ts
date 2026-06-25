@@ -24,9 +24,9 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
+      whitelist: true,  //Elimina i dati non definiti nei dto
+      forbidNonWhitelisted: true, //blocca la richiesta coompletamente
+      transform: true,  //conversione dei dati in istanze dei dto/numeri
     }),
   );
 

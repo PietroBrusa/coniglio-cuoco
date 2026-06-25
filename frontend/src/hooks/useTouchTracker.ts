@@ -1,36 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Metrics, TouchRecord } from '../types';
+import { computeMetrics, emptySnap, type Snapshot } from '../utils/computeMetrics';
 
 /**
  * Touch measurement engine — the clinical core of the application.
  * Unifies two input sources (keyboard via Makey-Makey and pointer/mouse/touch)
  * and computes the behavioural metrics defined in the project specification.
+ * The pure metric maths lives in `utils/computeMetrics.ts`.
  */
 
-/** Keyboard codes treated as a "touch" event (Makey-Makey default mapping). */
-export const MAKEY_KEYS = [
-  'Space',
-  'ArrowUp',
-  'ArrowDown',
-  'ArrowLeft',
-  'ArrowRight',
-  'Enter',
-  'KeyW',
-  'KeyA',
-  'KeyS',
-  'KeyD',
-  'KeyF',
-  'KeyG',
-];
-
-interface Snapshot {
-  touches: TouchRecord[];
-  downAt: number | null;
-  start: number;
-  now: number;
-}
-
-const emptySnap = (): Snapshot => ({ touches: [], downAt: null, start: 0, now: 0 });
+/**
+ * Keyboard codes treated as a "touch" event.
+ * The Makey-Makey is wired to a single conductive sensor that emits `Space`
+ * (the front "click" input), so only that code is accepted to avoid false
+ * positives from a physical keyboard near the test station.
+ */
+export const MAKEY_KEYS = ['Space'];
 
 /** Value returned by the hook: live metrics, touch state and input handlers. */
 export interface TouchTracker {
@@ -169,49 +154,5 @@ export function useTouchTracker(active: boolean): TouchTracker {
     pointerHandlers,
     reset,
     getResult,
-  };
-}
-
-/**
- * Computes {@link Metrics} from a touch snapshot. All times in milliseconds.
- * - **latency**: timestamp of the first tap's press.
- * - **totalContactMs**: sum of all completed tap durations.
- * - **meanIrtMs**: mean Inter-Response Time (gap between release and next press).
- * - **engagementRatio**: `totalContactMs / sessionDuration × 100`.
- * @param snapshot - Current ref values and timestamp.
- * @param sessionDurationMs - Optional override for the session duration.
- * @returns A fully populated {@link Metrics} object.
- */
-function computeMetrics(
-  { touches, downAt, start, now }: Snapshot,
-  sessionDurationMs?: number
-): Metrics {
-  const n = touches.length;
-  const totalContactMs = touches.reduce((s, t) => s + t.duration, 0);
-  const ongoing = downAt !== null ? now - downAt : 0;
-  const liveContactMs = totalContactMs + ongoing;
-
-  const latencyMs = n > 0 ? touches[0].down : null;
-
-  let meanIrtMs: number | null = null;
-  if (n > 1) {
-    let sum = 0;
-    for (let i = 0; i < n - 1; i += 1) sum += touches[i + 1].down - touches[i].up;
-    meanIrtMs = sum / (n - 1);
-  }
-
-  const duration = sessionDurationMs ?? (start ? now - start : 0);
-  const engagementRatio = duration > 0 ? (totalContactMs / duration) * 100 : 0;
-
-  return {
-    count: n,
-    latencyMs,
-    totalContactMs,
-    liveContactMs,
-    meanTouchMs: n > 0 ? totalContactMs / n : null,
-    meanIrtMs,
-    sessionDurationMs: duration,
-    engagementRatio,
-    touches,
   };
 }
