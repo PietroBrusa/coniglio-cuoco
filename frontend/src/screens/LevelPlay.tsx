@@ -38,8 +38,9 @@ interface LevelPlayProps {
 const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
   const isHard = difficulty === 'difficile';
 
-  const [phase, setPhase] = useState<'intro' | 'play'>('intro');
   const [starterTaps, setStarterTaps] = useState(0);
+  // `phase` è derivato da `starterTaps`: nessuno stato/effect separato da sincronizzare.
+  const phase: 'intro' | 'play' = starterTaps >= STARTER_TAPS ? 'play' : 'intro';
   const completedRef = useRef(false);
 
   const { metrics, isDown, pointerHandlers, getResult } = useTouchTracker(phase === 'play');
@@ -58,10 +59,6 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
   const registerStarterTap = useCallback(() => {
     setStarterTaps((prev) => prev + 1);
   }, []);
-
-  useEffect(() => {
-    if (starterTaps >= STARTER_TAPS) setPhase('play');
-  }, [starterTaps]);
 
   useEffect(() => {
     if (phase !== 'intro') return undefined;

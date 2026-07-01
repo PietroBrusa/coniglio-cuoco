@@ -134,19 +134,24 @@ export function useTouchTracker(active: boolean): TouchTracker {
     onPointerCancel: () => pressUp(),
   };
 
-  const getResult = useCallback(
-    (sessionDurationMs?: number) =>
-      computeMetrics(
-        {
-          touches: touchesRef.current,
-          downAt: null,
-          start: startRef.current,
-          now: performance.now(),
-        },
-        sessionDurationMs
-      ),
-    []
-  );
+  const getResult = useCallback((sessionDurationMs?: number) => {
+    const now = performance.now();
+    const touches = touchesRef.current.slice();
+    // Se un tocco è ancora premuto (il livello si completa senza rilascio, tipico
+    // dei livelli "hold"), chiudilo ora così la sua durata entra nelle metriche.
+    const downAt = downAtRef.current;
+    if (downAt !== null) {
+      touches.push({
+        down: downAt - startRef.current,
+        up: now - startRef.current,
+        duration: now - downAt,
+      });
+    }
+    return computeMetrics(
+      { touches, downAt: null, start: startRef.current, now },
+      sessionDurationMs
+    );
+  }, []);
 
   return {
     metrics: computeMetrics(snap),
