@@ -1,13 +1,9 @@
 import type { Food, Level } from '../types';
+import { FOODS } from './foods';
 
-/** Catalogue of food items available for selection at setup. */
-export const FOODS: Food[] = [
-  { id: 'carota', label: 'Carota', emoji: '🥕' },
-  { id: 'mela', label: 'Mela', emoji: '🍎' },
-  { id: 'broccolo', label: 'Broccolo', emoji: '🥦' },
-  { id: 'pomodoro', label: 'Pomodoro', emoji: '🍅' },
-  { id: 'banana', label: 'Banana', emoji: '🍌' },
-];
+// Re-exported so existing imports (`import { FOODS } from '../game/levels'`)
+// keep working; the catalogue itself lives in `./foods`.
+export { FOODS };
 
 /**
  * The three levels of the Rabbit Cook story, in order:

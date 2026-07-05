@@ -26,6 +26,8 @@ interface SetupScreenProps {
   onStart: (params: StartParams) => void;
   /** Called when the child clicks the saved-sessions button. */
   onOpenDashboard: () => void;
+  /** Called when the therapist opens the settings screen. */
+  onOpenSettings: () => void;
   /** Called when the therapist clicks "change child" to log out. */
   onLogout: () => void;
 }
@@ -35,10 +37,22 @@ interface SetupScreenProps {
  * Emits the chosen parameters via `onStart`; also provides access to the
  * dashboard and the logout action.
  */
-const SetupScreen = ({ childId, onStart, onOpenDashboard, onLogout }: SetupScreenProps) => {
+const SetupScreen = ({
+  childId,
+  onStart,
+  onOpenDashboard,
+  onOpenSettings,
+  onLogout,
+}: SetupScreenProps) => {
   const [sessionNumber, setSessionNumber] = useState(1);
   const [foodId, setFoodId] = useState(FOODS[0].id);
+  const [foodQuery, setFoodQuery] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty>('facile');
+
+  const query = foodQuery.trim().toLowerCase();
+  const visibleFoods = query
+    ? FOODS.filter((f) => f.label.toLowerCase().includes(query))
+    : FOODS;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,8 +86,15 @@ const SetupScreen = ({ childId, onStart, onOpenDashboard, onLogout }: SetupScree
 
         <label>
           Alimento da testare
+          <input
+            type="search"
+            className={c.foodSearch}
+            placeholder="Cerca un alimento…"
+            value={foodQuery}
+            onChange={(e) => setFoodQuery(e.target.value)}
+          />
           <div className={c.foodPicker}>
-            {FOODS.map((f) => (
+            {visibleFoods.map((f) => (
               <button
                 type="button"
                 key={f.id}
@@ -84,6 +105,9 @@ const SetupScreen = ({ childId, onStart, onOpenDashboard, onLogout }: SetupScree
                 {f.label}
               </button>
             ))}
+            {visibleFoods.length === 0 && (
+              <p className={c.foodEmpty}>Nessun alimento trovato.</p>
+            )}
           </div>
         </label>
 
@@ -110,6 +134,9 @@ const SetupScreen = ({ childId, onStart, onOpenDashboard, onLogout }: SetupScree
         </button>
         <button type="button" className={s.btn} onClick={onOpenDashboard}>
           📊 Sessioni salvate
+        </button>
+        <button type="button" className={s.btn} onClick={onOpenSettings}>
+          ⚙️ Impostazioni
         </button>
       </form>
     </div>

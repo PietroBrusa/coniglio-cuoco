@@ -1,0 +1,42 @@
+# Full local stack: MongoDB + NestJS backend + nginx-served React frontend.
+# Usage:  docker compose up --build
+# Then open http://localhost:8080
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - '27017:27017'
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DB: coniglio_cuoco
+      # Origin of the frontend (browser) — must match the served URL for CORS.
+      CORS_ORIGIN: http://localhost:8080
+      JWT_SECRET: cambia-questo-segreto-in-produzione
+      JWT_EXPIRES: 12h
+    ports:
+      - '3000:3000'
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Baked into the bundle: the browser calls the backend on the host port.
+        VITE_API_URL: http://localhost:3000
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:

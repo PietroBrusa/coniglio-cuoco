@@ -16,6 +16,7 @@ export default function SetupRoute() {
         navigate('/play');
       }}
       onOpenDashboard={() => navigate('/dashboard')}
+      onOpenSettings={() => navigate('/settings')}
       onLogout={() => {
         logout();
         navigate('/login');

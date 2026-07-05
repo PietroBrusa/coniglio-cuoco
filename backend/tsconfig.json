@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "rootDir": "./", 
+    "rootDir": "./src",
     "outDir": "./dist",
     "module": "commonjs",
     "declaration": true,
@@ -10,6 +10,7 @@
     "target": "ES2021",
     "sourceMap": true,
     "incremental": true,
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
