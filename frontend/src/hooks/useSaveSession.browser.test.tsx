@@ -1,0 +1,63 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { ReactNode } from 'react';
+import { renderHook } from 'vitest-browser-react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useSaveSession } from './useSaveSession';
+import { sessionsApi } from '../api/apiClient';
+import type { Session } from '../types';
+
+/**
+ * COMPONENT test for the auto-save hook.
+ *
+ * `useSaveSession` persists the session once on mount and exposes a status plus
+ * a manual `save` retry. We stub the `sessionsApi` create endpoint to drive the
+ * success and error paths.
+ */
+
+const session = { childId: 'Frodo', sessionNumber: 1, levels: [] } as unknown as Session;
+
+function wrapper() {
+  const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+}
+
+beforeEach(() => localStorage.clear());
+afterEach(() => vi.restoreAllMocks());
+
+describe('useSaveSession', () => {
+  it('saves automatically on mount and reports success', async () => {
+    const spy = vi
+      .spyOn(sessionsApi, 'sessionsControllerCreate')
+      .mockResolvedValue({ data: { _id: 'saved' } } as never);
+
+    const { result } = await renderHook(() => useSaveSession(session), { wrapper: wrapper() });
+
+    await vi.waitFor(() => expect(result.current.status).toBe('success'));
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports an error status when the save fails', async () => {
+    vi.spyOn(sessionsApi, 'sessionsControllerCreate').mockRejectedValue(new Error('save failed'));
+
+    const { result } = await renderHook(() => useSaveSession(session), { wrapper: wrapper() });
+
+    await vi.waitFor(() => expect(result.current.status).toBe('error'));
+    expect(result.current.error).toBe('save failed');
+  });
+
+  it('can retry via save() after an initial failure', async () => {
+    const spy = vi
+      .spyOn(sessionsApi, 'sessionsControllerCreate')
+      .mockRejectedValueOnce(new Error('first fails'))
+      .mockResolvedValueOnce({ data: { _id: 'saved' } } as never);
+
+    const { result } = await renderHook(() => useSaveSession(session), { wrapper: wrapper() });
+    await vi.waitFor(() => expect(result.current.status).toBe('error'));
+
+    await result.current.save();
+    await vi.waitFor(() => expect(result.current.status).toBe('success'));
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+});

@@ -1,0 +1,46 @@
+name: tests
+
+# Runs the full test pyramid on every push and pull request.
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (unit + E2E)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Unit & integration tests
+        run: npm test
+      # Docker is available on ubuntu-latest, so Testcontainers can start MongoDB.
+      - name: E2E tests (Testcontainers)
+        run: npm run test:e2e
+
+  frontend:
+    name: Frontend (unit + component + E2E)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run all test projects (unit, browser, e2e)
+        run: npm test

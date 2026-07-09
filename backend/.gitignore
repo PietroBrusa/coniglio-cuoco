@@ -1,3 +1,6 @@
 # Specifico del package (il resto è nel .gitignore di root)
 node_modules/
 dist/
+
+# Output dei test (Jest)
+coverage/

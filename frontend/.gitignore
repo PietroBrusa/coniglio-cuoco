@@ -4,3 +4,11 @@ dist/
 dist-ssr/
 *.local
 tsconfig.tsbuildinfo
+
+# Output dei test (Vitest)
+coverage/
+.vitest-attachments/
+
+# Output E2E (Playwright)
+playwright-report/
+test-results/
