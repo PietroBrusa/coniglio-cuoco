@@ -144,14 +144,3 @@ src/
   App.tsx                   Definizione delle route
   main.tsx                  Entry point: provider (Query, Router, Auth, Game)
 ```
-
-## Estensioni previste (non ancora implementate)
-
-- Livello extra "assaggio" con secondo alimento non collegato al Makey-Makey.
-- Sblocco cosmetici ed effetti sonori.
-- Scheda osservazione comportamentale compilata dal terapista (in-vivo).
-- Riepilogo aggregato/andamento engagement nel tempo per un bambino.
-- Dashboard terapista realtime (WebSocket, doc 06).
-
-> Già implementato (in passato elencato qui): accesso bambino con password
-> (Auth/JWT, doc 04/05) e variante "piano tiles" in modalità **difficile**.
