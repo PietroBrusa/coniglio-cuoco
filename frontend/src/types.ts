@@ -25,6 +25,27 @@ export type LevelMode = 'count' | 'hold';
  */
 export type Difficulty = 'facile' | 'difficile';
 
+/**
+ * How a lit window is scored in hard mode:
+ * - `tap`: a touch starting inside the window scores;
+ * - `hold`: contact must be sustained from the window's opening to its close.
+ */
+export type BeatScore = 'tap' | 'hold';
+
+/**
+ * Hard-mode ("piano tiles") beat configuration of a level. Play alternates a lit
+ * window lasting `onMs` and a dark pause lasting `offMs`; each beat samples both
+ * durations from their range, so `[min, max]` with `min === max` is a fixed
+ * cadence and `min < max` is randomised.
+ */
+export interface HardBeat {
+  /** Duration range of the lit window, i.e. how long contact is required (ms). */
+  onMs: [number, number];
+  /** Duration range of the dark pause, i.e. how long to wait before pressing (ms). */
+  offMs: [number, number];
+  score: BeatScore;
+}
+
 /** Static definition of a game level: gameplay parameters and display texts. */
 export interface Level {
   id: number;
@@ -36,6 +57,8 @@ export interface Level {
   target: number;
   /** Reserved for a future timed variant; currently unused. */
   quickTouchMs: number;
+  /** Beat timing and scoring used when the session difficulty is `difficile`. */
+  hardBeat: HardBeat;
   /** Generates the introductory narrative from the selected food label. */
   intro: (ctx: { foodLabel: string }) => string;
   hint: string;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Rabbit from '../shared/Rabbit';
 import { useTouchTracker, MAKEY_KEYS } from '../hooks/useTouchTracker';
+import { sampleBeatMs, isHeldThrough } from '../game/hardBeat';
 import type { Difficulty, Food, Level, Metrics, RabbitMood } from '../types';
 import s from '../styles/shared.module.scss';
 import c from './LevelPlay.module.scss';
@@ -8,10 +9,10 @@ import c from './LevelPlay.module.scss';
 /** Number of starter taps required in the intro phase before measurement begins. */
 const STARTER_TAPS = 3;
 
-// Hard-mode ("piano tiles") timing parameters.
-const BEAT_ON_MS = 600;  // duration of the "lit" window (tile on)
-const BEAT_OFF_MS = 700; // pause between windows (tile off)
-const MISS_FLASH_MS = 250; // red-flash duration for an off-beat tap
+// Hard-mode ("piano tiles") timing parameters. The window and pause durations
+// themselves come from the level's `hardBeat` ranges.
+const FIRST_BEAT_MS = 800;  // delay before the first window opens
+const MISS_FLASH_MS = 250;  // red-flash duration for a missed beat
 
 /** Rabbit mood while the food is being touched, keyed by level id. */
 const ACTIVE_MOOD: Record<number, RabbitMood> = { 1: 'happy', 2: 'sniff', 3: 'eat' };
@@ -45,12 +46,19 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
 
   const { metrics, isDown, pointerHandlers, getResult } = useTouchTracker(phase === 'play');
 
+  const beat = level.hardBeat;
+
   const [beatActive, setBeatActive] = useState(false);
   const [goodTaps, setGoodTaps] = useState(0);
   const [miss, setMiss] = useState(false);
   const beatActiveRef = useRef(false);
-  const prevDownRef = useRef(false);
   const missTimer = useRef<number | undefined>(undefined);
+  /** The lit window currently open, or `null` while the food is dim. */
+  const windowRef = useRef<{ openedAt: number } | null>(null);
+  /** Start time of the press in progress, or `null` while nothing is touched. */
+  const pressStartRef = useRef<number | null>(null);
+  /** Whether the open window has already been touched (drives the miss flash). */
+  const touchedRef = useRef(false);
 
   useEffect(() => {
     beatActiveRef.current = beatActive;
@@ -71,42 +79,90 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [phase, registerStarterTap]);
 
-  // Beat scheduler: toggles the food highlight by alternating the two timing windows.
-  useEffect(() => {
-    if (!isHard || phase !== 'play') return undefined;
-    let active = false;
-    let timer: number;
-    const tick = () => {
-      active = !active;
-      setBeatActive(active);
-      timer = window.setTimeout(tick, active ? BEAT_ON_MS : BEAT_OFF_MS);
-    };
-    timer = window.setTimeout(tick, 800);
-    return () => window.clearTimeout(timer);
-  }, [isHard, phase]);
-
-  // Signals an off-beat tap with a short red flash.
+  // Signals a missed beat with a short red flash.
   const triggerMiss = useCallback(() => {
     setMiss(true);
     window.clearTimeout(missTimer.current);
     missTimer.current = window.setTimeout(() => setMiss(false), MISS_FLASH_MS);
   }, []);
 
-  // On the rising edge of a touch: if the food is lit it counts as on-beat,
-  // otherwise it is a miss. Raw touches are always recorded by the tracker
-  // regardless, so clinical metrics remain unaffected.
+  /** Credits one successfully played beat. */
+  const scoreBeat = useCallback(() => setGoodTaps((g) => g + 1), []);
+
+  // Beat scheduler: alternates a lit window and a dark pause, sampling both
+  // durations from the level's ranges. Level 1 has a fixed cadence; levels 2 and
+  // 3 randomise both how long the wait lasts and how long contact must be held.
+  // A `hold` window is scored on close (a `tap` window scores on the touch
+  // itself, see below), so the check lives here.
   useEffect(() => {
-    if (!isHard || phase !== 'play') {
-      prevDownRef.current = isDown;
-      return;
+    if (!isHard || phase !== 'play') return undefined;
+    let timer: number;
+
+    const closeWindow = () => {
+      const openedAt = windowRef.current?.openedAt ?? 0;
+      windowRef.current = null;
+      setBeatActive(false);
+
+      if (beat.score === 'hold') {
+        // Scored only if one continuous press spans the whole window: it must
+        // still be down now, and have started around the moment it opened.
+        if (isHeldThrough(openedAt, pressStartRef.current)) scoreBeat();
+        else if (touchedRef.current) triggerMiss();
+      }
+      touchedRef.current = false;
+
+      timer = window.setTimeout(openWindow, sampleBeatMs(beat.offMs));
+    };
+
+    const openWindow = () => {
+      windowRef.current = { openedAt: performance.now() };
+      touchedRef.current = false;
+      setBeatActive(true);
+      timer = window.setTimeout(closeWindow, sampleBeatMs(beat.onMs));
+    };
+
+    timer = window.setTimeout(openWindow, FIRST_BEAT_MS);
+    return () => window.clearTimeout(timer);
+  }, [isHard, phase, beat, triggerMiss, scoreBeat]);
+
+  // Hard-mode scoring reads the touch edges straight from the input events, not
+  // from the tracker's `isDown` state, so a press is timed against the beat at
+  // the moment it happens rather than after a re-render. Raw touches are still
+  // recorded by the tracker regardless, so clinical metrics are unaffected.
+  const onBeatPress = useCallback(() => {
+    if (pressStartRef.current !== null) return; // already down
+    pressStartRef.current = performance.now();
+    if (!beatActiveRef.current) triggerMiss(); // pressed while the food is dim
+    else if (beat.score === 'tap') scoreBeat();
+    else touchedRef.current = true;
+  }, [beat, triggerMiss, scoreBeat]);
+
+  const onBeatRelease = useCallback(() => {
+    if (pressStartRef.current === null) return; // not down
+    pressStartRef.current = null;
+    // A `hold` beat abandoned before its window closes fails right away, so the
+    // feedback lands while the child is still in the act.
+    if (beat.score === 'hold' && beatActiveRef.current && touchedRef.current) {
+      touchedRef.current = false; // already reported — don't flash again on close
+      triggerMiss();
     }
-    const wasDown = prevDownRef.current;
-    prevDownRef.current = isDown;
-    if (isDown && !wasDown) {
-      if (beatActiveRef.current) setGoodTaps((g) => g + 1);
-      else triggerMiss();
-    }
-  }, [isDown, isHard, phase, triggerMiss]);
+  }, [beat, triggerMiss]);
+
+  useEffect(() => {
+    if (!isHard || phase !== 'play') return undefined;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (MAKEY_KEYS.includes(e.code) && !e.repeat) onBeatPress();
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (MAKEY_KEYS.includes(e.code)) onBeatRelease();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+    };
+  }, [isHard, phase, onBeatPress, onBeatRelease]);
 
   useEffect(() => () => window.clearTimeout(missTimer.current), []);
 
@@ -128,12 +184,36 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
   }, [phase, progressValue, level.target, getResult, onComplete]);
 
   const progressPct = Math.min(100, (progressValue / level.target) * 100);
+  const hardProgressLabel = beat.score === 'hold' ? 'Tenuti' : 'A tempo';
   const progressText = isHard
-    ? `A tempo ${Math.min(goodTaps, level.target)} / ${level.target}`
+    ? `${hardProgressLabel} ${Math.min(goodTaps, level.target)} / ${level.target}`
     : level.progressLabel(progressValue, level.target);
 
   const mood: RabbitMood =
     phase === 'intro' ? 'happy' : isDown ? ACTIVE_MOOD[level.id] ?? 'happy' : 'idle';
+
+  // In hard mode the tracker's handlers are wrapped so the same pointer event
+  // feeds both the measurement engine and the beat scoring.
+  const playHandlers = !isHard
+    ? pointerHandlers
+    : {
+        onPointerDown: (e: React.PointerEvent) => {
+          pointerHandlers.onPointerDown(e);
+          onBeatPress();
+        },
+        onPointerUp: () => {
+          pointerHandlers.onPointerUp();
+          onBeatRelease();
+        },
+        onPointerLeave: () => {
+          pointerHandlers.onPointerLeave();
+          onBeatRelease();
+        },
+        onPointerCancel: () => {
+          pointerHandlers.onPointerCancel();
+          onBeatRelease();
+        },
+      };
 
   const foodClass = [
     c.foodTarget,
@@ -159,7 +239,10 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
           <p className={c.introText}>{level.intro({ foodLabel: food.label })}</p>
           {isHard && (
             <p className={c.starterHint}>
-              Modalità a tempo: tocca {food.label.toLowerCase()} solo quando si illumina! 🎵
+              {beat.score === 'hold'
+                ? `Modalità a tempo: quando ${food.label.toLowerCase()} si illumina tocca subito e ` +
+                  `tieni premuto finché resta accesa! Ogni volta l'attesa e la durata cambiano. 🎵`
+                : `Modalità a tempo: tocca ${food.label.toLowerCase()} solo quando si illumina! 🎵`}
             </p>
           )}
           <p className={c.starterHint}>
@@ -189,7 +272,7 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
         className={foodClass}
         aria-label={`Tocca ${food.label}`}
         {...(phase === 'play'
-          ? pointerHandlers
+          ? playHandlers
           : {
               onPointerDown: (e: React.PointerEvent) => {
                 e.preventDefault();
@@ -204,9 +287,11 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
         {phase !== 'play'
           ? ''
           : isHard
-            ? beatActive
-              ? '🎵 Tocca ora!'
-              : 'Aspetta che si illumini…'
+            ? !beatActive
+              ? 'Aspetta che si illumini…'
+              : beat.score === 'hold'
+                ? '🎵 Tieni premuto!'
+                : '🎵 Tocca ora!'
             : level.hint}
       </p>
     </div>
