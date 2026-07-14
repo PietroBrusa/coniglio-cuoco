@@ -17,7 +17,6 @@ export const LEVELS: Level[] = [
     behavior: 'Approccio e contatto con le dita',
     mode: 'count',
     target: 5,
-    quickTouchMs: 600,
     // Cadenza fissa: il bambino impara il ritmo prima che diventi imprevedibile.
     hardBeat: { onMs: [600, 600], offMs: [700, 700], score: 'tap' },
     intro: ({ foodLabel }) =>
@@ -35,7 +34,6 @@ export const LEVELS: Level[] = [
     behavior: 'Sollevare e avvicinare al viso, annusare',
     mode: 'hold',
     target: 6,
-    quickTouchMs: 800,
     // Attesa e tenuta randomizzate: il bambino non può anticipare il ritmo.
     hardBeat: { onMs: [600, 1400], offMs: [700, 1500], score: 'hold' },
     intro: ({ foodLabel }) =>
@@ -53,7 +51,6 @@ export const LEVELS: Level[] = [
     behavior: 'Contatto con labbra / lingua',
     mode: 'hold',
     target: 5,
-    quickTouchMs: 800,
     // Come il livello 2, ma con finestre più lunghe e pause più imprevedibili.
     hardBeat: { onMs: [900, 2000], offMs: [800, 2000], score: 'hold' },
     intro: ({ foodLabel }) =>

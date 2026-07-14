@@ -21,3 +21,7 @@
 #docs/*.md
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
+
+# Script di pubblicazione del client su un repo Git dedicato: qui il client
+# generato vive dentro il repo del frontend, quindi non serve.
+git_push.sh

@@ -55,8 +55,6 @@ export interface Level {
   mode: LevelMode;
   /** Goal: number of taps (count mode) or seconds of contact (hold mode). */
   target: number;
-  /** Reserved for a future timed variant; currently unused. */
-  quickTouchMs: number;
   /** Beat timing and scoring used when the session difficulty is `difficile`. */
   hardBeat: HardBeat;
   /** Generates the introductory narrative from the selected food label. */

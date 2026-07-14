@@ -8,6 +8,8 @@ tsconfig.tsbuildinfo
 # Output dei test (Vitest)
 coverage/
 .vitest-attachments/
+# Screenshot salvati automaticamente quando un test browser fallisce
+__screenshots__/
 
 # Output E2E (Playwright)
 playwright-report/
