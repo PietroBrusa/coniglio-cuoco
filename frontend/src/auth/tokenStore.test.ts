@@ -1,5 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getToken, getStoredChild, setAuth, clearAuth } from './tokenStore';
+import {
+  getToken,
+  getStoredChild,
+  setAuth,
+  clearAuth,
+  onAuthCleared,
+  isSessionExpired,
+} from './tokenStore';
+
+/** Builds a JWT-shaped string whose payload carries the given `exp` (seconds). */
+function jwtExpiring(atMs: number): string {
+  const payload = btoa(JSON.stringify({ sub: 'B001', exp: Math.floor(atMs / 1000) }));
+  return `header.${payload}.signature`;
+}
 
 /**
  * UNIT tests for the token store (the single source of truth for auth state).
@@ -48,5 +61,38 @@ describe('tokenStore', () => {
     clearAuth();
     expect(getToken()).toBeNull();
     expect(getStoredChild()).toBeNull();
+  });
+
+  it('notifies subscribers when the auth is cleared, and stops after unsubscribing', () => {
+    const listener = vi.fn();
+    const unsubscribe = onAuthCleared(listener);
+
+    clearAuth();
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    unsubscribe();
+    clearAuth();
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('isSessionExpired', () => {
+  it('is expired when no token is stored', () => {
+    expect(isSessionExpired()).toBe(true);
+  });
+
+  it('is expired when the token exp is in the past', () => {
+    setAuth(jwtExpiring(Date.now() - 60_000), 'B001');
+    expect(isSessionExpired()).toBe(true);
+  });
+
+  it('is not expired when the token exp is still in the future', () => {
+    setAuth(jwtExpiring(Date.now() + 60 * 60_000), 'B001');
+    expect(isSessionExpired()).toBe(false);
+  });
+
+  it('leaves the verdict to the backend when the token carries no readable exp', () => {
+    setAuth('not.a.jwt', 'B001');
+    expect(isSessionExpired()).toBe(false);
   });
 });

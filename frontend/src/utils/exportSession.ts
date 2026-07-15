@@ -11,11 +11,11 @@ import type { Session } from '../types';
  * @returns CSV string with header row.
  */
 export function sessionToCsv(session: Session): string {
-  const rows = [CSV_HEADER.join(',')];
+  const rows = [toCsvRow(CSV_HEADER)];
   for (const lv of session.levels) {
     const m = lv.metrics;
     rows.push(
-      [
+      toCsvRow([
         session.childId,
         session.date,
         session.sessionNumber,
@@ -30,7 +30,7 @@ export function sessionToCsv(session: Session): string {
         s2(m.meanTouchMs),
         s2(m.meanIrtMs),
         m.engagementRatio == null ? '' : m.engagementRatio.toFixed(1),
-      ].join(',')
+      ])
     );
   }
   return rows.join('\n');
@@ -92,6 +92,24 @@ export function formatMetrics(m: {
  * @returns Formatted string (e.g. `"1.50"`) or `""` for null.
  */
 const s2 = (v: number | null): string => (v == null ? '' : (v / 1000).toFixed(2));
+
+/**
+ * Escapes a single CSV field according to RFC 4180: a field containing a comma,
+ * a double quote or a newline is wrapped in quotes, and any inner quote is
+ * doubled. Without this, free text shifts every following column — the level 2
+ * `behavior` ("Sollevare e avvicinare al viso, annusare") and any child name
+ * with a comma in it both do exactly that.
+ * @param value - The raw field value.
+ * @returns The field, quoted only if it needs to be.
+ */
+function csvField(value: string | number): string {
+  const text = String(value);
+  if (!/[",\r\n]/.test(text)) return text;
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+/** Joins already-escaped fields into one CSV line. */
+const toCsvRow = (fields: (string | number)[]): string => fields.map(csvField).join(',');
 
 const CSV_HEADER = [
   'IdBambino',

@@ -1,8 +1,14 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { AxiosError } from 'axios';
 import { authApi } from '../api/apiClient';
-import { clearAuth, getStoredChild, setAuth } from '../auth/tokenStore';
+import {
+  clearAuth,
+  getStoredChild,
+  isSessionExpired,
+  onAuthCleared,
+  setAuth,
+} from '../auth/tokenStore';
 
 /**
  * App-wide authentication state. Exposes the logged-in child, the `isLoggedIn`
@@ -50,7 +56,22 @@ function messageFrom(e: unknown): string {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [childId, setChildId] = useState<string | null>(() => getStoredChild());
+  const [childId, setChildId] = useState<string | null>(() => {
+    // An expired token is worthless: drop it now rather than letting the app
+    // look logged in until the first request fails — which, in the game flow,
+    // would be the save at the very end of a session.
+    if (isSessionExpired()) {
+      clearAuth();
+      return null;
+    }
+    return getStoredChild();
+  });
+
+  // The API layer clears the stored auth on HTTP 401 from a plain module, which
+  // cannot reach this state. Without this subscription `isLoggedIn` would stay
+  // `true` with no token behind it, and ProtectedRoute would keep the user in a
+  // half-logged-in app where every request fails.
+  useEffect(() => onAuthCleared(() => setChildId(null)), []);
 
   const authenticate = useCallback(
     async (kind: 'login' | 'register', name: string, password: string) => {

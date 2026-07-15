@@ -2,7 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook } from 'vitest-browser-react';
 import { AxiosError } from 'axios';
 import { AuthProvider, useAuth } from './AuthContext';
-import { authApi } from '../api/apiClient';
+import { authApi, sessionsApi } from '../api/apiClient';
+import { fetchSessions } from '../api/client';
+import { setAuth } from '../auth/tokenStore';
 
 /**
  * COMPONENT test for the authentication context (Vitest browser mode).
@@ -82,6 +84,37 @@ describe('AuthContext', () => {
     await expect(result.current.register('x', '1')).rejects.toThrow(
       'name too short, password too short',
     );
+  });
+
+  // Regression: the API layer clears the stored token on 401 from a plain module.
+  // If that did not reach this context, `isLoggedIn` would stay true with no token
+  // behind it and ProtectedRoute would keep the user inside an app where every
+  // request fails — in the game flow, exactly while the session is being saved.
+  it('logs the user out when a request comes back 401 (expired token)', async () => {
+    const expired = new AxiosError('Unauthorized');
+    expired.response = { status: 401, data: {} } as AxiosError['response'];
+    vi.spyOn(sessionsApi, 'sessionsControllerFindAll').mockRejectedValue(expired);
+
+    setAuth('jwt.tok', 'Frodo');
+    const { result } = await renderHook(() => useAuth(), { wrapper: AuthProvider });
+    expect(result.current.isLoggedIn).toBe(true);
+
+    await expect(fetchSessions()).rejects.toThrow(/Sessione scaduta/);
+
+    await vi.waitFor(() => expect(result.current.isLoggedIn).toBe(false));
+    expect(result.current.childId).toBeNull();
+    expect(localStorage.getItem('cc_token')).toBeNull();
+  });
+
+  it('starts logged out when the stored token has already expired', async () => {
+    const exp = Math.floor((Date.now() - 60_000) / 1000);
+    const payload = btoa(JSON.stringify({ sub: 'Frodo', exp }));
+    setAuth(`header.${payload}.signature`, 'Frodo');
+
+    const { result } = await renderHook(() => useAuth(), { wrapper: AuthProvider });
+
+    expect(result.current.isLoggedIn).toBe(false);
+    expect(localStorage.getItem('cc_token')).toBeNull(); // e il token scaduto è stato buttato
   });
 
   it('logs out and clears the stored token', async () => {

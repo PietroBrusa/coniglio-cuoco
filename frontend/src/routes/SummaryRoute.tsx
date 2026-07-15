@@ -5,11 +5,13 @@ import { useGame } from '../context/GameContext';
 /** Route /summary: riepilogo e salvataggio della sessione completata. */
 export default function SummaryRoute() {
   const navigate = useNavigate();
-  const { session, newSession } = useGame();
+  const { session, sessionSaved, markSessionSaved, newSession } = useGame();
   if (!session) return <Navigate to="/setup" replace />;
   return (
     <SessionSummary
       session={session}
+      alreadySaved={sessionSaved}
+      onSaved={markSessionSaved}
       onNewSession={() => {
         newSession();
         navigate('/setup');

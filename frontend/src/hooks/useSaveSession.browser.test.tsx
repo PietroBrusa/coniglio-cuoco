@@ -47,6 +47,38 @@ describe('useSaveSession', () => {
     expect(result.current.error).toBe('save failed');
   });
 
+  it('calls onSaved once the session is persisted', async () => {
+    vi.spyOn(sessionsApi, 'sessionsControllerCreate').mockResolvedValue({
+      data: { _id: 'saved' },
+    } as never);
+    const onSaved = vi.fn();
+
+    const { result } = await renderHook(() => useSaveSession(session, { onSaved }), {
+      wrapper: wrapper(),
+    });
+
+    await vi.waitFor(() => expect(result.current.status).toBe('success'));
+    expect(onSaved).toHaveBeenCalledTimes(1);
+  });
+
+  // Regression: the summary screen remounts when the user navigates back and
+  // forward with the browser buttons. Without `alreadySaved` the auto-save would
+  // fire again and write a duplicate session document.
+  it('does not save again when the session is already persisted', async () => {
+    const spy = vi
+      .spyOn(sessionsApi, 'sessionsControllerCreate')
+      .mockResolvedValue({ data: { _id: 'saved' } } as never);
+
+    const { result } = await renderHook(
+      () => useSaveSession(session, { alreadySaved: true }),
+      { wrapper: wrapper() },
+    );
+
+    expect(result.current.status).toBe('success');
+    await new Promise((r) => setTimeout(r, 50));
+    expect(spy).not.toHaveBeenCalled();
+  });
+
   it('can retry via save() after an initial failure', async () => {
     const spy = vi
       .spyOn(sessionsApi, 'sessionsControllerCreate')

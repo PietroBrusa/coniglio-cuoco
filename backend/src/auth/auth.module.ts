@@ -16,12 +16,24 @@ import { AuthGuard } from './auth.guard';
     ChildrenModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET', 'dev-secret'),
-        signOptions: {
-          expiresIn: config.get<string>('JWT_EXPIRES', '12h') as `${number}h`,
-        },
-      }),
+      useFactory: (config: ConfigService) => {
+        // Nessun valore di ripiego: un segreto di default farebbe partire
+        // l'applicazione con token falsificabili da chiunque legga il sorgente.
+        // Meglio un avvio che fallisce di un sistema che sembra sicuro e non lo è.
+        const secret = config.get<string>('JWT_SECRET');
+        if (!secret) {
+          throw new Error(
+            'JWT_SECRET non è impostata. Definiscila nel file .env (sviluppo) o fra le ' +
+              "variabili d'ambiente del servizio (produzione).",
+          );
+        }
+        return {
+          secret,
+          signOptions: {
+            expiresIn: config.get<string>('JWT_EXPIRES', '12h') as `${number}h`,
+          },
+        };
+      },
     }),
   ],
   controllers: [AuthController],

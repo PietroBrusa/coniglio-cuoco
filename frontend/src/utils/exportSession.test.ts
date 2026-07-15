@@ -1,6 +1,34 @@
 import { describe, it, expect } from 'vitest';
 import { sessionToCsv, formatMetrics } from './exportSession';
+import { LEVELS } from '../game/levels';
 import type { LevelResult, Session } from '../types';
+
+/**
+ * Splits one CSV line the way a real reader (Excel, R, pandas) does: quoted
+ * fields may contain commas, and a doubled quote inside them is a literal quote.
+ * Used to assert that the exported columns actually line up.
+ */
+function parseCsvLine(line: string): string[] {
+  const fields: string[] = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') {
+        field += '"';
+        i += 1;
+      } else if (ch === '"') inQuotes = false;
+      else field += ch;
+    } else if (ch === '"') inQuotes = true;
+    else if (ch === ',') {
+      fields.push(field);
+      field = '';
+    } else field += ch;
+  }
+  fields.push(field);
+  return fields;
+}
 
 /**
  * UNIT tests for the pure serialisation/formatting helpers.
@@ -58,6 +86,35 @@ describe('sessionToCsv', () => {
     expect(row[8]).toBe('3'); // NTocchi
     expect(row[9]).toBe('0.80'); // Latenza_s (800ms)
     expect(row[13]).toBe('30.0'); // EngagementRatio_% (1 decimal)
+  });
+
+  // Regression: level 2's real `behavior` text contains a comma. Written raw it
+  // acted as a column separator and shifted every metric one place to the left,
+  // silently corrupting the exported dataset.
+  it('keeps the columns aligned when a field contains a comma', () => {
+    const annusata = LEVELS[1];
+    expect(annusata.behavior).toContain(','); // guards the premise of this test
+
+    const csv = sessionToCsv({
+      ...session,
+      levels: [{ ...level, levelId: annusata.id, levelName: annusata.name, behavior: annusata.behavior }],
+    });
+    const [header, row] = csv.split('\n').map(parseCsvLine);
+
+    expect(row).toHaveLength(header.length);
+    expect(row[6]).toBe(annusata.behavior); // Comportamento, comma and all
+    expect(row[7]).toBe('5.00'); // DurataSessione_s — still in its own column
+    expect(row[8]).toBe('3'); // NTocchi
+    expect(row[13]).toBe('30.0'); // EngagementRatio_% — no longer falls off the row
+  });
+
+  it('escapes quotes and commas in free-text fields (child name, food)', () => {
+    const csv = sessionToCsv({ ...session, childId: 'Rossi, Mario', food: 'Pane "integrale"' });
+    const row = parseCsvLine(csv.split('\n')[1]);
+
+    expect(row[0]).toBe('Rossi, Mario');
+    expect(row[3]).toBe('Pane "integrale"');
+    expect(row).toHaveLength(14);
   });
 });
 
