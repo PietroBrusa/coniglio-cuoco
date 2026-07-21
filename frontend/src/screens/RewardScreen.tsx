@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import Rabbit from '../shared/Rabbit';
-import { formatMetrics } from '../utils/exportSession';
+import { formatMetrics } from '../utils/formatMetrics';
 import { computeStars } from '../game/stars';
 import { loadSettings } from '../game/settings';
 import { playVictory } from '../utils/sound';

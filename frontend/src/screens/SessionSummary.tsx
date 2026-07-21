@@ -1,5 +1,5 @@
 import Rabbit from '../shared/Rabbit';
-import { downloadCsv, downloadJson, formatMetrics } from '../utils/exportSession';
+import { formatMetrics } from '../utils/formatMetrics';
 import { useSaveSession } from '../hooks/useSaveSession';
 import type { Session } from '../types';
 import s from '../styles/shared.module.scss';
@@ -65,12 +65,6 @@ const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: Sessio
             Riprova salvataggio ↻
           </button>
         )}
-        <button type="button" className={s.btn} onClick={() => downloadCsv(session)}>
-          Esporta CSV ⬇
-        </button>
-        <button type="button" className={s.btn} onClick={() => downloadJson(session)}>
-          Esporta JSON ⬇
-        </button>
         <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={onNewSession}>
           Nuova sessione 🔄
         </button>

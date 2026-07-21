@@ -11,7 +11,7 @@ import {
   groupByFood,
   wholeIntervalRecording,
 } from '../utils/abaData';
-import { downloadCsv, downloadJson, formatMetrics } from '../utils/exportSession';
+import { formatMetrics } from '../utils/formatMetrics';
 import type { SavedSession } from '../api/client';
 import s from '../styles/shared.module.scss';
 import c from './Dashboard.module.scss';
@@ -162,12 +162,6 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
                   </div>
                 ))}
                 <div className={s.rewardActions}>
-                  <button type="button" className={s.btn} onClick={() => downloadCsv(session)}>
-                    Esporta CSV ⬇
-                  </button>
-                  <button type="button" className={s.btn} onClick={() => downloadJson(session)}>
-                    Esporta JSON ⬇
-                  </button>
                   <button
                     type="button"
                     className={`${s.btn} ${s.btnDanger}`}

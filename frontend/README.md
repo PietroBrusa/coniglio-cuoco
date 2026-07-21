@@ -50,8 +50,9 @@ npm run build          # build di produzione (tsc + vite)
 ```
 
 > Per la persistenza serve il backend attivo (`../backend`) e MongoDB.
-> Senza backend il gioco funziona comunque: il salvataggio mostra un errore
-> con possibilità di riprova, e l'export CSV/JSON resta disponibile.
+> Senza backend il gioco funziona comunque, ma la seduta non si salva: il
+> riepilogo mostra un errore con possibilità di riprova, e chiudendo la pagina
+> i dati si perdono.
 
 ## Come si gioca
 
@@ -80,15 +81,19 @@ npm run build          # build di produzione (tsc + vite)
    coinvolgimento sostenuto (livelli *hold*: Engagement Ratio ≥ 40%; livelli a
    tocchi e modalità difficile: contatto totale ≥ 1,5 s). Soglie in cima al
    file, facili da tarare.
-5. **Fine sessione** — riepilogo completo, **salvataggio su DB** ed
-   **esportazione CSV/JSON**.
+5. **Fine sessione** — riepilogo completo e **salvataggio automatico su DB**
+   (una volta sola: tornare indietro col browser non duplica la seduta).
 
 Dalla schermata di accesso/setup è raggiungibile la **dashboard** ("Sessioni
 salvate"), che presenta **un programma per alimento**: per l'alimento scelto
 mostra il **grafico di andamento ABA** (percentuale di contatto per seduta, una
 linea per livello, con linea di criterio e linee di cambio fase), l'elenco delle
 sedute con il dettaglio delle metriche e la **griglia a intervalli** di ciascun
-livello, l'export CSV/JSON e la **cancellazione** dal database.
+livello, e la **cancellazione** dal database.
+
+I dati non vengono esportati su file: si leggono in dashboard o si prelevano
+dall'API REST. Un file esportato è una copia che invecchia ed esce dal perimetro
+di controllo, mentre il grafico è sempre allineato al database.
 
 Senza hardware si può giocare con il **mouse/touch** sull'alimento oppure con la
 **barra spaziatrice** — l'unico tasto accettato, perché il Makey-Makey è
@@ -140,7 +145,7 @@ src/
   utils/
     computeMetrics.ts       Matematica delle metriche (funzione pura)
     abaData.ts              Derivazione delle viste cliniche (funzioni pure)
-    exportSession.ts        Export CSV/JSON + formattazione metriche per la UI
+    formatMetrics.ts        Metriche grezze → etichette e unità per la UI
     sound.ts                Jingle di vittoria (Web Audio API, nessun asset)
   api/
     generated/              Client API generato da OpenAPI (axios) — non editare
@@ -151,8 +156,8 @@ src/
     SetupScreen.tsx (+scss) Dati sessione, alimento e difficoltà
     LevelPlay.tsx   (+scss) Intro narrativa + gioco misurato (facile/difficile)
     RewardScreen.tsx(+scss) Stelle + riepilogo metriche del livello
-    SessionSummary.tsx(+scss) Riepilogo, salvataggio su DB ed esportazione
-    Dashboard.tsx   (+scss) Un programma per alimento: grafico, sedute, export
+    SessionSummary.tsx(+scss) Riepilogo e salvataggio automatico su DB
+    Dashboard.tsx   (+scss) Un programma per alimento: grafico, sedute, elimina
     SettingsScreen.tsx(+scss) Soglie delle stelle e suono
   shared/
     Rabbit.tsx      (+scss) Avatar del coniglio (espressioni)
