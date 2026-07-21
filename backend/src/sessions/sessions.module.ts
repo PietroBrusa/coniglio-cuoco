@@ -5,7 +5,6 @@ import { SessionsService } from './sessions.service';
 import { SessionEntity } from './entities/session.entity';
 import { AuthModule } from '../auth/auth.module';
 
-/** Sessions feature module: JWT-protected REST routes and MongoDB persistence. */
 @Module({
   imports: [TypeOrmModule.forFeature([SessionEntity]), AuthModule],
   controllers: [SessionsController],

@@ -2,7 +2,6 @@ import { Navigate, useNavigate } from 'react-router';
 import LevelPlay from '../screens/LevelPlay';
 import { useGame } from '../context/GameContext';
 
-/** Route /play: gioca il livello corrente; a fine livello va alla ricompensa. */
 export default function PlayRoute() {
   const navigate = useNavigate();
   const { session, level, food, difficulty, completeLevel } = useGame();

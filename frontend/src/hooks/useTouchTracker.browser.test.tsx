@@ -61,6 +61,46 @@ describe('useTouchTracker', () => {
     expect(result.current.isDown).toBe(false);
   });
 
+  it('keeps the window shut until the first contact', async () => {
+    const { result } = await renderHook(() => useTouchTracker(true));
+
+    await sleep(50);
+    expect(result.current.hasStarted).toBe(false);
+    expect(result.current.metrics.sessionDurationMs).toBe(0);
+
+    result.current.pointerHandlers.onPointerDown(pointerEvent);
+
+    await vi.waitFor(() => expect(result.current.hasStarted).toBe(true));
+  });
+
+  it('measures the latency from the level becoming playable to that contact', async () => {
+    // The window is anchored to the first touch, so the wait before it would be
+    // invisible if it were not captured separately.
+    const { result } = await renderHook(() => useTouchTracker(true));
+
+    await sleep(80);
+    result.current.pointerHandlers.onPointerDown(pointerEvent);
+
+    await vi.waitFor(() => expect(result.current.metrics.latencyMs).not.toBeNull());
+    expect(result.current.metrics.latencyMs).toBeGreaterThan(50);
+  });
+
+  it('clips a touch still held when the window closes', async () => {
+    // The closing timer fires a little late; contact past the window was never
+    // part of the measurement and must not inflate the ratio.
+    const { result } = await renderHook(() => useTouchTracker(true));
+
+    result.current.pointerHandlers.onPointerDown(pointerEvent);
+    await vi.waitFor(() => expect(result.current.isDown).toBe(true));
+    await sleep(120);
+
+    const frozen = result.current.getResult(50);
+
+    expect(frozen.sessionDurationMs).toBe(50);
+    expect(frozen.totalContactMs).toBeLessThanOrEqual(50);
+    expect(frozen.engagementRatio).toBeLessThanOrEqual(100);
+  });
+
   it('getResult closes an ongoing (still-pressed) touch, e.g. end of a hold level', async () => {
     const { result } = await renderHook(() => useTouchTracker(true));
 

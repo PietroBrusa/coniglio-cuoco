@@ -6,21 +6,13 @@ import s from '../styles/shared.module.scss';
 import c from './SessionSummary.module.scss';
 
 interface SessionSummaryProps {
-  /** The completed session to display and save. */
   session: Session;
   /** `true` if the session has already been persisted (skips the auto-save). */
   alreadySaved?: boolean;
-  /** Called once the session has been persisted. */
   onSaved?: () => void;
-  /** Called when the child starts a new session (resets game state, navigates to setup). */
   onNewSession: () => void;
 }
 
-/**
- * End-of-session summary screen. Saves the session to the backend automatically
- * on mount (via {@link useSaveSession}), shows per-level metrics, and provides
- * CSV / JSON export and a "new session" action.
- */
 const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: SessionSummaryProps) => {
   const { save, status, error } = useSaveSession(session, { alreadySaved, onSaved });
 

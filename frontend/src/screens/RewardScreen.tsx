@@ -9,24 +9,15 @@ import s from '../styles/shared.module.scss';
 import c from './RewardScreen.module.scss';
 
 interface RewardScreenProps {
-  /** The level that was just completed. */
   level: Level;
-  /** Metrics snapshot from the completed level. */
   metrics: Metrics;
-  /** Session difficulty (passed to {@link computeStars}). */
   difficulty: Difficulty;
   /** When `true` the "next" button reads "End session" instead of "Next level". */
   isLastLevel: boolean;
-  /** Called when the child chooses to advance (next level or end session). */
   onNext: () => void;
-  /** Called when the child chooses to repeat the current level. */
   onRepeat: () => void;
 }
 
-/**
- * End-of-level reward screen: displays the earned stars and a metrics summary,
- * with buttons to repeat the level or advance to the next one.
- */
 const RewardScreen = ({
   level,
   metrics,
@@ -38,7 +29,6 @@ const RewardScreen = ({
   const settings = loadSettings();
   const stars = computeStars(metrics, level, difficulty, settings);
 
-  // Celebrate the completed level with a short victory jingle (if enabled).
   useEffect(() => {
     if (settings.soundEnabled) playVictory();
     // Intentionally runs once on mount: one sound per reward screen.

@@ -1,12 +1,8 @@
 import type { Food } from '../types';
 
 /**
- * Curated catalogue of foods available for selection at setup.
- *
- * Each item renders with its system `emoji`, so the list works everywhere with
- * no external assets or network. The first five ids (carota, mela, broccolo,
- * pomodoro, banana) are preserved from the original list so previously saved
- * sessions still resolve.
+ * The ids carota, mela, broccolo, pomodoro and banana are preserved from the
+ * original list so previously saved sessions still resolve.
  */
 export const FOODS: Food[] = [
   // Frutta

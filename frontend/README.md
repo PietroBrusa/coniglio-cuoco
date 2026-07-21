@@ -55,9 +55,10 @@ npm run build          # build di produzione (tsc + vite)
 
 ## Come si gioca
 
-1. **Accesso bambino** — si sceglie il bambino con cui giocare (dalla lista di
-   quelli esistenti o creandone uno nuovo). Tutto il resto — gioco incluso e
-   sessioni salvate — è scopato su quel bambino.
+1. **Accesso bambino** — codice del bambino e password: si accede a un account
+   esistente o se ne registra uno nuovo. Tutto il resto — gioco e sessioni
+   salvate — è ristretto a quel bambino, e l'isolamento è imposto dal backend
+   leggendo l'identità dal token, non dalla richiesta.
 2. **Setup** — numero sessione, alimento da testare e **difficoltà** (l'ID
    bambino è quello loggato; "cambia bambino" per tornare all'accesso).
    - **🌱 Facile** — meccanica base: tocchi liberi.
@@ -65,13 +66,14 @@ npm run build          # build di produzione (tsc + vite)
      ritmo e valgono solo i tocchi eseguiti **quando è illuminato**; i tocchi
      fuori tempo sono un *miss* (nessun progresso). Le metriche cliniche
      registrano comunque **tutti** i tocchi reali.
-3. **Livelli** (storia del Coniglio cuoco):
-   - **L1 · La Raccolta** — approccio rapido: toccare l'alimento con le dita
-     (meccanica *count*, N tocchi).
-   - **L2 · L'Annusata** — contatto prolungato col naso (guanto isolante);
-     riempe una barra (meccanica *hold*, secondi di contatto).
-   - **L3 · L'Assaggio** — contatto con labbra/lingua (meccanica *hold*).
-   - Ogni livello inizia toccando l'alimento alcune volte (avvio rapido).
+3. **Livelli** (storia del Coniglio cuoco). Tutti e tre usano la meccanica
+   *hold* con la stessa finestra di misura di 6 secondi, così le tre linee del
+   grafico sono percentuali dello stesso denominatore e si leggono fra loro:
+   - **L1 · La Raccolta** — contatto con le dita.
+   - **L2 · L'Annusata** — contatto prolungato col naso (guanto isolante).
+   - **L3 · L'Assaggio** — contatto con labbra/lingua.
+   - Ogni livello inizia toccando l'alimento alcune volte (avvio rapido). La
+     finestra di misura si apre al **primo contatto**, non a inizio livello.
 4. **Ricompensa** — stelle, espressioni del coniglio e riepilogo metriche.
    Le stelle (1–3) sono assegnate in `RewardScreen.tsx`: 1 garantita per aver
    completato, +1 per l'approccio pronto (latenza al 1° tocco ≤ 3 s), +1 per il
@@ -82,11 +84,16 @@ npm run build          # build di produzione (tsc + vite)
    **esportazione CSV/JSON**.
 
 Dalla schermata di accesso/setup è raggiungibile la **dashboard** ("Sessioni
-salvate"): elenca le sessioni del bambino, ne mostra il dettaglio metriche,
-permette di esportarle (CSV/JSON) e di **eliminarle** dal database.
+salvate"), che presenta **un programma per alimento**: per l'alimento scelto
+mostra il **grafico di andamento ABA** (percentuale di contatto per seduta, una
+linea per livello, con linea di criterio e linee di cambio fase), l'elenco delle
+sedute con il dettaglio delle metriche e la **griglia a intervalli** di ciascun
+livello, l'export CSV/JSON e la **cancellazione** dal database.
 
-Senza hardware si può giocare con il **mouse/touch** sull'alimento o con i
-tasti di default del Makey-Makey (frecce, spazio, W/A/S/D/F/G).
+Senza hardware si può giocare con il **mouse/touch** sull'alimento oppure con la
+**barra spaziatrice** — l'unico tasto accettato, perché il Makey-Makey è
+cablato su un solo sensore e restringere il tasto evita falsi positivi da una
+tastiera vicina alla postazione.
 
 ## Metriche registrate (per livello)
 
@@ -119,25 +126,39 @@ src/
     LoginRoute / SetupRoute / PlayRoute / RewardRoute /
     SummaryRoute / DashboardRoute.tsx   Una route per schermata
   auth/tokenStore.ts        Token + bambino in localStorage (non-React)
-  game/
-    levels.ts               Storia, alimenti e parametri dei livelli
+  game/                     Logica di dominio pura (niente React)
+    foods.ts                Catalogo degli alimenti selezionabili
+    levels.ts               Storia e parametri dei livelli
+    hardBeat.ts             Regole temporali della modalità difficile
+    stars.ts                Assegnazione delle stelle
     sessionRecord.ts        Costruzione del record di sessione (dominio)
-  hooks/useTouchTracker.ts  Motore di misurazione tocchi (Makey-Makey / pointer)
-  utils/exportSession.ts    Export CSV/JSON + formattazione metriche per la UI
+    settings.ts             Soglie del terapista (localStorage)
+  hooks/
+    useTouchTracker.ts      Motore di misurazione tocchi (Makey-Makey / pointer)
+    useSaveSession.ts       Mutation salvataggio (+ invalidate), una volta sola
+    useSessions.ts          Query elenco + mutation elimina
+  utils/
+    computeMetrics.ts       Matematica delle metriche (funzione pura)
+    abaData.ts              Derivazione delle viste cliniche (funzioni pure)
+    exportSession.ts        Export CSV/JSON + formattazione metriche per la UI
+    sound.ts                Jingle di vittoria (Web Audio API, nessun asset)
   api/
     generated/              Client API generato da OpenAPI (axios) — non editare
     apiClient.ts            Configurazione + istanze authApi/sessionsApi
     client.ts               Adattatori sessioni (su client generato) + gestione 401
-    useSaveSession.ts       Mutation salvataggio (+ invalidate)
-    useSessions.ts          Query elenco + mutation elimina
-  components/
+  screens/
     LoginScreen.tsx         Accesso/registrazione (usa AuthContext)
     SetupScreen.tsx (+scss) Dati sessione, alimento e difficoltà
     LevelPlay.tsx   (+scss) Intro narrativa + gioco misurato (facile/difficile)
     RewardScreen.tsx(+scss) Stelle + riepilogo metriche del livello
     SessionSummary.tsx(+scss) Riepilogo, salvataggio su DB ed esportazione
-    Dashboard.tsx   (+scss) Sessioni del bambino: dettaglio, export, elimina
+    Dashboard.tsx   (+scss) Un programma per alimento: grafico, sedute, export
+    SettingsScreen.tsx(+scss) Soglie delle stelle e suono
+  shared/
     Rabbit.tsx      (+scss) Avatar del coniglio (espressioni)
+    AbaChart.tsx    (+scss) Grafico di andamento ABA (SVG scritto a mano)
+    IntervalGrid.tsx(+scss) Griglia di whole-interval recording
+    seriesColors.ts         Colori delle serie, uno per livello
   styles/
     _tokens.scss            Token colore di servizio (partial @use)
     shared.module.scss      Primitive di design condivise (SCSS Modules)

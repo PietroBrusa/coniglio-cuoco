@@ -6,11 +6,6 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './auth.guard';
 
-/**
- * Authentication module: configures the JWT service (secret and expiry from
- * environment variables) and exports {@link AuthGuard} for use by other
- * protected modules.
- */
 @Module({
   imports: [
     ChildrenModule,

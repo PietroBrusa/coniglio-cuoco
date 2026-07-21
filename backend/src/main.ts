@@ -5,12 +5,6 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
-/**
- * Application bootstrap: sets up CORS, the global ValidationPipe (field
- * whitelist + type coercion) and the Swagger / OpenAPI documentation
- * (UI at `/api`, JSON spec at `/api-json`), then starts listening on the
- * configured port.
- */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
@@ -24,13 +18,12 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,  //Elimina i dati non definiti nei dto
-      forbidNonWhitelisted: true, //blocca la richiesta coompletamente
-      transform: true,  //conversione dei dati in istanze dei dto/numeri
+      whitelist: true, // scarta i campi non definiti nei DTO
+      forbidNonWhitelisted: true, // e blocca del tutto la richiesta che li contiene
+      transform: true,
     }),
   );
 
-  // OpenAPI spec: describes the API surface and enables frontend client generation.
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Rabbit Cook API')
     .setDescription('Game session persistence and child authentication.')

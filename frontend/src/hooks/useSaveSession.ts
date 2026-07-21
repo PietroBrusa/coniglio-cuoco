@@ -5,27 +5,20 @@ import type { Session } from '../types';
 
 type SaveStatus = 'idle' | 'pending' | 'success' | 'error';
 
-/** Options that let the caller own the "already saved" flag. */
 export interface UseSaveSessionOptions {
   /**
-   * `true` if this session has already been persisted. The auto-save on mount is
-   * then skipped and the status starts at `success`. The caller must keep this
-   * flag outside the component tree (game state), otherwise remounting the
-   * summary screen — e.g. with the browser's back / forward buttons — would save
-   * the same session a second time.
+   * `true` if this session has already been persisted; the auto-save on mount is
+   * then skipped. The caller must keep this flag outside the component tree
+   * (game state), otherwise remounting the summary screen — e.g. with the
+   * browser's back / forward buttons — would save the session a second time.
    */
   alreadySaved?: boolean;
-  /** Called once the session has been persisted, so the caller can raise its flag. */
   onSaved?: () => void;
 }
 
 /**
- * Saves the session to the backend exactly once and exposes the current save
- * status. On success invalidates the `['sessions']` React Query cache and calls
- * `onSaved`. `save` can be called manually to retry after an error.
- * @param session - The completed game session to persist.
- * @param options - See {@link UseSaveSessionOptions}.
- * @returns `{ save, status, error }` — retry function, current status and last error message.
+ * Saves the session to the backend exactly once. `save` can be called manually
+ * to retry after an error.
  */
 export function useSaveSession(session: Session, options: UseSaveSessionOptions = {}) {
   const { alreadySaved = false, onSaved } = options;

@@ -63,6 +63,14 @@ export default defineConfig({
       {
         // 3. End-to-end tests — full user flows in a real browser.
         plugins: [react()],
+        // The E2E runs without a backend, so every request must fail as a
+        // connection error. Left on the default port it would reach a backend
+        // running on the developer's machine, get a 401 for its fake token, and
+        // the 401 handler would log the app out mid-flow. Pointing at a dead
+        // port makes the run identical with or without a local backend.
+        define: {
+          'import.meta.env.VITE_API_URL': JSON.stringify('http://localhost:59999'),
+        },
         test: {
           name: 'e2e',
           include: ['e2e/**/*.e2e.test.{ts,tsx}'],

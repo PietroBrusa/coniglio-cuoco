@@ -3,53 +3,45 @@ import type { Metrics, TouchRecord } from '../types';
 import { computeMetrics, emptySnap, type Snapshot } from '../utils/computeMetrics';
 
 /**
- * Touch measurement engine — the clinical core of the application.
- * Unifies two input sources (keyboard via Makey-Makey and pointer/mouse/touch)
- * and computes the behavioural metrics defined in the project specification.
- * The pure metric maths lives in `utils/computeMetrics.ts`.
- */
-
-/**
- * Keyboard codes treated as a "touch" event.
  * The Makey-Makey is wired to a single conductive sensor that emits `Space`
  * (the front "click" input), so only that code is accepted to avoid false
  * positives from a physical keyboard near the test station.
  */
 export const MAKEY_KEYS = ['Space'];
 
-/** Value returned by the hook: live metrics, touch state and input handlers. */
 export interface TouchTracker {
-  /** Metrics updated in real time (drives the progress UI). */
   metrics: Metrics;
-  /** `true` while a touch / key press is currently active. */
   isDown: boolean;
-  /** Pointer event handlers to spread onto the food target element. */
+  /** `true` once the child has made first contact: the window is open. */
+  hasStarted: boolean;
   pointerHandlers: {
     onPointerDown: (e: React.PointerEvent) => void;
     onPointerUp: () => void;
     onPointerLeave: () => void;
     onPointerCancel: () => void;
   };
-  /** Resets all measurements (call at the start of each level). */
   reset: () => void;
-  /**
-   * Computes and returns a frozen {@link Metrics} snapshot.
-   * @param sessionDurationMs - Optional duration override (overrides `now - start`).
-   */
   getResult: (sessionDurationMs?: number) => Metrics;
 }
 
 /**
- * Measurement hook. When `active` is `true` it listens for touch and keyboard
- * events and keeps metrics up to date. Uses `ref`s for sub-millisecond precision
- * (`performance.now()`) and publishes a state snapshot only on relevant changes
- * to avoid re-rendering on every raw event.
- * @param active - When `false` the hook is fully idle (no listeners, no timers).
- * @returns A {@link TouchTracker} with live metrics, state flags and input handlers.
+ * Touch measurement engine, unifying keyboard (Makey-Makey) and pointer input.
+ * Uses `ref`s for sub-millisecond precision (`performance.now()`) and publishes
+ * a state snapshot only on relevant changes, to avoid re-rendering on every raw
+ * event.
+ *
+ * The measurement window opens on the child's *first* contact, not when the
+ * level becomes playable: a child who hesitates for twenty seconds and then
+ * holds for four must not score four seconds out of twenty-four. The hesitation
+ * is recorded separately, as the latency.
  */
 export function useTouchTracker(active: boolean): TouchTracker {
+  /** When the level became playable — the reference for the latency. */
+  const playStartRef = useRef(0);
+  /** When the window opened (first contact); `0` until then. */
   const startRef = useRef(0);
-  const downAtRef = useRef<number | null>(null); 
+  const latencyRef = useRef<number | null>(null);
+  const downAtRef = useRef<number | null>(null);
   const touchesRef = useRef<TouchRecord[]>([]);
 
   const [snap, setSnap] = useState<Snapshot>(emptySnap);
@@ -60,11 +52,14 @@ export function useTouchTracker(active: boolean): TouchTracker {
       downAt: downAtRef.current,
       start: startRef.current,
       now: performance.now(),
+      latency: latencyRef.current,
     });
   }, []);
 
   const reset = useCallback(() => {
-    startRef.current = performance.now();
+    playStartRef.current = performance.now();
+    startRef.current = 0;
+    latencyRef.current = null;
     downAtRef.current = null;
     touchesRef.current = [];
     publish();
@@ -73,7 +68,13 @@ export function useTouchTracker(active: boolean): TouchTracker {
   const pressDown = useCallback(() => {
     if (!active) return;
     if (downAtRef.current !== null) return;
-    downAtRef.current = performance.now();
+    const now = performance.now();
+    // First contact opens the window and freezes how long it was waited for.
+    if (startRef.current === 0) {
+      startRef.current = now;
+      latencyRef.current = now - playStartRef.current;
+    }
+    downAtRef.current = now;
     publish();
   }, [active, publish]);
 
@@ -116,10 +117,13 @@ export function useTouchTracker(active: boolean): TouchTracker {
     };
   }, [active, pressDown, pressUp]);
 
+  // Ticks for as long as the window is open, not just while the food is being
+  // touched: the window runs down whether or not there is contact, and the
+  // countdown and progress bar have to keep moving when the child lets go.
   useEffect(() => {
     if (!active) return undefined;
     const id = setInterval(() => {
-      if (downAtRef.current !== null) publish();
+      if (startRef.current !== 0) publish();
     }, 100);
     return () => clearInterval(id);
   }, [active, publish]);
@@ -136,28 +140,41 @@ export function useTouchTracker(active: boolean): TouchTracker {
 
   const getResult = useCallback((sessionDurationMs?: number) => {
     const now = performance.now();
+    const start = startRef.current;
     const touches = touchesRef.current.slice();
-    // Se un tocco è ancora premuto (il livello si completa senza rilascio, tipico
-    // dei livelli "hold"), chiudilo ora così la sua durata entra nelle metriche.
+
+    // A press still down when the window closes (the normal case) is closed here
+    // so its duration reaches the metrics.
     const downAt = downAtRef.current;
     if (downAt !== null) {
-      touches.push({
-        down: downAt - startRef.current,
-        up: now - startRef.current,
-        duration: now - downAt,
-      });
+      touches.push({ down: downAt - start, up: now - start, duration: now - downAt });
     }
+
+    // The timer that closes the window fires a few milliseconds late, so a press
+    // still down would otherwise reach past it. Clip to the window: contact
+    // outside it was never part of the measurement.
+    const limit = sessionDurationMs ?? (start ? now - start : 0);
+    const clipped = touches.map((t) => clipTouch(t, limit)).filter((t): t is TouchRecord => !!t);
+
     return computeMetrics(
-      { touches, downAt: null, start: startRef.current, now },
-      sessionDurationMs
+      { touches: clipped, downAt: null, start, now, latency: latencyRef.current },
+      sessionDurationMs,
     );
   }, []);
 
   return {
     metrics: computeMetrics(snap),
     isDown: snap.downAt !== null,
+    hasStarted: snap.start !== 0,
     pointerHandlers,
     reset,
     getResult,
   };
+}
+
+/** Trims a touch to `[0, limit]`, dropping it if nothing is left inside. */
+function clipTouch(touch: TouchRecord, limit: number): TouchRecord | null {
+  const down = Math.max(0, touch.down);
+  const up = Math.min(touch.up, limit);
+  return up > down ? { down, up, duration: up - down } : null;
 }

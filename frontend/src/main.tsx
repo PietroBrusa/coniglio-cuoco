@@ -7,7 +7,6 @@ import App from './App.tsx';
 import { AuthProvider } from './context/AuthContext';
 import { GameProvider } from './context/GameContext';
 
-// Entry point: composes the global providers (React Query, router, auth, game).
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById('root')!).render(

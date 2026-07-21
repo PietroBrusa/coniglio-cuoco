@@ -1,7 +1,6 @@
 import { Navigate, Outlet } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 
-/** Guardia: consente l'accesso solo se autenticati, altrimenti va a /login. */
 export default function ProtectedRoute() {
   const { isLoggedIn } = useAuth();
   return isLoggedIn ? <Outlet /> : <Navigate to="/login" replace />;

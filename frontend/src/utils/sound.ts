@@ -1,12 +1,11 @@
 /**
- * Lightweight sound effects synthesised with the Web Audio API, so the game
- * ships no audio assets and has no licensing concerns. Sounds are best-effort:
- * any failure (e.g. autoplay policy, unsupported browser) is swallowed silently.
+ * Sound effects synthesised with the Web Audio API, so the game ships no audio
+ * assets. Best-effort: any failure (autoplay policy, unsupported browser) is
+ * swallowed silently.
  */
 
 type WebkitWindow = Window & { webkitAudioContext?: typeof AudioContext };
 
-/** Plays a short, cheerful ascending arpeggio to celebrate a completed level. */
 export function playVictory(): void {
   try {
     const Ctx = window.AudioContext ?? (window as WebkitWindow).webkitAudioContext;
@@ -33,7 +32,6 @@ export function playVictory(): void {
       osc.stop(start + 0.4);
     });
 
-    // Release the audio context once the jingle has finished.
     window.setTimeout(() => void ctx.close(), notes.length * step * 1000 + 500);
   } catch {
     /* audio unavailable — ignore */

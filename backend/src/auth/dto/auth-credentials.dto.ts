@@ -1,6 +1,5 @@
 import { IsString, MaxLength, MinLength } from 'class-validator';
 
-/** Validated credentials for registration and login (name + password). */
 export class AuthCredentialsDto {
   @IsString()
   @MinLength(1)

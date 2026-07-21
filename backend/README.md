@@ -27,6 +27,16 @@ PORT=3000
 MONGODB_URI=mongodb://localhost:27017
 MONGODB_DB=coniglio_cuoco
 CORS_ORIGIN=http://localhost:5173
+JWT_SECRET=            # obbligatoria: senza, l'avvio fallisce
+JWT_EXPIRES=12h
+```
+
+`JWT_SECRET` **non ha un valore di ripiego**, di proposito: un segreto di default farebbe
+partire l'applicazione con token falsificabili da chiunque legga il sorgente. Generane uno
+casuale (diverso per ogni ambiente) con:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 ## Avvio
@@ -38,7 +48,7 @@ npm run build        # compila in dist/
 npm run start:prod   # esegue la build
 ```
 
-All'avvio: `🐰 API Coniglio Cuoco in ascolto su http://localhost:3000`
+All'avvio: `🐰 Rabbit Cook API listening on http://localhost:3000`
 
 ## Documentazione OpenAPI / Swagger
 
@@ -82,6 +92,7 @@ src/
     auth.service.ts               Registrazione/login, hash bcrypt, firma token
     auth.guard.ts                 Guard che valida il Bearer token
     dto/auth-credentials.dto.ts   DTO credenziali validate
+    dto/auth-response.dto.ts      DTO risposta (access_token + name)
   children/
     children.module.ts            Feature module
     children.service.ts           Accesso agli account bambino
@@ -91,6 +102,7 @@ src/
     sessions.controller.ts        Rotte REST /sessions (protette)
     sessions.service.ts           Logica + MongoRepository
     dto/create-session.dto.ts     DTO validati (class-validator)
+    dto/session.dto.ts            DTO di risposta (SessionDto, DeleteResultDto)
     entities/session.entity.ts    Entità TypeORM + sotto-documenti
 ```
 

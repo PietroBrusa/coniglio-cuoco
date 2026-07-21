@@ -9,11 +9,6 @@ import DashboardRoute from './routes/DashboardRoute';
 import SettingsRoute from './routes/SettingsRoute';
 import s from './styles/shared.module.scss';
 
-/**
- * Root route definition. Each screen maps to one route; game screens are
- * protected by {@link ProtectedRoute}. Session state lives in the Auth and Game
- * contexts; navigation is driven entirely by React Router.
- */
 const App = () => (
   <div className={s.wrapper}>
     <Routes>

@@ -11,41 +11,21 @@ import {
 } from '../auth/tokenStore';
 
 /**
- * App-wide authentication state. Exposes the logged-in child, the `isLoggedIn`
- * flag and the login / register / logout actions. Credential verification is
- * handled entirely by the backend; only the JWT token (stored in `localStorage`)
- * and its derived UI state are kept here.
+ * App-wide authentication state. Credential verification is handled entirely by
+ * the backend; only the JWT token (stored in `localStorage`) and its derived UI
+ * state are kept here.
  */
 interface AuthContextType {
-  /** Identifier of the currently logged-in child, or `null` when logged out. */
   childId: string | null;
-  /** `true` when a valid token is present in storage. */
   isLoggedIn: boolean;
-  /**
-   * Authenticates with an existing account.
-   * @param name - Child identifier.
-   * @param password - Plain-text password (transmitted over HTTPS only).
-   * @throws {Error} Human-readable message from the backend on failure.
-   */
   login: (name: string, password: string) => Promise<void>;
-  /**
-   * Creates a new account and logs in immediately.
-   * @param name - Desired child identifier.
-   * @param password - Plain-text password.
-   * @throws {Error} Human-readable message from the backend on failure.
-   */
   register: (name: string, password: string) => Promise<void>;
-  /** Clears the stored token and resets `childId` to `null`. */
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-/**
- * Extracts a user-readable message from a backend Axios error response.
- * @param e - Any caught value.
- * @returns A descriptive error string.
- */
+/** User-readable message from a backend Axios error response. */
 function messageFrom(e: unknown): string {
   if (e instanceof AxiosError) {
     const msg = (e.response?.data as { message?: string | string[] })?.message;
@@ -113,11 +93,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-/**
- * Hook to access the authentication context.
- * @returns The current {@link AuthContextType} value.
- * @throws {Error} If used outside an `<AuthProvider>` tree.
- */
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);

@@ -14,7 +14,6 @@ export interface AuthResult {
   name: string;
 }
 
-/** Authentication logic: registration, login and token signing. */
 @Injectable()
 export class AuthService {
   constructor(
@@ -22,10 +21,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  /**
-   * Registers a new child account, hashes the password and returns a token.
-   * @throws {ConflictException} (409) if a child with the same name already exists.
-   */
   async register({ name, password }: AuthCredentialsDto): Promise<AuthResult> {
     const existing = await this.childrenService.findByName(name);
     if (existing) throw new ConflictException('Child already registered');
@@ -34,10 +29,6 @@ export class AuthService {
     return this.sign(name);
   }
 
-  /**
-   * Verifies credentials via bcrypt and returns a token on success.
-   * @throws {UnauthorizedException} (401) if the name or password is wrong.
-   */
   async login({ name, password }: AuthCredentialsDto): Promise<AuthResult> {
     const child = await this.childrenService.findByName(name);
     const ok = child && (await bcrypt.compare(password, child.passwordHash));
@@ -45,11 +36,7 @@ export class AuthService {
     return this.sign(name);
   }
 
-  /**
-   * Signs a JWT with the child's name as both `sub` and `name` claims.
-   * @param name - Child identifier to embed in the token payload.
-   * @returns Signed {@link AuthResult} with the access token and name.
-   */
+  /** The child's name is both the `sub` and the `name` claim. */
   private async sign(name: string): Promise<AuthResult> {
     const access_token = await this.jwtService.signAsync({ sub: name, name });
     return { access_token, name };

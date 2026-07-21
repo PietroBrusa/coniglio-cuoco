@@ -11,13 +11,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-/**
- * Validated payload for `POST /sessions`. Mirrors the frontend `Session` type
- * (levels → metrics → touches); the global `ValidationPipe` rejects
- * non-conforming payloads with HTTP 400.
- */
+// Validated payload for `POST /sessions`, mirroring the frontend `Session`
+// type: levels → metrics → touches.
 
-/** A single touch event (timestamps and duration in ms). */
 export class TouchRecordDto {
   @IsNumber()
   down!: number;
@@ -29,7 +25,6 @@ export class TouchRecordDto {
   duration!: number;
 }
 
-/** Measured metrics for a completed level. */
 export class LevelResultMetricsDto {
   @IsInt()
   n!: number;
@@ -61,7 +56,6 @@ export class LevelResultMetricsDto {
   touches!: TouchRecordDto[];
 }
 
-/** Result of a completed level: level definition data and measured metrics. */
 export class LevelResultDto {
   @IsInt()
   levelId!: number;
@@ -84,7 +78,6 @@ export class LevelResultDto {
   metrics!: LevelResultMetricsDto;
 }
 
-/** Full session payload sent by the client. */
 export class CreateSessionDto {
   // Set server-side from the authenticated token; ignored if provided by the client.
   @IsOptional()

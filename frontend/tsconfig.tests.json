@@ -1,0 +1,9 @@
+{
+  // The main tsconfig excludes test files so that `build` never fails on them.
+  // The side effect is that a broken test fixture — one missing a required DTO
+  // field, say — compiles silently and only surfaces in the editor. This config
+  // type-checks everything, tests included: `npm run typecheck:tests`.
+  "extends": "./tsconfig.json",
+  "include": ["src", "e2e"],
+  "exclude": []
+}

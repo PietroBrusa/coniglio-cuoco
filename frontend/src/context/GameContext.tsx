@@ -5,11 +5,6 @@ import { LEVELS, getFood } from '../game/levels';
 import { addLevelResult, createSession } from '../game/sessionRecord';
 import { useAuth } from './AuthContext';
 
-/**
- * Game flow state shared across all screens. Contains only the current session
- * data (session, level index, last result); screen navigation is handled by the
- * router, not by a `stage` field in this context.
- */
 interface GameState {
   session: Session | null;
   levelIndex: number;
@@ -20,7 +15,6 @@ interface GameState {
    * and pressing "avanti" again would append the same result a second time.
    */
   resultRecorded: boolean;
-  /** `true` once the completed session has been persisted to the backend. */
   saved: boolean;
 }
 
@@ -39,17 +33,6 @@ const initialState: GameState = {
   saved: false,
 };
 
-/**
- * Pure reducer for game state transitions.
- * - `START`: creates a fresh session and resets to level 0.
- * - `COMPLETE`: stores the metrics of the completed level.
- * - `NEXT`: appends the last result to the session and advances the level index.
- * - `SAVED`: marks the session as persisted, so it is never saved twice.
- * - `NEW`: resets to the initial idle state.
- * @param state - Current game state (never mutated).
- * @param action - Dispatched action.
- * @returns New game state.
- */
 function reducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'START': {
@@ -65,8 +48,6 @@ function reducer(state: GameState, action: GameAction): GameState {
       return { ...initialState, session };
     }
     case 'COMPLETE':
-      // A fresh result supersedes any previous one (e.g. when a level is repeated)
-      // and is not yet part of the session record.
       return { ...state, lastResult: action.result, resultRecorded: false };
     case 'NEXT': {
       if (!state.session || !state.lastResult) return state;
@@ -95,19 +76,12 @@ function reducer(state: GameState, action: GameAction): GameState {
 }
 
 interface GameContextType {
-  /** Current session in progress, or `null` before setup. */
   session: Session | null;
-  /** Zero-based index of the active level in `LEVELS`. */
   levelIndex: number;
-  /** Metrics from the most recently completed level, or `null`. */
   lastResult: Metrics | null;
-  /** Resolved {@link Level} object for the current `levelIndex`. */
   level: Level;
-  /** Resolved {@link Food} object for the session's `foodId`. */
   food: Food;
-  /** Session difficulty, defaulting to `'facile'` before setup. */
   difficulty: Difficulty;
-  /** `true` when the current level is the last one in `LEVELS`. */
   isLastLevel: boolean;
   /**
    * `true` once the session has been persisted. Lives here, and not inside the
@@ -115,23 +89,10 @@ interface GameContextType {
    * not save the same session a second time.
    */
   sessionSaved: boolean;
-  /**
-   * Starts a new session with the parameters chosen at setup.
-   * @param p.sessionNumber - Sequential session number.
-   * @param p.foodId - Technical id of the selected food.
-   * @param p.difficulty - Chosen difficulty.
-   */
   startSession: (p: { sessionNumber: number; foodId: string; difficulty: Difficulty }) => void;
-  /**
-   * Stores the metrics of the just-completed level.
-   * @param result - Live metrics snapshot from {@link useTouchTracker}.
-   */
   completeLevel: (result: Metrics) => void;
-  /** Appends the last result to the session and advances to the next level. */
   next: () => void;
-  /** Marks the session as persisted, so it is not saved again on remount. */
   markSessionSaved: () => void;
-  /** Resets the game state (returns to setup). */
   newSession: () => void;
 }
 
@@ -164,11 +125,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 }
 
-/**
- * Hook to access the game flow context.
- * @returns The current {@link GameContextType} value.
- * @throws {Error} If used outside a `<GameProvider>` tree.
- */
 // eslint-disable-next-line react-refresh/only-export-components
 export function useGame(): GameContextType {
   const ctx = useContext(GameContext);

@@ -12,12 +12,15 @@ import { GameProvider } from '../src/context/GameContext';
  * screens) and plays a full session the way a child would, by interacting with
  * the on-screen food target:
  *
- *   setup → play level 1 (tap) → reward → level 2 (hold) → reward →
+ *   setup → play level 1 (hold) → reward → level 2 (hold) → reward →
  *   level 3 (hold) → reward → summary
  *
  * Nothing in the UI is mocked. The backend is not started here (the persistence
  * layer has its own Testcontainers E2E), so the summary's auto-save simply
- * reports its status; the journey and every screen transition are real.
+ * reports its status; the journey and every screen transition are real. The e2e
+ * project points the API at a dead port (see `vitest.config.ts`) so the save
+ * always fails as a connection error, never as a 401 — which would log the app
+ * out and take the summary off screen.
  */
 
 type Screen = Awaited<ReturnType<typeof render>>;
@@ -80,28 +83,21 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('Gameplay journey (E2E)', () => {
-  it('plays the first (tap) level: setup → play → reward', async () => {
+  it('plays the first (hold) level: setup → play → reward', async () => {
     const screen = await renderApp('/setup');
     await screen.getByRole('button', { name: /Inizia la storia/ }).click();
 
-    await enterPlay(screen, 'Raccolte 0 / 5'); // level 1: tap, target 5
-    await tapFood(screen, 5);
-
-    await expect
-      .element(screen.getByText('Livello 1 completato!'), { timeout: 5000 })
-      .toBeInTheDocument();
+    await enterPlay(screen, 'Cesto 0%'); // level 1: hold, target 6s
+    await holdUntilComplete(screen, 'Livello 1 completato!', 12_000);
   }, 20_000);
 
   it('completes the full three-level session through to the summary', async () => {
     const screen = await renderApp('/setup');
     await screen.getByRole('button', { name: /Inizia la storia/ }).click();
 
-    // ---- Level 1: tap mode (target 5) ----
-    await enterPlay(screen, 'Raccolte 0 / 5');
-    await tapFood(screen, 5);
-    await expect
-      .element(screen.getByText('Livello 1 completato!'), { timeout: 5000 })
-      .toBeInTheDocument();
+    // ---- Level 1: hold mode (target 6s) ----
+    await enterPlay(screen, 'Cesto 0%');
+    await holdUntilComplete(screen, 'Livello 1 completato!', 12_000);
     await screen.getByRole('button', { name: /Prossimo livello/ }).click();
 
     // ---- Level 2: hold mode (target 6s) ----

@@ -41,6 +41,6 @@ describe('LEVELS data integrity', () => {
   it('exposes intro and progressLabel as functions of the game state', () => {
     const level = getLevel(1);
     expect(level.intro({ foodLabel: 'Carota' })).toContain('Carota'.toLowerCase());
-    expect(level.progressLabel(3, 5)).toBe('Raccolte 3 / 5');
+    expect(level.progressLabel(3, 6)).toBe('Cesto 50%');
   });
 });

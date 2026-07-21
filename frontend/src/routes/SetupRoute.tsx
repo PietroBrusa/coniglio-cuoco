@@ -3,7 +3,6 @@ import SetupScreen from '../screens/SetupScreen';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 
-/** Route /setup: avvia una sessione, apre la dashboard o esegue il logout. */
 export default function SetupRoute() {
   const navigate = useNavigate();
   const { childId, logout } = useAuth();

@@ -17,26 +17,13 @@ const DIFFICULTIES: { id: Difficulty; emoji: string; label: string; hint: string
 ];
 
 interface SetupScreenProps {
-  /** Identifier of the currently logged-in child (displayed in the header bar). */
   childId: string;
-  /**
-   * Called with the chosen parameters when the form is submitted.
-   * @param params - Session number, food id and difficulty.
-   */
   onStart: (params: StartParams) => void;
-  /** Called when the child clicks the saved-sessions button. */
   onOpenDashboard: () => void;
-  /** Called when the therapist opens the settings screen. */
   onOpenSettings: () => void;
-  /** Called when the therapist clicks "change child" to log out. */
   onLogout: () => void;
 }
 
-/**
- * Setup screen: the therapist selects session number, food and difficulty.
- * Emits the chosen parameters via `onStart`; also provides access to the
- * dashboard and the logout action.
- */
 const SetupScreen = ({
   childId,
   onStart,

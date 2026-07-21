@@ -1,0 +1,41 @@
+@use '../styles/tokens' as t;
+
+.grid {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+
+  th,
+  td {
+    border: 1px solid t.$border;
+    padding: 0.35rem 0.2rem;
+    text-align: center;
+    color: var(--farm-brown);
+  }
+  thead th {
+    background: #f1f6e8;
+    font-weight: 600;
+  }
+}
+.caption {
+  caption-side: top;
+  text-align: left;
+  padding-bottom: 0.35rem;
+  color: t.$text-muted;
+  font-size: 0.85rem;
+}
+
+// The glyph carries the meaning; the tint only reinforces it.
+.plus {
+  background: #e8f4e0;
+  color: #2f6b1f;
+  font-weight: 700;
+}
+.minus {
+  background: #fbfbf8;
+  color: t.$text-muted;
+}
+.totalCol {
+  background: #f1f6e8;
+  font-weight: 700;
+}

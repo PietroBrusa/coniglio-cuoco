@@ -1,21 +1,17 @@
 /**
- * Operator-configurable application settings, persisted in the browser
- * (localStorage). These control the star-rating thresholds — so a therapist can
- * tune how generously stars are awarded without touching the code — plus a
- * global victory-sound toggle.
+ * Star-rating thresholds, so a therapist can tune how generously stars are
+ * awarded without touching the code.
  */
 export interface AppSettings {
   /** Max latency to the first tap (ms) to earn the "prompt approach" star. */
   promptLatencyMs: number;
-  /** Engagement ratio (%) required for the "sustained contact" star (hold levels). */
+  /** Engagement ratio (%) for the "sustained contact" star (hold levels). */
   holdEngagementPct: number;
-  /** Total contact time (ms) required for the "sustained contact" star (tap levels). */
+  /** Total contact time (ms) for the "sustained contact" star (tap levels). */
   tapContactMs: number;
-  /** Whether the victory sound plays at the end of a level. */
   soundEnabled: boolean;
 }
 
-/** Factory defaults (match the original hard-coded thresholds). */
 export const DEFAULT_SETTINGS: AppSettings = {
   promptLatencyMs: 3000,
   holdEngagementPct: 40,
@@ -25,11 +21,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
 const STORAGE_KEY = 'coniglio-cuoco:settings';
 
-/**
- * Loads settings from localStorage, merged over {@link DEFAULT_SETTINGS} so that
- * missing or corrupt values always fall back to a sane default.
- * @returns The current settings.
- */
+/** Merged over the defaults, so missing or corrupt values still fall back. */
 export function loadSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -41,10 +33,6 @@ export function loadSettings(): AppSettings {
   }
 }
 
-/**
- * Persists settings to localStorage.
- * @param settings - The settings to save.
- */
 export function saveSettings(settings: AppSettings): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));

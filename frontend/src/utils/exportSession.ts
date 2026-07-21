@@ -1,15 +1,6 @@
 import type { Session } from '../types';
 
-/**
- * Session export to external files (CSV / JSON) and metric formatting for the UI.
- * Domain record construction lives in `game/sessionRecord.ts`.
- */
-
-/**
- * Serialises a session as CSV — one row per completed level, times in seconds.
- * @param session - The session to serialise.
- * @returns CSV string with header row.
- */
+/** One row per completed level, times in seconds. */
 export function sessionToCsv(session: Session): string {
   const rows = [toCsvRow(CSV_HEADER)];
   for (const lv of session.levels) {
@@ -36,34 +27,22 @@ export function sessionToCsv(session: Session): string {
   return rows.join('\n');
 }
 
-/**
- * Triggers a browser download of the full session as a JSON file.
- * @param session - Session to export.
- */
 export function downloadJson(session: Session): void {
   download(`${baseName(session)}.json`, JSON.stringify(session, null, 2), 'application/json');
 }
 
-/**
- * Triggers a browser download of the session as a CSV file (Excel-compatible).
- * @param session - Session to export.
- */
 export function downloadCsv(session: Session): void {
   download(`${baseName(session)}.csv`, sessionToCsv(session), 'text/csv');
 }
 
-/** A label/value pair used in metric summary tables throughout the UI. */
 export interface MetricRow {
   label: string;
   value: string | number;
 }
 
 /**
- * Converts metrics into labelled rows with human-readable units.
- * Accepts both live {@link Metrics} (`count`) and persisted metrics (`n`);
- * whichever is present is used for the tap-count row.
- * @param m - Metrics object, either live or persisted.
- * @returns Array of {@link MetricRow} ready for rendering.
+ * Labelled rows with human-readable units. Accepts both live `Metrics`
+ * (`count`) and persisted metrics (`n`); whichever is present is used.
  */
 export function formatMetrics(m: {
   count?: number; // live Metrics
@@ -86,21 +65,13 @@ export function formatMetrics(m: {
   ];
 }
 
-/**
- * Converts milliseconds to seconds with 2 decimal places.
- * @param v - Value in milliseconds, or `null`.
- * @returns Formatted string (e.g. `"1.50"`) or `""` for null.
- */
+/** Milliseconds to seconds, 2 decimal places; `""` for null. */
 const s2 = (v: number | null): string => (v == null ? '' : (v / 1000).toFixed(2));
 
 /**
- * Escapes a single CSV field according to RFC 4180: a field containing a comma,
- * a double quote or a newline is wrapped in quotes, and any inner quote is
- * doubled. Without this, free text shifts every following column — the level 2
- * `behavior` ("Sollevare e avvicinare al viso, annusare") and any child name
- * with a comma in it both do exactly that.
- * @param value - The raw field value.
- * @returns The field, quoted only if it needs to be.
+ * Escapes a field per RFC 4180. Without this, free text shifts every following
+ * column — the level 2 `behavior` ("Sollevare e avvicinare al viso, annusare")
+ * and any child name with a comma in it both do exactly that.
  */
 function csvField(value: string | number): string {
   const text = String(value);
@@ -108,7 +79,6 @@ function csvField(value: string | number): string {
   return `"${text.replace(/"/g, '""')}"`;
 }
 
-/** Joins already-escaped fields into one CSV line. */
 const toCsvRow = (fields: (string | number)[]): string => fields.map(csvField).join(',');
 
 const CSV_HEADER = [
@@ -128,12 +98,6 @@ const CSV_HEADER = [
   'EngagementRatio_%',
 ];
 
-/**
- * Triggers a browser file download via a temporary Blob object URL.
- * @param filename - Suggested file name.
- * @param content - Text content of the file.
- * @param type - MIME type (e.g. `'text/csv'` or `'application/json'`).
- */
 function download(filename: string, content: string, type: string): void {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);

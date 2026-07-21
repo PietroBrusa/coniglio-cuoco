@@ -6,15 +6,10 @@ import s from '../styles/shared.module.scss';
 import c from './SettingsScreen.module.scss';
 
 interface SettingsScreenProps {
-  /** Called when the therapist leaves the settings screen. */
   onBack: () => void;
 }
 
-/**
- * Settings screen: lets the therapist tune the star-rating thresholds and toggle
- * the victory sound. Values are edited in friendly units (seconds / percent) and
- * persisted to localStorage via {@link saveSettings}.
- */
+/** Values are edited in friendly units (seconds / percent). */
 const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const [draft, setDraft] = useState<AppSettings>(() => loadSettings());
   const [saved, setSaved] = useState(false);

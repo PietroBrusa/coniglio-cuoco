@@ -4,14 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import s from '../styles/shared.module.scss';
 
 interface LoginScreenProps {
-  /** Called on successful login or registration (typically navigates to setup). */
   onLogin: () => void;
 }
 
-/**
- * Login / registration screen. Delegates credential handling to {@link useAuth}
- * and calls `onLogin` once the backend confirms authentication.
- */
 const LoginScreen = ({ onLogin }: LoginScreenProps) => {
   const { login, register } = useAuth();
   const [name, setName] = useState('');

@@ -1,38 +1,41 @@
 import type { Metrics, TouchRecord } from '../types';
 
-/**
- * Pure metric engine for the touch tracker.
- * Kept free of React so it can be unit-tested in isolation; the stateful
- * listening/timing logic lives in `hooks/useTouchTracker.ts`.
- */
-
 /** Immutable picture of the tracker state at a single instant. */
 export interface Snapshot {
-  /** Completed taps so far. */
+  /** Completed taps so far, timed from `start`. */
   touches: TouchRecord[];
   /** Start time of the tap currently in progress, or `null`. */
   downAt: number | null;
-  /** Session start timestamp. */
+  /**
+   * Start of the measurement window, which opens on the child's *first* contact.
+   * `0` while the level is playable but has not been touched yet.
+   */
   start: number;
-  /** Timestamp of this snapshot. */
   now: number;
+  /**
+   * Time from the level becoming playable to that first contact (ms). Measured
+   * before the window opens, so it survives the window being anchored to the
+   * first touch.
+   */
+  latency: number | null;
 }
 
-/** An empty snapshot (no taps, session not started). */
-export const emptySnap = (): Snapshot => ({ touches: [], downAt: null, start: 0, now: 0 });
+export const emptySnap = (): Snapshot => ({
+  touches: [],
+  downAt: null,
+  start: 0,
+  now: 0,
+  latency: null,
+});
 
 /**
- * Computes {@link Metrics} from a touch snapshot. All times in milliseconds.
- * - **latency**: timestamp of the first tap's press.
- * - **totalContactMs**: sum of all completed tap durations.
- * - **meanIrtMs**: mean Inter-Response Time (gap between release and next press).
- * - **engagementRatio**: `totalContactMs / sessionDuration × 100`.
- * @param snapshot - Current ref values and timestamp.
- * @param sessionDurationMs - Optional override for the session duration.
- * @returns A fully populated {@link Metrics} object.
+ * All times in milliseconds. `sessionDurationMs` is the duration to score
+ * against and defaults to the time elapsed since the window opened; the level
+ * passes its full window here, so the final ratio is measured against the whole
+ * window and not against the moment the level happened to end.
  */
 export function computeMetrics(
-  { touches, downAt, start, now }: Snapshot,
+  { touches, downAt, start, now, latency }: Snapshot,
   sessionDurationMs?: number
 ): Metrics {
   const n = touches.length;
@@ -40,7 +43,7 @@ export function computeMetrics(
   const ongoing = downAt !== null ? now - downAt : 0;
   const liveContactMs = totalContactMs + ongoing;
 
-  const latencyMs = n > 0 ? touches[0].down : null;
+  const latencyMs = latency;
 
   let meanIrtMs: number | null = null;
   if (n > 1) {
@@ -50,7 +53,9 @@ export function computeMetrics(
   }
 
   const duration = sessionDurationMs ?? (start ? now - start : 0);
-  const engagementRatio = duration > 0 ? (totalContactMs / duration) * 100 : 0;
+  // Clamped: a press still down when the window closes can be timed a few
+  // milliseconds past it, and a ratio over 100% would be nonsense on the chart.
+  const engagementRatio = duration > 0 ? Math.min(100, (totalContactMs / duration) * 100) : 0;
 
   return {
     count: n,
