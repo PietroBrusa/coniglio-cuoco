@@ -18,8 +18,8 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // scarta i campi non definiti nei DTO
-      forbidNonWhitelisted: true, // e blocca del tutto la richiesta che li contiene
+      whitelist: true,
+      forbidNonWhitelisted: true,
       transform: true,
     }),
   );

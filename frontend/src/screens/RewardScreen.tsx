@@ -12,7 +12,6 @@ interface RewardScreenProps {
   level: Level;
   metrics: Metrics;
   difficulty: Difficulty;
-  /** When `true` the "next" button reads "End session" instead of "Next level". */
   isLastLevel: boolean;
   onNext: () => void;
   onRepeat: () => void;
@@ -31,7 +30,6 @@ const RewardScreen = ({
 
   useEffect(() => {
     if (settings.soundEnabled) playVictory();
-    // Intentionally runs once on mount: one sound per reward screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

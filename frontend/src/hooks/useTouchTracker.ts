@@ -2,17 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Metrics, TouchRecord } from '../types';
 import { computeMetrics, emptySnap, type Snapshot } from '../utils/computeMetrics';
 
-/**
- * The Makey-Makey is wired to a single conductive sensor that emits `Space`
- * (the front "click" input), so only that code is accepted to avoid false
- * positives from a physical keyboard near the test station.
- */
 export const MAKEY_KEYS = ['Space'];
 
 export interface TouchTracker {
   metrics: Metrics;
   isDown: boolean;
-  /** `true` once the child has made first contact: the window is open. */
   hasStarted: boolean;
   pointerHandlers: {
     onPointerDown: (e: React.PointerEvent) => void;
@@ -24,21 +18,8 @@ export interface TouchTracker {
   getResult: (sessionDurationMs?: number) => Metrics;
 }
 
-/**
- * Touch measurement engine, unifying keyboard (Makey-Makey) and pointer input.
- * Uses `ref`s for sub-millisecond precision (`performance.now()`) and publishes
- * a state snapshot only on relevant changes, to avoid re-rendering on every raw
- * event.
- *
- * The measurement window opens on the child's *first* contact, not when the
- * level becomes playable: a child who hesitates for twenty seconds and then
- * holds for four must not score four seconds out of twenty-four. The hesitation
- * is recorded separately, as the latency.
- */
 export function useTouchTracker(active: boolean): TouchTracker {
-  /** When the level became playable — the reference for the latency. */
   const playStartRef = useRef(0);
-  /** When the window opened (first contact); `0` until then. */
   const startRef = useRef(0);
   const latencyRef = useRef<number | null>(null);
   const downAtRef = useRef<number | null>(null);
@@ -69,7 +50,6 @@ export function useTouchTracker(active: boolean): TouchTracker {
     if (!active) return;
     if (downAtRef.current !== null) return;
     const now = performance.now();
-    // First contact opens the window and freezes how long it was waited for.
     if (startRef.current === 0) {
       startRef.current = now;
       latencyRef.current = now - playStartRef.current;
@@ -117,9 +97,6 @@ export function useTouchTracker(active: boolean): TouchTracker {
     };
   }, [active, pressDown, pressUp]);
 
-  // Ticks for as long as the window is open, not just while the food is being
-  // touched: the window runs down whether or not there is contact, and the
-  // countdown and progress bar have to keep moving when the child lets go.
   useEffect(() => {
     if (!active) return undefined;
     const id = setInterval(() => {
@@ -143,16 +120,11 @@ export function useTouchTracker(active: boolean): TouchTracker {
     const start = startRef.current;
     const touches = touchesRef.current.slice();
 
-    // A press still down when the window closes (the normal case) is closed here
-    // so its duration reaches the metrics.
     const downAt = downAtRef.current;
     if (downAt !== null) {
       touches.push({ down: downAt - start, up: now - start, duration: now - downAt });
     }
 
-    // The timer that closes the window fires a few milliseconds late, so a press
-    // still down would otherwise reach past it. Clip to the window: contact
-    // outside it was never part of the measurement.
     const limit = sessionDurationMs ?? (start ? now - start : 0);
     const clipped = touches.map((t) => clipTouch(t, limit)).filter((t): t is TouchRecord => !!t);
 
@@ -172,7 +144,6 @@ export function useTouchTracker(active: boolean): TouchTracker {
   };
 }
 
-/** Trims a touch to `[0, limit]`, dropping it if nothing is left inside. */
 function clipTouch(touch: TouchRecord, limit: number): TouchRecord | null {
   const down = Math.max(0, touch.down);
   const up = Math.min(touch.up, limit);

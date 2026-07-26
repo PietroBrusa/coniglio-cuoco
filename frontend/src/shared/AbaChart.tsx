@@ -3,31 +3,21 @@ import type { AbaSeries, PhaseChange } from '../utils/abaData';
 import { colorForLevel } from './seriesColors';
 import c from './AbaChart.module.scss';
 
-/** Plot geometry (SVG user units; the chart scales to its container). */
 const W = 760;
 const H = 340;
 const M = { top: 16, right: 18, bottom: 46, left: 52 };
 const PLOT_W = W - M.left - M.right;
 const PLOT_H = H - M.top - M.bottom;
 
-/** Y axis is always the full percentage range: sessions stay comparable. */
 const Y_TICKS = [0, 25, 50, 75, 100];
 
 interface AbaChartProps {
   series: AbaSeries[];
   phaseChanges: PhaseChange[];
-  /** Horizontal criterion line (%), i.e. the mastery threshold. */
   criterion: number;
   foodLabel?: string;
 }
 
-/**
- * Standard ABA progress graph for one food's programme: engagement ratio (%) by
- * session, one line per level, with the criterion line and the phase-change
- * lines that mark where the condition changed. Hand-drawn SVG rather than a
- * chart library, because the phase/criterion furniture is the whole point of
- * this chart and libraries treat it as an afterthought.
- */
 const AbaChart = ({ series, phaseChanges, criterion, foodLabel }: AbaChartProps) => {
   const titleId = useId();
   const [hover, setHover] = useState<{
@@ -38,8 +28,6 @@ const AbaChart = ({ series, phaseChanges, criterion, foodLabel }: AbaChartProps)
     ordinal: number;
   } | null>(null);
 
-  // X axis counts this food's own sessions: one evenly spaced slot each, so
-  // sessions run with other foods neither appear here nor leave a gap.
   const ordinals = [
     ...new Set(series.flatMap((s) => s.points.map((p) => p.ordinal))),
   ].sort((a, b) => a - b);
@@ -53,7 +41,6 @@ const AbaChart = ({ series, phaseChanges, criterion, foodLabel }: AbaChartProps)
     M.left + (ordinals.length > 1 ? ordinals.indexOf(ordinal) * step : PLOT_W / 2);
   const y = (value: number) => M.top + PLOT_H - (Math.max(0, Math.min(100, value)) / 100) * PLOT_H;
 
-  // Session labels are thinned so they never collide on a long programme.
   const labelEvery = Math.ceil(ordinals.length / 12);
 
   return (
@@ -70,7 +57,6 @@ const AbaChart = ({ series, phaseChanges, criterion, foodLabel }: AbaChartProps)
           livello, con linea di criterio al {criterion}%
         </title>
 
-        {/* Grid + Y axis */}
         {Y_TICKS.map((t) => (
           <g key={t}>
             <line className={c.grid} x1={M.left} x2={W - M.right} y1={y(t)} y2={y(t)} />
@@ -80,7 +66,6 @@ const AbaChart = ({ series, phaseChanges, criterion, foodLabel }: AbaChartProps)
           </g>
         ))}
 
-        {/* Phase-change lines: drawn *between* two sessions, never through a point. */}
         {phaseChanges.map((change) => {
           const i = ordinals.indexOf(change.atOrdinal);
           if (i <= 0) return null;
@@ -95,7 +80,6 @@ const AbaChart = ({ series, phaseChanges, criterion, foodLabel }: AbaChartProps)
           );
         })}
 
-        {/* Criterion line */}
         <line
           className={c.criterionLine}
           x1={M.left}
@@ -103,13 +87,10 @@ const AbaChart = ({ series, phaseChanges, criterion, foodLabel }: AbaChartProps)
           y1={y(criterion)}
           y2={y(criterion)}
         />
-        {/* Labelled at the left edge: the right end is where the lines finish,
-            and a criterion label there lands on top of the last markers. */}
         <text className={c.criterionLabel} x={M.left + 4} y={y(criterion) - 6} textAnchor="start">
           criterio {criterion}%
         </text>
 
-        {/* X axis */}
         <line
           className={c.axis}
           x1={M.left}
@@ -134,7 +115,6 @@ const AbaChart = ({ series, phaseChanges, criterion, foodLabel }: AbaChartProps)
           Sessione
         </text>
 
-        {/* One polyline + markers per level. */}
         {series.map((s) => {
           const color = colorForLevel(s.levelId);
           const points = [...s.points].sort((a, b) => a.ordinal - b.ordinal);
@@ -154,7 +134,6 @@ const AbaChart = ({ series, phaseChanges, criterion, foodLabel }: AbaChartProps)
                     r={5}
                     fill={color}
                   />
-                  {/* Invisible, larger hit target: the marker itself is too small to hover. */}
                   <circle
                     className={c.hit}
                     cx={x(p.ordinal)}

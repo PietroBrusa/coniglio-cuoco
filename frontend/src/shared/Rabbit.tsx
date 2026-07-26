@@ -27,7 +27,6 @@ const MOOD_CLASS: Record<RabbitMood, string> = {
 
 interface RabbitProps {
   mood?: RabbitMood;
-  /** Overrides the default speech-bubble message for the given mood. */
   message?: string;
 }
 

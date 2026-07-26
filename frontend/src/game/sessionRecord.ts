@@ -21,10 +21,6 @@ export function createSession({
   };
 }
 
-/**
- * Returns a **new** session with the level's result appended. Live metrics are
- * reduced to the persisted form: `count` is renamed to `n`.
- */
 export function addLevelResult(
   session: Session,
   { level, metrics }: { level: Level; metrics: Metrics }

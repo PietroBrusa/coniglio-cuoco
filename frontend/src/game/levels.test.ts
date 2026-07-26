@@ -1,12 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { LEVELS, FOODS, getFood, getLevel } from './levels';
 
-/**
- * UNIT tests for the game catalogue lookups.
- *
- * These guard the "graceful fallback" contract: an unknown id must never crash
- * the game — it resolves to a sensible default instead.
- */
 describe('getFood', () => {
   it('returns the matching food by id', () => {
     const carota = getFood('carota');

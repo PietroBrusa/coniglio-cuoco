@@ -11,9 +11,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-// Validated payload for `POST /sessions`, mirroring the frontend `Session`
-// type: levels → metrics → touches.
-
 export class TouchRecordDto {
   @IsNumber()
   down!: number;
@@ -79,7 +76,6 @@ export class LevelResultDto {
 }
 
 export class CreateSessionDto {
-  // Set server-side from the authenticated token; ignored if provided by the client.
   @IsOptional()
   @IsString()
   childId?: string;

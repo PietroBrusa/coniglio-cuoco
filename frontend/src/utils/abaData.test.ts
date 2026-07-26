@@ -9,14 +9,6 @@ import {
 import type { SavedSession } from '../api/client';
 import type { TouchRecord } from '../types';
 
-/**
- * UNIT tests for the clinical data derivation.
- *
- * These are the numbers the therapist reads off the graph and the Excel export,
- * so the edge cases that matter are: sessions arriving out of order, levels that
- * are missing from some sessions, and the strictness of whole-interval scoring.
- */
-
 const touch = (down: number, up: number): TouchRecord => ({ down, up, duration: up - down });
 
 function session(
@@ -115,8 +107,6 @@ describe('buildAbaSeries', () => {
   });
 
   it('numbers the points 1..N within the run, ignoring the session numbers', () => {
-    // These are one food's sessions, pulled out of a programme where other foods
-    // took the numbers in between: the graph must still read 1, 2, 3.
     const series = buildAbaSeries([session(2), session(5), session(9)]);
 
     expect(series[0].points.map((p) => p.ordinal)).toEqual([1, 2, 3]);
@@ -150,7 +140,6 @@ describe('buildAbaSeries', () => {
   });
 
   it('tolerates a level missing from some sessions', () => {
-    // A session abandoned after level 1 must not shift level 2's later points.
     const series = buildAbaSeries([
       session(1, {
         levels: [
@@ -201,8 +190,6 @@ describe('findPhaseChanges', () => {
   });
 
   it('positions the line by ordinal, not by the session number', () => {
-    // One food's sessions numbered 4, 7, 11: the difficulty change at session 11
-    // is the third point of this programme, so the line belongs at x = 3.
     const changes = findPhaseChanges([
       session(4, { difficulty: 'facile' }),
       session(7, { difficulty: 'facile' }),
@@ -225,7 +212,6 @@ describe('findPhaseChanges', () => {
       session(2, { food: 'Carota' }),
     ]);
 
-    // Mela → Carota at 2, then Carota → Mela at 3.
     expect(changes.map((ch) => ch.atSessionNumber)).toEqual([2, 3]);
   });
 
@@ -238,7 +224,6 @@ describe('findPhaseChanges', () => {
 
 describe('wholeIntervalRecording', () => {
   it('gives the grid one column per second of the window', () => {
-    // A six-second level is six columns, whatever happened inside it.
     const record = wholeIntervalRecording([touch(0, 2500)], 6000);
 
     expect(record.marks).toHaveLength(6);
@@ -246,8 +231,6 @@ describe('wholeIntervalRecording', () => {
   });
 
   it('scores a second only when contact spans it entirely', () => {
-    // Contact runs 0–2500 ms: seconds 1 and 2 are full, second 3 (2000–3000) is
-    // only half covered and does not count.
     const record = wholeIntervalRecording([touch(0, 2500)], 6000);
 
     expect(record.marks).toEqual([true, true, false, false, false, false]);
@@ -256,14 +239,12 @@ describe('wholeIntervalRecording', () => {
   });
 
   it('scores a second bridged by back-to-back touches', () => {
-    // Two touches meeting exactly at 1000 ms cover second 1 without a gap.
     const record = wholeIntervalRecording([touch(0, 1000), touch(1000, 2000)], 6000);
 
     expect(record.marks.slice(0, 3)).toEqual([true, true, false]);
   });
 
   it('does not score a second with a release in the middle', () => {
-    // A 10 ms release inside second 1 breaks whole-interval scoring.
     const record = wholeIntervalRecording([touch(0, 500), touch(510, 2000)], 6000);
 
     expect(record.marks[0]).toBe(false);
@@ -286,7 +267,6 @@ describe('wholeIntervalRecording', () => {
   });
 
   it('never scores anything for a zero-length level', () => {
-    // Guards against a division by zero producing NaN or an all-true grid.
     const record = wholeIntervalRecording([touch(0, 0)], 0);
 
     expect(record.marks).toEqual([]);
@@ -294,7 +274,6 @@ describe('wholeIntervalRecording', () => {
   });
 
   it('rounds a window that is not a whole number of seconds', () => {
-    // The closing timer fires a few ms late, which must not add a column.
     const record = wholeIntervalRecording([touch(0, 6000)], 6040);
 
     expect(record.marks).toHaveLength(6);

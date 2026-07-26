@@ -2,11 +2,6 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreateSessionDto } from './create-session.dto';
 
-/**
- * UNIT tests for CreateSessionDto validation, including the nested
- * level → metrics → touches structure that the ValidationPipe validates deeply.
- */
-
 const validPayload = {
   sessionNumber: 1,
   food: 'Carota',

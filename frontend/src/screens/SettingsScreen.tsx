@@ -9,7 +9,6 @@ interface SettingsScreenProps {
   onBack: () => void;
 }
 
-/** Values are edited in friendly units (seconds / percent). */
 const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const [draft, setDraft] = useState<AppSettings>(() => loadSettings());
   const [saved, setSaved] = useState(false);

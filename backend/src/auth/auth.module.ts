@@ -12,9 +12,6 @@ import { AuthGuard } from './auth.guard';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        // Nessun valore di ripiego: un segreto di default farebbe partire
-        // l'applicazione con token falsificabili da chiunque legga il sorgente.
-        // Meglio un avvio che fallisce di un sistema che sembra sicuro e non lo è.
         const secret = config.get<string>('JWT_SECRET');
         if (!secret) {
           throw new Error(

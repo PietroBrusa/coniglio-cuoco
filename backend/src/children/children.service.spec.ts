@@ -3,13 +3,6 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ChildrenService } from './children.service';
 import { ChildEntity } from './entities/child.entity';
 
-/**
- * UNIT tests for ChildrenService.
- *
- * The TypeORM MongoRepository is a heavy external dependency (a live DB
- * connection), so here it is replaced by a fake object exposing only the two
- * methods the service actually uses. This keeps the test fast and deterministic.
- */
 describe('ChildrenService', () => {
   let service: ChildrenService;
   let repo: { findOneBy: jest.Mock; create: jest.Mock; save: jest.Mock };

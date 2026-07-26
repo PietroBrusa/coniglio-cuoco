@@ -2,13 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { sampleBeatMs, isHeldThrough, HOLD_EARLY_MS, HOLD_GRACE_MS } from './hardBeat';
 import { getLevel } from './levels';
 
-/**
- * UNIT tests for the hard-mode beat rules.
- *
- * These guard the two properties the mechanic rests on: level 1 keeps a fixed
- * cadence while levels 2 and 3 randomise both the wait and the required hold,
- * and a `hold` window scores only for a single press that spans it.
- */
 describe('sampleBeatMs', () => {
   it('returns the fixed value when min equals max (level 1 cadence)', () => {
     expect(sampleBeatMs([600, 600])).toBe(600);

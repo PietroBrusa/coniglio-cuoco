@@ -1,11 +1,6 @@
 import type { Difficulty, Level, Metrics } from '../types';
 import type { AppSettings } from './settings';
 
-/**
- * Star rating (1–3), fair across mechanics and difficulty settings: 1 star for
- * completing the level, +1 for a prompt approach, +1 for sustained engagement
- * measured against the threshold suited to the active mechanic.
- */
 export function computeStars(
   metrics: Metrics,
   level: Level,

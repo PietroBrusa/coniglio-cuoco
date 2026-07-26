@@ -4,15 +4,6 @@ import { fetchSessions, saveSession, deleteSession } from './client';
 import { sessionsApi } from './apiClient';
 import type { Session } from '../types';
 
-/**
- * COMPONENT test for the API wrapper layer (`client.ts`).
- *
- * These thin wrappers centralise error handling: on HTTP 401 they must clear
- * the stored auth (token expiry) and surface a friendly message; other errors
- * pass through untouched. We spy on the generated `sessionsApi` instance so no
- * real network call is made.
- */
-
 function axios401(): AxiosError {
   const e = new AxiosError('Unauthorized');
   e.response = { status: 401, data: {} } as AxiosError['response'];
@@ -51,7 +42,6 @@ describe('client wrappers', () => {
     vi.spyOn(sessionsApi, 'sessionsControllerFindAll').mockRejectedValue(axios401());
 
     await expect(fetchSessions()).rejects.toThrow(/Sessione scaduta/);
-    // Token expiry → auth wiped so the UI can redirect to login.
     expect(localStorage.getItem('cc_token')).toBeNull();
     expect(localStorage.getItem('cc_child')).toBeNull();
   });
@@ -62,6 +52,6 @@ describe('client wrappers', () => {
     );
 
     await expect(deleteSession('abc')).rejects.toThrow('Network down');
-    expect(localStorage.getItem('cc_token')).toBe('expired.token'); // untouched
+    expect(localStorage.getItem('cc_token')).toBe('expired.token');
   });
 });

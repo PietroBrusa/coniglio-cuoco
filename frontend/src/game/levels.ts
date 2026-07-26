@@ -1,20 +1,8 @@
 import type { Food, Level } from '../types';
 import { FOODS } from './foods';
 
-// Re-exported so existing imports (`import { FOODS } from '../game/levels'`)
-// keep working; the catalogue itself lives in `./foods`.
 export { FOODS };
 
-/**
- * The three levels of the Rabbit Cook story, in order:
- * 1) La Raccolta (fingertip touch), 2) L'Annusata (nose contact),
- * 3) L'Assaggio (lips / tongue contact).
- *
- * `target` is the length of the measurement window in seconds: the level opens
- * it on the child's first contact and closes it when it runs out. Every level
- * uses the same six seconds, so the three lines on the progress graph are
- * percentages of the same denominator and can be read against one another.
- */
 export const LEVELS: Level[] = [
   {
     id: 1,
@@ -22,7 +10,6 @@ export const LEVELS: Level[] = [
     behavior: 'Approccio e contatto con le dita',
     mode: 'hold',
     target: 6,
-    // Cadenza fissa: il bambino impara il ritmo prima che diventi imprevedibile.
     hardBeat: { onMs: [600, 600], offMs: [700, 700], score: 'tap' },
     intro: ({ foodLabel }) =>
       `Benvenuto alla Fattoria del Coniglio! \n\n` +
@@ -40,7 +27,6 @@ export const LEVELS: Level[] = [
     behavior: 'Sollevare e avvicinare al viso, annusare',
     mode: 'hold',
     target: 6,
-    // Attesa e tenuta randomizzate: il bambino non può anticipare il ritmo.
     hardBeat: { onMs: [600, 1400], offMs: [700, 1500], score: 'hold' },
     intro: ({ foodLabel }) =>
       `Il coniglietto ha raccolto ${foodLabel.toLowerCase()}! 👃\n\n` +
@@ -57,7 +43,6 @@ export const LEVELS: Level[] = [
     behavior: 'Contatto con labbra / lingua',
     mode: 'hold',
     target: 6,
-    // Come il livello 2, ma con finestre più lunghe e pause più imprevedibili.
     hardBeat: { onMs: [900, 2000], offMs: [800, 2000], score: 'hold' },
     intro: ({ foodLabel }) =>
       `${foodLabel} è pronta! \n\n` +

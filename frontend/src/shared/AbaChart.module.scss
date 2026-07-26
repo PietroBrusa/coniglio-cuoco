@@ -15,7 +15,6 @@
   font-style: italic;
 }
 
-// Furniture stays recessive: the data lines are the only saturated marks.
 .grid {
   stroke: #e6ebdd;
   stroke-width: 1;
@@ -44,9 +43,6 @@
   font-size: 11px;
 }
 
-// Literal colours, not CSS variables: an unresolved `var()` makes `stroke`
-// invalid, and an invalid stroke silently falls back to `none` — the criterion
-// line would vanish without any other symptom.
 .criterionLine {
   stroke: #6d4c41;
   stroke-width: 1.5;
@@ -65,7 +61,6 @@
   stroke-linecap: round;
 }
 .marker {
-  // 2px surface ring keeps overlapping markers legible where lines cross.
   stroke: #fff;
   stroke-width: 2;
 }

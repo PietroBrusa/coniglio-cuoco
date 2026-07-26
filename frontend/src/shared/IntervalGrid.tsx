@@ -6,11 +6,6 @@ interface IntervalGridProps {
   caption: string;
 }
 
-/**
- * Whole-interval recording grid, laid out like the paper data sheet: one column
- * per second of the level's window, scored `+` (contact for that whole second)
- * or `−`. The glyph carries the meaning, colour only reinforces it.
- */
 const IntervalGrid = ({ record, caption }: IntervalGridProps) => (
   <table className={c.grid}>
     <caption className={c.caption}>

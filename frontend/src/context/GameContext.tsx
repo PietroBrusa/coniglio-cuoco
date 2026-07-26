@@ -9,11 +9,6 @@ interface GameState {
   session: Session | null;
   levelIndex: number;
   lastResult: Metrics | null;
-  /**
-   * `true` once `lastResult` has been appended to the session by `NEXT`.
-   * Makes `NEXT` idempotent: without it, going back to /reward with the browser
-   * and pressing "avanti" again would append the same result a second time.
-   */
   resultRecorded: boolean;
   saved: boolean;
 }
@@ -51,14 +46,10 @@ function reducer(state: GameState, action: GameAction): GameState {
       return { ...state, lastResult: action.result, resultRecorded: false };
     case 'NEXT': {
       if (!state.session || !state.lastResult) return state;
-      // Already appended: the user came back to /reward and pressed "avanti" twice.
       if (state.resultRecorded) return state;
       const level = LEVELS[state.levelIndex];
       const session = addLevelResult(state.session, { level, metrics: state.lastResult });
       const isLast = state.levelIndex >= LEVELS.length - 1;
-      // `lastResult` is kept (not cleared): while navigating to the next level
-      // it prevents the /reward guard from seeing a null result and redirecting
-      // back to setup. It will be overwritten by the next level's completion.
       return {
         ...state,
         session,
@@ -83,11 +74,6 @@ interface GameContextType {
   food: Food;
   difficulty: Difficulty;
   isLastLevel: boolean;
-  /**
-   * `true` once the session has been persisted. Lives here, and not inside the
-   * summary screen, so that remounting that screen (browser back / forward) does
-   * not save the same session a second time.
-   */
   sessionSaved: boolean;
   startSession: (p: { sessionNumber: number; foodId: string; difficulty: Difficulty }) => void;
   completeLevel: (result: Metrics) => void;

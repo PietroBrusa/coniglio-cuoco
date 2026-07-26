@@ -10,11 +10,6 @@ import {
   setAuth,
 } from '../auth/tokenStore';
 
-/**
- * App-wide authentication state. Credential verification is handled entirely by
- * the backend; only the JWT token (stored in `localStorage`) and its derived UI
- * state are kept here.
- */
 interface AuthContextType {
   childId: string | null;
   isLoggedIn: boolean;
@@ -25,7 +20,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-/** User-readable message from a backend Axios error response. */
 function messageFrom(e: unknown): string {
   if (e instanceof AxiosError) {
     const msg = (e.response?.data as { message?: string | string[] })?.message;
@@ -37,9 +31,6 @@ function messageFrom(e: unknown): string {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [childId, setChildId] = useState<string | null>(() => {
-    // An expired token is worthless: drop it now rather than letting the app
-    // look logged in until the first request fails — which, in the game flow,
-    // would be the save at the very end of a session.
     if (isSessionExpired()) {
       clearAuth();
       return null;
@@ -47,10 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return getStoredChild();
   });
 
-  // The API layer clears the stored auth on HTTP 401 from a plain module, which
-  // cannot reach this state. Without this subscription `isLoggedIn` would stay
-  // `true` with no token behind it, and ProtectedRoute would keep the user in a
-  // half-logged-in app where every request fails.
   useEffect(() => onAuthCleared(() => setChildId(null)), []);
 
   const authenticate = useCallback(

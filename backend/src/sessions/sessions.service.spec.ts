@@ -6,12 +6,6 @@ import { SessionsService } from './sessions.service';
 import { SessionEntity } from './entities/session.entity';
 import { CreateSessionDto } from './dto/create-session.dto';
 
-/**
- * UNIT tests for SessionsService, with a faked MongoRepository.
- *
- * The focus is the ownership logic in `findOneForChild` / `removeForChild`:
- * a session may only ever be read or deleted by the child that owns it.
- */
 describe('SessionsService', () => {
   let service: SessionsService;
   let repo: {

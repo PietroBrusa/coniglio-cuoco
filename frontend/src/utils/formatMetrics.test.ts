@@ -2,16 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { formatMetrics } from './formatMetrics';
 import type { LevelResult } from '../types';
 
-/**
- * UNIT tests for the metric formatting helper.
- *
- * `formatMetrics` is a pure function (no DOM, no I/O), so it is tested with
- * plain input/output assertions. It is the single place where raw milliseconds
- * become the strings the therapist reads on screen, so the cases that matter are
- * the unit conversion, the `null` values, and the two shapes of metrics it has
- * to accept (live and persisted).
- */
-
 const level: LevelResult = {
   levelId: 1,
   levelName: 'La Raccolta',

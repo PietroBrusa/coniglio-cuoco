@@ -6,17 +6,8 @@ import { AuthService } from './auth.service';
 import { ChildrenService } from '../children/children.service';
 import { ChildEntity } from '../children/entities/child.entity';
 
-/**
- * UNIT tests for AuthService.
- *
- * The two collaborators (ChildrenService, JwtService) are replaced with test
- * doubles so the logic is exercised in complete isolation — no database, no
- * real token signing. bcrypt runs for real because it is pure, deterministic
- * and fast enough for a unit test.
- */
 describe('AuthService', () => {
   let service: AuthService;
-  // Mock: records calls AND lets each test define the return value.
   let children: {
     findByName: jest.Mock;
     create: jest.Mock;
@@ -49,13 +40,12 @@ describe('AuthService', () => {
 
   describe('register', () => {
     it('hashes the password, creates the child and returns a token', async () => {
-      children.findByName.mockResolvedValue(null); // stub: name is free
+      children.findByName.mockResolvedValue(null);
       children.create.mockResolvedValue({} as ChildEntity);
 
       const result = await service.register({ name: 'Frodo', password: 'shire123' });
 
       expect(result).toEqual({ access_token: 'signed.jwt.token', name: 'Frodo' });
-      // The password is never stored in clear text: create() receives a hash.
       expect(children.create).toHaveBeenCalledTimes(1);
       const [nameArg, hashArg] = children.create.mock.calls[0];
       expect(nameArg).toBe('Frodo');

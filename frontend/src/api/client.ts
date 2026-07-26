@@ -4,11 +4,6 @@ import { sessionsApi } from './apiClient';
 import type { CreateSessionDto, SessionDto } from './generated';
 import { clearAuth } from '../auth/tokenStore';
 
-/**
- * Thin wrappers over the generated sessions API client, centralising 401
- * handling so that token expiry is always caught in one place.
- */
-
 export type SavedSession = SessionDto;
 
 export async function saveSession(session: Session): Promise<SavedSession> {
@@ -20,7 +15,6 @@ export async function saveSession(session: Session): Promise<SavedSession> {
   }
 }
 
-/** Child scoping is enforced by the backend via the JWT — no `childId` param. */
 export async function fetchSessions(): Promise<SavedSession[]> {
   try {
     const { data } = await sessionsApi.sessionsControllerFindAll();

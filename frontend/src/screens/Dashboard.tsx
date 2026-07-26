@@ -21,10 +21,6 @@ interface DashboardProps {
   onBack: () => void;
 }
 
-/**
- * Saved-session dashboard, one page per food: each food is a programme of its
- * own, with its own progress graph and its own session list.
- */
 const Dashboard = ({ childId, onBack }: DashboardProps) => {
   const { data, isLoading, isError, error, refetch, isFetching } = useSessions(childId);
   const deleteMutation = useDeleteSession();
@@ -33,20 +29,14 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
 
   const sessions = useMemo(() => data ?? [], [data]);
 
-  // The criterion line is the same engagement threshold the star rating uses,
-  // so the graph and the in-game reward tell the therapist the same story.
   const criterion = loadSettings().holdEngagementPct;
 
-  // A trend line may never be read across a change of target food, so the page
-  // works on one food group at a time. Falling back to the first group keeps the
-  // view valid when the selected food's last session is deleted.
   const groups = useMemo(() => groupByFood(sessions), [sessions]);
   const group = groups.find((g) => g.key === selectedFood) ?? groups[0];
 
   const series = useMemo(() => (group ? buildAbaSeries(group.sessions) : []), [group]);
   const phaseChanges = useMemo(() => (group ? findPhaseChanges(group.sessions) : []), [group]);
 
-  // Newest first in the list, while the graph reads oldest to newest.
   const listed = useMemo(() => (group ? [...group.sessions].reverse() : []), [group]);
   const ordinalOf = (sessionNumber: number) =>
     (group?.sessions.findIndex((s) => s.sessionNumber === sessionNumber) ?? -1) + 1;
@@ -126,7 +116,6 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
               className={c.sessionRow}
               onClick={() => setExpandedId(open ? null : session._id)}
             >
-              {/* Numbered as on the graph, which counts this food's own sessions. */}
               <span className={c.sessionRowMain}>
                 <span className={s.foodChipEmoji}>{food.emoji}</span>
                 sessione {ordinalOf(session.sessionNumber)} · {session.food}

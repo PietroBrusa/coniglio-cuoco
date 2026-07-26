@@ -8,7 +8,6 @@ import * as bcrypt from 'bcryptjs';
 import { ChildrenService } from '../children/children.service';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 
-/** Authentication result: signed JWT token and child name. */
 export interface AuthResult {
   access_token: string;
   name: string;
@@ -36,7 +35,6 @@ export class AuthService {
     return this.sign(name);
   }
 
-  /** The child's name is both the `sub` and the `name` claim. */
   private async sign(name: string): Promise<AuthResult> {
     const access_token = await this.jwtService.signAsync({ sub: name, name });
     return { access_token, name };

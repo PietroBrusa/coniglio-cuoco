@@ -18,11 +18,9 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["node", "jest"]
   },
-  // Senza questi, tsc raccoglie anche `test/` ed entra in conflitto con `rootDir`
-  // (TS6059), rompendo `npm run typecheck`. `rootDir` non va toccato: lo eredita
-  // tsconfig.build.json, e cambiarlo sposterebbe l'output in dist/src/.
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

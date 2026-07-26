@@ -1,18 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings } from './settings';
 
-/**
- * UNIT tests for settings persistence.
- *
- * `loadSettings`/`saveSettings` depend on the browser `localStorage`, which does
- * not exist in the Node unit environment. Rather than spin up a whole browser
- * for such simple logic, we inject a FAKE: a minimal in-memory implementation
- * of the Storage API (a classic "fake" test double — a working, simplified
- * stand-in not suitable for production). This keeps the test fast while still
- * exercising the real read/merge/write logic.
- */
-
-/** In-memory Storage fake, good enough for get/set/remove. */
 function createLocalStorageFake(): Storage {
   let store: Record<string, string> = {};
   return {
@@ -48,8 +36,8 @@ describe('loadSettings', () => {
       JSON.stringify({ promptLatencyMs: 1000 }),
     );
     const settings = loadSettings();
-    expect(settings.promptLatencyMs).toBe(1000); // overridden
-    expect(settings.holdEngagementPct).toBe(DEFAULT_SETTINGS.holdEngagementPct); // default kept
+    expect(settings.promptLatencyMs).toBe(1000);
+    expect(settings.holdEngagementPct).toBe(DEFAULT_SETTINGS.holdEngagementPct);
   });
 
   it('falls back to defaults on corrupt JSON', () => {

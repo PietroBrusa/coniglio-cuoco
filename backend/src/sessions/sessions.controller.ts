@@ -5,7 +5,6 @@ import { CreateSessionDto } from './dto/create-session.dto';
 import { DeleteResultDto, SessionDto } from './dto/session.dto';
 import { AuthGuard, AuthedRequest } from '../auth/auth.guard';
 
-/** `childId` is always taken from the token, never from the request body. */
 @ApiTags('sessions')
 @ApiBearerAuth()
 @Controller('sessions')

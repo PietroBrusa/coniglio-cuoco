@@ -8,8 +8,8 @@ import c from './LevelPlay.module.scss';
 
 const STARTER_TAPS = 3;
 
-const FIRST_BEAT_MS = 800; // delay before the first hard-mode window opens
-const MISS_FLASH_MS = 250; // red-flash duration for a missed beat
+const FIRST_BEAT_MS = 800;
+const MISS_FLASH_MS = 250;
 
 const ACTIVE_MOOD: Record<number, RabbitMood> = { 1: 'happy', 2: 'sniff', 3: 'eat' };
 
@@ -20,11 +20,6 @@ interface LevelPlayProps {
   onComplete: (result: Metrics) => void;
 }
 
-/**
- * The level is a fixed measurement window — `level.target` seconds — that opens
- * on the child's first contact and closes on its own, whatever happened inside.
- * `onComplete` is called exactly once, when it closes.
- */
 const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
   const isHard = difficulty === 'difficile';
 
@@ -38,8 +33,6 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
     phase === 'play',
   );
 
-  // Held in a ref so a parent re-rendering with a fresh callback cannot restart
-  // the window timer below, which would silently stretch the level.
   const onCompleteRef = useRef(onComplete);
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -52,10 +45,8 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
   const [miss, setMiss] = useState(false);
   const beatActiveRef = useRef(false);
   const missTimer = useRef<number | undefined>(undefined);
-  /** The lit window currently open, or `null` while the food is dim. */
   const windowRef = useRef<{ openedAt: number } | null>(null);
   const pressStartRef = useRef<number | null>(null);
-  /** Whether the open window has already been touched (drives the miss flash). */
   const touchedRef = useRef(false);
 
   useEffect(() => {
@@ -85,9 +76,6 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
 
   const scoreBeat = useCallback(() => setGoodTaps((g) => g + 1), []);
 
-  // Beat scheduler: alternates a lit window and a dark pause, sampling both
-  // durations from the level's ranges. A `hold` window is scored on close (a
-  // `tap` window scores on the touch itself), so the check lives here.
   useEffect(() => {
     if (!isHard || phase !== 'play') return undefined;
     let timer: number;
@@ -98,8 +86,6 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
       setBeatActive(false);
 
       if (beat.score === 'hold') {
-        // Scored only if one continuous press spans the whole window: it must
-        // still be down now, and have started around the moment it opened.
         if (isHeldThrough(openedAt, pressStartRef.current)) scoreBeat();
         else if (touchedRef.current) triggerMiss();
       }
@@ -119,24 +105,19 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
     return () => window.clearTimeout(timer);
   }, [isHard, phase, beat, triggerMiss, scoreBeat]);
 
-  // Hard-mode scoring reads the touch edges straight from the input events, not
-  // from the tracker's `isDown` state, so a press is timed against the beat at
-  // the moment it happens rather than after a re-render.
   const onBeatPress = useCallback(() => {
-    if (pressStartRef.current !== null) return; // already down
+    if (pressStartRef.current !== null) return;
     pressStartRef.current = performance.now();
-    if (!beatActiveRef.current) triggerMiss(); // pressed while the food is dim
+    if (!beatActiveRef.current) triggerMiss();
     else if (beat.score === 'tap') scoreBeat();
     else touchedRef.current = true;
   }, [beat, triggerMiss, scoreBeat]);
 
   const onBeatRelease = useCallback(() => {
-    if (pressStartRef.current === null) return; // not down
+    if (pressStartRef.current === null) return;
     pressStartRef.current = null;
-    // A `hold` beat abandoned before its window closes fails right away, so the
-    // feedback lands while the child is still in the act.
     if (beat.score === 'hold' && beatActiveRef.current && touchedRef.current) {
-      touchedRef.current = false; // already reported — don't flash again on close
+      touchedRef.current = false;
       triggerMiss();
     }
   }, [beat, triggerMiss]);
@@ -159,12 +140,8 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
 
   useEffect(() => () => window.clearTimeout(missTimer.current), []);
 
-  // Hard mode measures the same thing as easy mode — the beats are the game, not
-  // the measurement.
   const contactSeconds = metrics.liveContactMs / 1000;
 
-  // Closes the level once the window has run out, exactly once. The window opens
-  // on first contact, so an unstarted level simply waits.
   useEffect(() => {
     if (phase !== 'play' || !hasStarted || completedRef.current) return undefined;
 
@@ -186,8 +163,6 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
   const mood: RabbitMood =
     phase === 'intro' ? 'happy' : isDown ? ACTIVE_MOOD[level.id] ?? 'happy' : 'idle';
 
-  // In hard mode the tracker's handlers are wrapped so the same pointer event
-  // feeds both the measurement engine and the beat scoring.
   const playHandlers = !isHard
     ? pointerHandlers
     : {
@@ -280,8 +255,6 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
       </button>
 
       <p className={c.hint}>
-        {/* In hard mode the lit food is already the instruction, and telling the
-            child to touch would invite a touch while it is dim — a miss. */}
         {phase !== 'play'
           ? ''
           : isHard

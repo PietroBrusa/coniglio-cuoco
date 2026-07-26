@@ -4,24 +4,10 @@ import request from 'supertest';
 import { MongoDBContainer, StartedMongoDBContainer } from '@testcontainers/mongodb';
 import { AppModule } from '../src/app.module';
 
-/**
- * END-TO-END tests for the whole backend.
- *
- * Unlike the unit tests, NOTHING is mocked here: the full NestJS application is
- * bootstrapped and driven through real HTTP requests (Supertest), and it talks
- * to a REAL MongoDB spun up on the fly by Testcontainers. When the suite ends
- * the container is torn down, so no external infrastructure is required — only
- * a running Docker engine.
- *
- * This is the highest-confidence layer of the pyramid: auth, the JWT guard,
- * validation, the ownership rules and MongoDB persistence are all exercised
- * together, exactly as a client would experience them.
- */
 describe('Backend E2E (auth + sessions)', () => {
   let app: INestApplication;
   let mongo: StartedMongoDBContainer;
 
-  // A complete, valid session payload (mirrors what the frontend sends).
   const sessionPayload = {
     sessionNumber: 1,
     food: 'Carota',
@@ -50,17 +36,11 @@ describe('Backend E2E (auth + sessions)', () => {
   };
 
   beforeAll(async () => {
-    // 1. Start a throwaway MongoDB in a container and point the app at it.
-    // Testcontainers runs Mongo as a single-node replica set, which advertises
-    // the container's internal hostname during topology discovery. From the host
-    // that hostname is unresolvable, so we force `directConnection=true` to skip
-    // discovery and talk straight to the mapped port.
     mongo = await new MongoDBContainer('mongo:7').start();
     process.env.MONGODB_URI = `${mongo.getConnectionString()}/?directConnection=true`;
     process.env.MONGODB_DB = 'coniglio_cuoco_test';
     process.env.JWT_SECRET = 'e2e-secret';
 
-    // 2. Bootstrap the real application (same config as src/main.ts).
     const moduleRef: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -77,7 +57,6 @@ describe('Backend E2E (auth + sessions)', () => {
     await mongo?.stop();
   });
 
-  // Tokens obtained during the flow, reused across tests (ordered execution).
   let frodoToken: string;
   let sessionId: string;
 
@@ -103,7 +82,7 @@ describe('Backend E2E (auth + sessions)', () => {
     it('POST /auth/register rejects an invalid body with 400 (ValidationPipe)', () =>
       request(app.getHttpServer())
         .post('/auth/register')
-        .send({ name: 'x', password: '1' }) // password too short
+        .send({ name: 'x', password: '1' })
         .expect(400));
 
     it('POST /auth/login fails with 401 on wrong password', () =>

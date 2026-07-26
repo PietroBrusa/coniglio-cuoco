@@ -8,17 +8,10 @@ import {
   isSessionExpired,
 } from './tokenStore';
 
-/** Builds a JWT-shaped string whose payload carries the given `exp` (seconds). */
 function jwtExpiring(atMs: number): string {
   const payload = btoa(JSON.stringify({ sub: 'B001', exp: Math.floor(atMs / 1000) }));
   return `header.${payload}.signature`;
 }
-
-/**
- * UNIT tests for the token store (the single source of truth for auth state).
- * `localStorage` does not exist in the Node unit environment, so we inject a
- * small in-memory fake (a "fake" test double).
- */
 
 function createLocalStorageFake(): Storage {
   let store: Record<string, string> = {};

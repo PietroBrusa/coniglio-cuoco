@@ -7,7 +7,6 @@ import c from './SessionSummary.module.scss';
 
 interface SessionSummaryProps {
   session: Session;
-  /** `true` if the session has already been persisted (skips the auto-save). */
   alreadySaved?: boolean;
   onSaved?: () => void;
   onNewSession: () => void;

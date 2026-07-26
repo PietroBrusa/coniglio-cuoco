@@ -2,15 +2,6 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { AuthCredentialsDto } from './auth-credentials.dto';
 
-/**
- * UNIT tests for the validation rules on AuthCredentialsDto.
- *
- * These are the same rules the global ValidationPipe enforces on every
- * `/auth/*` request; testing them directly (without HTTP) documents the
- * contract and pins the boundaries (name 1–50, password 4–100).
- */
-
-/** Validates a plain object as an AuthCredentialsDto and returns the failing property names. */
 async function failingProps(payload: unknown): Promise<string[]> {
   const dto = plainToInstance(AuthCredentialsDto, payload);
   const errors = await validate(dto);

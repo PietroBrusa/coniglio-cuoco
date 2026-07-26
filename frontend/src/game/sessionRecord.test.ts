@@ -2,14 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { createSession, addLevelResult } from './sessionRecord';
 import type { Level, Metrics, Session } from '../types';
 
-/**
- * UNIT tests for the immutable session-record builders.
- *
- * These pure functions build the domain object persisted to the backend. Beyond
- * the happy path, they guard two contracts: sensible fallbacks for missing
- * metadata, and strict immutability (the input session is never mutated).
- */
-
 const level = {
   id: 2,
   name: "L'Annusata",
@@ -73,7 +65,7 @@ describe('addLevelResult', () => {
     const result = next.levels[0];
     expect(result.levelId).toBe(2);
     expect(result.levelName).toBe("L'Annusata");
-    expect(result.metrics.n).toBe(4); // count → n
+    expect(result.metrics.n).toBe(4);
     expect(result.metrics).not.toHaveProperty('count');
     expect(result.metrics).not.toHaveProperty('liveContactMs');
   });
@@ -88,7 +80,7 @@ describe('addLevelResult', () => {
 
     const next = addLevelResult(base, { level, metrics });
 
-    expect(base.levels).toHaveLength(0); // original untouched
-    expect(next).not.toBe(base); // a new object is returned
+    expect(base.levels).toHaveLength(0);
+    expect(next).not.toBe(base);
   });
 });

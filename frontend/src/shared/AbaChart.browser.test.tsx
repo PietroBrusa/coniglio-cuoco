@@ -3,20 +3,6 @@ import { render, cleanup } from 'vitest-browser-react';
 import AbaChart from './AbaChart';
 import type { AbaSeries } from '../utils/abaData';
 
-/**
- * COMPONENT tests for the progress chart, in a real browser.
- *
- * The chart is read by a therapist to decide whether a programme is working, so
- * these check that identity is never carried by colour alone (a legend entry per
- * level) and that the clinical furniture — criterion and phase-change lines — is
- * actually drawn.
- */
-
-/**
- * A plotted point. The X axis counts this food's own sessions (`ordinal`); the
- * number the session was saved with only shows up in the description, so the
- * two are given separately here.
- */
 const point = (ordinal: number, value: number, sessionNumber = ordinal) => ({
   sessionNumber,
   ordinal,
@@ -65,7 +51,6 @@ describe('AbaChart', () => {
   });
 
   it('skips a phase-change line at the very first session', async () => {
-    // There is no gap to the left of session 1, so the line has nowhere to go.
     const screen = await render(
       <AbaChart
         series={series}
@@ -91,8 +76,6 @@ describe('AbaChart', () => {
   });
 
   it("counts this food's own sessions, whatever the session numbers were", async () => {
-    // Sessions 4, 7 and 11 of the child, but 1, 2 and 3 of this food: the axis
-    // reads 1–3 and never mentions the numbers they were saved with.
     const spaced: AbaSeries[] = [
       {
         levelId: 1,

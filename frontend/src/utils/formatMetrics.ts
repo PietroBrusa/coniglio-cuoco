@@ -3,13 +3,9 @@ export interface MetricRow {
   value: string | number;
 }
 
-/**
- * Labelled rows with human-readable units. Accepts both live `Metrics`
- * (`count`) and persisted metrics (`n`); whichever is present is used.
- */
 export function formatMetrics(m: {
-  count?: number; // live Metrics
-  n?: number;     // persisted LevelResultMetrics
+  count?: number;
+  n?: number;
   latencyMs: number | null;
   totalContactMs: number;
   meanTouchMs: number | null;
@@ -28,5 +24,4 @@ export function formatMetrics(m: {
   ];
 }
 
-/** Milliseconds to seconds, 2 decimal places. */
 const s2 = (v: number): string => (v / 1000).toFixed(2);

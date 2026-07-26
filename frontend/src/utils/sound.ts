@@ -1,9 +1,3 @@
-/**
- * Sound effects synthesised with the Web Audio API, so the game ships no audio
- * assets. Best-effort: any failure (autoplay policy, unsupported browser) is
- * swallowed silently.
- */
-
 type WebkitWindow = Window & { webkitAudioContext?: typeof AudioContext };
 
 export function playVictory(): void {
@@ -12,7 +6,6 @@ export function playVictory(): void {
     if (!Ctx) return;
     const ctx = new Ctx();
 
-    // C-major arpeggio ending on the octave: C5, E5, G5, C6.
     const notes = [523.25, 659.25, 783.99, 1046.5];
     const step = 0.13;
 
@@ -34,6 +27,6 @@ export function playVictory(): void {
 
     window.setTimeout(() => void ctx.close(), notes.length * step * 1000 + 500);
   } catch {
-    /* audio unavailable — ignore */
+    return;
   }
 }

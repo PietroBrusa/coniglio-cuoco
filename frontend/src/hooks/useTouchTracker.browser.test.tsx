@@ -3,22 +3,10 @@ import { renderHook } from 'vitest-browser-react';
 import { useTouchTracker } from './useTouchTracker';
 import type React from 'react';
 
-/**
- * COMPONENT-level test of the measurement HOOK (Vitest browser mode).
- *
- * `useTouchTracker` is the clinical core: it turns raw pointer and Makey-Makey
- * (keyboard `Space`) events into `TouchRecord`s and live metrics. The pure maths
- * lives in `computeMetrics` (unit-tested separately); here we test the stateful
- * event handling in a real browser, where `performance.now()`, pointer and
- * keyboard events behave like production.
- */
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** A minimal stand-in for a React pointer event (only preventDefault is used). */
 const pointerEvent = { preventDefault: () => {} } as unknown as React.PointerEvent;
 
-/** Fires a Makey-Makey key (Space by default) on window. */
 const key = (type: 'keydown' | 'keyup', code = 'Space', extra: KeyboardEventInit = {}) =>
   window.dispatchEvent(new KeyboardEvent(type, { code, ...extra }));
 
@@ -29,12 +17,12 @@ describe('useTouchTracker', () => {
     result.current.pointerHandlers.onPointerDown(pointerEvent);
     await vi.waitFor(() => expect(result.current.isDown).toBe(true));
 
-    await sleep(30); // let the contact accrue a measurable duration
+    await sleep(30);
     result.current.pointerHandlers.onPointerUp();
 
     await vi.waitFor(() => expect(result.current.metrics.count).toBe(1));
     const m = result.current.metrics;
-    expect(result.current.isDown).toBe(false); // touch released
+    expect(result.current.isDown).toBe(false);
     expect(m.latencyMs).not.toBeNull();
     expect(m.totalContactMs).toBeGreaterThan(0);
   });
@@ -74,8 +62,6 @@ describe('useTouchTracker', () => {
   });
 
   it('measures the latency from the level becoming playable to that contact', async () => {
-    // The window is anchored to the first touch, so the wait before it would be
-    // invisible if it were not captured separately.
     const { result } = await renderHook(() => useTouchTracker(true));
 
     await sleep(80);
@@ -86,8 +72,6 @@ describe('useTouchTracker', () => {
   });
 
   it('clips a touch still held when the window closes', async () => {
-    // The closing timer fires a little late; contact past the window was never
-    // part of the measurement and must not inflate the ratio.
     const { result } = await renderHook(() => useTouchTracker(true));
 
     result.current.pointerHandlers.onPointerDown(pointerEvent);
@@ -108,9 +92,8 @@ describe('useTouchTracker', () => {
     await vi.waitFor(() => expect(result.current.isDown).toBe(true));
     await sleep(40);
 
-    // No pointer-up: the level completes while the food is still held.
     const frozen = result.current.getResult();
-    expect(frozen.count).toBe(1); // the ongoing touch was counted
+    expect(frozen.count).toBe(1);
     expect(frozen.totalContactMs).toBeGreaterThan(0);
   });
 
@@ -138,7 +121,6 @@ describe('useTouchTracker', () => {
     }
 
     await vi.waitFor(() => expect(result.current.metrics.count).toBe(3));
-    // With 3 taps there are 2 inter-response gaps, so mean IRT is computable.
     expect(result.current.metrics.meanIrtMs).not.toBeNull();
   });
 });

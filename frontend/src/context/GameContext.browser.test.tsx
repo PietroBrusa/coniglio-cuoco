@@ -5,17 +5,6 @@ import { AuthProvider } from './AuthContext';
 import { GameProvider, useGame } from './GameContext';
 import type { Metrics } from '../types';
 
-/**
- * COMPONENT test for the game-flow context.
- *
- * The focus is the *idempotence* of the session record: a level result must be
- * appended to the session exactly once, and the session must be persisted
- * exactly once, no matter how many times the user navigates back and forth with
- * the browser buttons. A duplicate here silently corrupts the clinical dataset,
- * so it is worth pinning down.
- */
-
-/** Minimal metrics fixture; `count` is the only field the assertions read. */
 const metrics = (count: number): Metrics => ({
   count,
   latencyMs: 500,
@@ -36,7 +25,6 @@ function wrapper({ children }: { children: ReactNode }) {
   );
 }
 
-/** Renders the hook with a session already started on level 1. */
 async function startedGame() {
   const { result } = await renderHook(() => useGame(), { wrapper });
   result.current.startSession({ sessionNumber: 1, foodId: 'carota', difficulty: 'facile' });
@@ -66,8 +54,6 @@ describe('GameContext', () => {
     result.current.next();
     await vi.waitFor(() => expect(result.current.session!.levels).toHaveLength(1));
 
-    // The user hits the browser's back button and presses "avanti" a second time:
-    // `lastResult` is still set, so without a guard the reducer would append again.
     result.current.next();
 
     await new Promise((r) => setTimeout(r, 50));
@@ -78,10 +64,10 @@ describe('GameContext', () => {
   it('keeps only the latest attempt when a level is repeated', async () => {
     const result = await startedGame();
 
-    result.current.completeLevel(metrics(3)); // first attempt
+    result.current.completeLevel(metrics(3));
     await vi.waitFor(() => expect(result.current.lastResult!.count).toBe(3));
 
-    result.current.completeLevel(metrics(9)); // repeated level, better attempt
+    result.current.completeLevel(metrics(9));
     await vi.waitFor(() => expect(result.current.lastResult!.count).toBe(9));
 
     result.current.next();
@@ -96,7 +82,6 @@ describe('GameContext', () => {
     result.current.markSessionSaved();
     await vi.waitFor(() => expect(result.current.sessionSaved).toBe(true));
 
-    // A brand-new session must be saveable again.
     result.current.startSession({ sessionNumber: 2, foodId: 'mela', difficulty: 'facile' });
     await vi.waitFor(() => expect(result.current.sessionSaved).toBe(false));
   });

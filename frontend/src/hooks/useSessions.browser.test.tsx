@@ -5,13 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSessions, useDeleteSession } from './useSessions';
 import { sessionsApi } from '../api/apiClient';
 
-/**
- * COMPONENT test for the React Query hooks that read/delete sessions.
- *
- * The network is stubbed at the generated `sessionsApi` seam. A fresh
- * QueryClient per test (retries disabled) keeps each case isolated and fast.
- */
-
 function wrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return ({ children }: { children: ReactNode }) => (

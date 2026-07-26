@@ -1,11 +1,6 @@
 import type { Food } from '../types';
 
-/**
- * The ids carota, mela, broccolo, pomodoro and banana are preserved from the
- * original list so previously saved sessions still resolve.
- */
 export const FOODS: Food[] = [
-  // Frutta
   { id: 'mela', label: 'Mela', emoji: '🍎' },
   { id: 'mela-verde', label: 'Mela verde', emoji: '🍏' },
   { id: 'pera', label: 'Pera', emoji: '🍐' },
@@ -27,7 +22,6 @@ export const FOODS: Food[] = [
   { id: 'oliva', label: 'Oliva', emoji: '🫒' },
   { id: 'avocado', label: 'Avocado', emoji: '🥑' },
 
-  // Verdura
   { id: 'carota', label: 'Carota', emoji: '🥕' },
   { id: 'broccolo', label: 'Broccolo', emoji: '🥦' },
   { id: 'mais', label: 'Mais', emoji: '🌽' },
@@ -47,7 +41,6 @@ export const FOODS: Food[] = [
   { id: 'piselli', label: 'Piselli', emoji: '🫛' },
   { id: 'zenzero', label: 'Zenzero', emoji: '🫚' },
 
-  // Pane, cereali e derivati
   { id: 'pane', label: 'Pane', emoji: '🍞' },
   { id: 'baguette', label: 'Baguette', emoji: '🥖' },
   { id: 'pretzel', label: 'Pretzel', emoji: '🥨' },
@@ -63,7 +56,6 @@ export const FOODS: Food[] = [
   { id: 'spaghetti', label: 'Spaghetti', emoji: '🍝' },
   { id: 'popcorn', label: 'Popcorn', emoji: '🍿' },
 
-  // Piatti pronti
   { id: 'uovo', label: 'Uovo', emoji: '🍳' },
   { id: 'carne', label: 'Carne', emoji: '🍖' },
   { id: 'pollo', label: 'Pollo', emoji: '🍗' },
@@ -86,12 +78,10 @@ export const FOODS: Food[] = [
   { id: 'raviolo', label: 'Raviolo', emoji: '🥟' },
   { id: 'spiedino', label: 'Spiedino', emoji: '🍢' },
 
-  // Pesce e frutti di mare
   { id: 'granchio', label: 'Granchio', emoji: '🦀' },
   { id: 'gambero', label: 'Gambero', emoji: '🦐' },
   { id: 'calamaro', label: 'Calamaro', emoji: '🦑' },
 
-  // Dolci
   { id: 'gelato-cono', label: 'Cono gelato', emoji: '🍦' },
   { id: 'gelato', label: 'Gelato', emoji: '🍨' },
   { id: 'ghiacciolo', label: 'Ghiacciolo', emoji: '🍧' },
@@ -107,7 +97,6 @@ export const FOODS: Food[] = [
   { id: 'budino', label: 'Budino', emoji: '🍮' },
   { id: 'miele', label: 'Miele', emoji: '🍯' },
 
-  // Bevande
   { id: 'latte', label: 'Latte', emoji: '🥛' },
   { id: 'caffe', label: 'Caffè', emoji: '☕' },
   { id: 'te', label: 'Tè', emoji: '🍵' },

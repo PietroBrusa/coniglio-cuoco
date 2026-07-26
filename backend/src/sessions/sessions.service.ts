@@ -5,7 +5,6 @@ import { ObjectId } from 'mongodb';
 import { SessionEntity } from './entities/session.entity';
 import { CreateSessionDto } from './dto/create-session.dto';
 
-/** MongoDB persistence for sessions, with ownership checks on every operation. */
 @Injectable()
 export class SessionsService {
   constructor(

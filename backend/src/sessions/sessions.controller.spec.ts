@@ -5,13 +5,6 @@ import { CreateSessionDto } from './dto/create-session.dto';
 import { AuthedRequest, AuthGuard } from '../auth/auth.guard';
 import { SessionEntity } from './entities/session.entity';
 
-/**
- * UNIT tests for SessionsController.
- *
- * SessionsService is fully mocked: we only verify the controller's own
- * responsibility, which is wiring the authenticated child's id (from the JWT,
- * exposed as `req.user`) into every service call — never trusting the body.
- */
 describe('SessionsController', () => {
   let controller: SessionsController;
   let service: {
@@ -35,8 +28,6 @@ describe('SessionsController', () => {
       controllers: [SessionsController],
       providers: [{ provide: SessionsService, useValue: service }],
     })
-      // The guard is exercised separately in auth.guard.spec.ts; here we stub it
-      // so the controller can be instantiated without wiring up JwtService.
       .overrideGuard(AuthGuard)
       .useValue({ canActivate: () => true })
       .compile();
@@ -51,7 +42,6 @@ describe('SessionsController', () => {
   it('create injects childId from the token, ignoring any body-supplied one', () => {
     const saved = {} as SessionEntity;
     service.create.mockReturnValue(saved);
-    // Malicious client tries to write a session for someone else:
     const dto = { childId: 'Sauron', sessionNumber: 1 } as unknown as CreateSessionDto;
 
     const result = controller.create(dto, req);

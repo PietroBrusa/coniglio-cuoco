@@ -3,38 +3,21 @@ import { render } from 'vitest-browser-react';
 import RewardScreen from './RewardScreen';
 import type { Level, Metrics } from '../types';
 
-/**
- * COMPONENT test — runs the REAL RewardScreen in a real Chromium browser
- * (Vitest browser mode), together with its real <Rabbit> child.
- *
- * We test the component the way a user experiences it:
- *   - the contract: given metrics + difficulty, the right number of stars and
- *     the level title are rendered;
- *   - interactions: clicking the "repeat" / "next" buttons fires the callbacks;
- *   - an edge case: the advance button changes label on the last level.
- *
- * The victory sound is a side effect on mount; we disable it deterministically
- * by writing `soundEnabled: false` into localStorage (which `loadSettings`
- * reads), so no real audio plays during the test.
- */
-
 const level = { id: 2, mode: 'hold', name: "L'Annusata" } as Level;
 
-/** Metrics tuned (with default settings) to earn the maximum 3 stars. */
 const threeStarMetrics = {
   count: 5,
-  latencyMs: 0, // prompt approach → +1 star
+  latencyMs: 0,
   totalContactMs: 3000,
   liveContactMs: 3000,
   meanTouchMs: 600,
   meanIrtMs: 200,
   sessionDurationMs: 5000,
-  engagementRatio: 100, // sustained contact → +1 star
+  engagementRatio: 100,
   touches: [],
 } as Metrics;
 
 beforeEach(() => {
-  // Disable the victory jingle for a deterministic, silent test run.
   localStorage.setItem('coniglio-cuoco:settings', JSON.stringify({ soundEnabled: false }));
 });
 
@@ -52,8 +35,7 @@ describe('RewardScreen', () => {
     );
 
     await expect.element(screen.getByText('Livello 2 completato!')).toBeInTheDocument();
-    await expect.element(screen.getByText('Bravissimo!')).toBeInTheDocument(); // rabbit bubble
-    // The star row exposes the count through an accessible label.
+    await expect.element(screen.getByText('Bravissimo!')).toBeInTheDocument();
     await expect.element(screen.getByLabelText('3 stelle su 3')).toBeInTheDocument();
   });
 

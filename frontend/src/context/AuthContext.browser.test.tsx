@@ -6,16 +6,6 @@ import { authApi, sessionsApi } from '../api/apiClient';
 import { fetchSessions } from '../api/client';
 import { setAuth } from '../auth/tokenStore';
 
-/**
- * COMPONENT test for the authentication context (Vitest browser mode).
- *
- * The network boundary is the generated `authApi` client. Because module
- * mocking (vi.mock) is unavailable in browser mode, we spy on the client
- * instance methods instead — a clean seam that also exercises the real token
- * persistence and the error-message mapping.
- */
-
-/** Builds an AxiosError carrying a backend-style error body. */
 function axiosError(message: string | string[]): AxiosError {
   const e = new AxiosError('Request failed');
   e.response = { data: { message } } as AxiosError['response'];
@@ -86,10 +76,6 @@ describe('AuthContext', () => {
     );
   });
 
-  // Regression: the API layer clears the stored token on 401 from a plain module.
-  // If that did not reach this context, `isLoggedIn` would stay true with no token
-  // behind it and ProtectedRoute would keep the user inside an app where every
-  // request fails — in the game flow, exactly while the session is being saved.
   it('logs the user out when a request comes back 401 (expired token)', async () => {
     const expired = new AxiosError('Unauthorized');
     expired.response = { status: 401, data: {} } as AxiosError['response'];
@@ -114,7 +100,7 @@ describe('AuthContext', () => {
     const { result } = await renderHook(() => useAuth(), { wrapper: AuthProvider });
 
     expect(result.current.isLoggedIn).toBe(false);
-    expect(localStorage.getItem('cc_token')).toBeNull(); // e il token scaduto è stato buttato
+    expect(localStorage.getItem('cc_token')).toBeNull();
   });
 
   it('logs out and clears the stored token', async () => {

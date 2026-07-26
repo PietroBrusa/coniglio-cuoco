@@ -3,19 +3,10 @@ import { render, cleanup } from 'vitest-browser-react';
 import IntervalGrid from './IntervalGrid';
 import { wholeIntervalRecording } from '../utils/abaData';
 
-/**
- * COMPONENT tests for the whole-interval recording grid, in a real browser.
- * The grid stands in for a paper data sheet, so what is checked is that each
- * interval shows a readable `+`/`−` glyph — not a colour — and that the percent
- * of occurrence matches the scored record.
- */
-
 afterEach(() => cleanup());
 
-/** Contact from `down` to `up`, in ms from the start of the window. */
 const contact = (down: number, up: number) => ({ down, up, duration: up - down });
 
-/** The six-second window every level now measures over. */
 const WINDOW_MS = 6000;
 
 describe('IntervalGrid', () => {
@@ -24,11 +15,10 @@ describe('IntervalGrid', () => {
     const screen = await render(<IntervalGrid record={record} caption="Livello 1" />);
 
     const cells = screen.container.querySelectorAll('tbody td');
-    expect(cells).toHaveLength(7); // 6 seconds + the percent column
+    expect(cells).toHaveLength(7);
   });
 
   it('marks covered seconds with "+" and the rest with "−"', async () => {
-    // Contact for the first half of the window: three `+` then three `−`.
     const record = wholeIntervalRecording([contact(0, 3000)], WINDOW_MS);
     const screen = await render(<IntervalGrid record={record} caption="Livello 1" />);
 

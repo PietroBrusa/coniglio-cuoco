@@ -2,17 +2,10 @@ import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard, AuthedRequest } from './auth.guard';
 
-/**
- * UNIT tests for AuthGuard.
- *
- * A minimal fake ExecutionContext is built to feed a request into the guard.
- * JwtService is a stub whose `verifyAsync` we drive per test.
- */
 describe('AuthGuard', () => {
   let guard: AuthGuard;
   let jwt: { verifyAsync: jest.Mock };
 
-  /** Builds a fake ExecutionContext wrapping a request with the given headers. */
   const contextWith = (authorization?: string): { ctx: ExecutionContext; req: AuthedRequest } => {
     const req = { headers: authorization ? { authorization } : {} } as AuthedRequest;
     const ctx = {

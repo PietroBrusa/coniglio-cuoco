@@ -14,7 +14,6 @@ export class ChildrenService {
     return this.childrenRepository.findOneBy({ name });
   }
 
-  /** `passwordHash` must already be hashed by the caller. */
   create(name: string, passwordHash: string): Promise<ChildEntity> {
     const child = this.childrenRepository.create({ name, passwordHash });
     return this.childrenRepository.save(child);

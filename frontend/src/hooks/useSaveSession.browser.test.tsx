@@ -6,14 +6,6 @@ import { useSaveSession } from './useSaveSession';
 import { sessionsApi } from '../api/apiClient';
 import type { Session } from '../types';
 
-/**
- * COMPONENT test for the auto-save hook.
- *
- * `useSaveSession` persists the session once on mount and exposes a status plus
- * a manual `save` retry. We stub the `sessionsApi` create endpoint to drive the
- * success and error paths.
- */
-
 const session = { childId: 'Frodo', sessionNumber: 1, levels: [] } as unknown as Session;
 
 function wrapper() {
@@ -61,9 +53,6 @@ describe('useSaveSession', () => {
     expect(onSaved).toHaveBeenCalledTimes(1);
   });
 
-  // Regression: the summary screen remounts when the user navigates back and
-  // forward with the browser buttons. Without `alreadySaved` the auto-save would
-  // fire again and write a duplicate session document.
   it('does not save again when the session is already persisted', async () => {
     const spy = vi
       .spyOn(sessionsApi, 'sessionsControllerCreate')

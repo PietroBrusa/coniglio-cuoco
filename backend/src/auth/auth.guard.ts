@@ -7,7 +7,6 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
-/** Identity payload embedded in the JWT. */
 export interface AuthUser {
   sub: string;
   name: string;
@@ -17,10 +16,6 @@ export interface AuthedRequest extends Request {
   user?: AuthUser;
 }
 
-/**
- * Verifies the Bearer token and populates `request.user` with the decoded
- * payload; throws 401 if the token is missing or invalid.
- */
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {}
