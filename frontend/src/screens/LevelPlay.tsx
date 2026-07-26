@@ -170,16 +170,16 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
           pointerHandlers.onPointerDown(e);
           onBeatPress();
         },
-        onPointerUp: () => {
-          pointerHandlers.onPointerUp();
+        onPointerUp: (e: React.PointerEvent) => {
+          pointerHandlers.onPointerUp(e);
           onBeatRelease();
         },
-        onPointerLeave: () => {
-          pointerHandlers.onPointerLeave();
+        onPointerLeave: (e: React.PointerEvent) => {
+          pointerHandlers.onPointerLeave(e);
           onBeatRelease();
         },
-        onPointerCancel: () => {
-          pointerHandlers.onPointerCancel();
+        onPointerCancel: (e: React.PointerEvent) => {
+          pointerHandlers.onPointerCancel(e);
           onBeatRelease();
         },
       };

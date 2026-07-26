@@ -5,7 +5,8 @@ import type React from 'react';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-const pointerEvent = { preventDefault: () => {} } as unknown as React.PointerEvent;
+const pointerEvent = (pointerId = 1) =>
+  ({ pointerId, preventDefault: () => {} }) as unknown as React.PointerEvent;
 
 const key = (type: 'keydown' | 'keyup', code = 'Space', extra: KeyboardEventInit = {}) =>
   window.dispatchEvent(new KeyboardEvent(type, { code, ...extra }));
@@ -14,11 +15,11 @@ describe('useTouchTracker', () => {
   it('records a completed tap from a pointer down → up', async () => {
     const { result } = await renderHook(() => useTouchTracker(true));
 
-    result.current.pointerHandlers.onPointerDown(pointerEvent);
+    result.current.pointerHandlers.onPointerDown(pointerEvent());
     await vi.waitFor(() => expect(result.current.isDown).toBe(true));
 
     await sleep(30);
-    result.current.pointerHandlers.onPointerUp();
+    result.current.pointerHandlers.onPointerUp(pointerEvent());
 
     await vi.waitFor(() => expect(result.current.metrics.count).toBe(1));
     const m = result.current.metrics;
@@ -56,7 +57,7 @@ describe('useTouchTracker', () => {
     expect(result.current.hasStarted).toBe(false);
     expect(result.current.metrics.sessionDurationMs).toBe(0);
 
-    result.current.pointerHandlers.onPointerDown(pointerEvent);
+    result.current.pointerHandlers.onPointerDown(pointerEvent());
 
     await vi.waitFor(() => expect(result.current.hasStarted).toBe(true));
   });
@@ -65,7 +66,7 @@ describe('useTouchTracker', () => {
     const { result } = await renderHook(() => useTouchTracker(true));
 
     await sleep(80);
-    result.current.pointerHandlers.onPointerDown(pointerEvent);
+    result.current.pointerHandlers.onPointerDown(pointerEvent());
 
     await vi.waitFor(() => expect(result.current.metrics.latencyMs).not.toBeNull());
     expect(result.current.metrics.latencyMs).toBeGreaterThan(50);
@@ -74,7 +75,7 @@ describe('useTouchTracker', () => {
   it('clips a touch still held when the window closes', async () => {
     const { result } = await renderHook(() => useTouchTracker(true));
 
-    result.current.pointerHandlers.onPointerDown(pointerEvent);
+    result.current.pointerHandlers.onPointerDown(pointerEvent());
     await vi.waitFor(() => expect(result.current.isDown).toBe(true));
     await sleep(120);
 
@@ -88,7 +89,7 @@ describe('useTouchTracker', () => {
   it('getResult closes an ongoing (still-pressed) touch, e.g. end of a hold level', async () => {
     const { result } = await renderHook(() => useTouchTracker(true));
 
-    result.current.pointerHandlers.onPointerDown(pointerEvent);
+    result.current.pointerHandlers.onPointerDown(pointerEvent());
     await vi.waitFor(() => expect(result.current.isDown).toBe(true));
     await sleep(40);
 
@@ -100,23 +101,42 @@ describe('useTouchTracker', () => {
   it('is completely idle when active is false', async () => {
     const { result } = await renderHook(() => useTouchTracker(false));
 
-    result.current.pointerHandlers.onPointerDown(pointerEvent);
+    result.current.pointerHandlers.onPointerDown(pointerEvent());
     key('keydown');
     key('keyup');
-    result.current.pointerHandlers.onPointerUp();
+    result.current.pointerHandlers.onPointerUp(pointerEvent());
 
     await sleep(50);
     expect(result.current.metrics.count).toBe(0);
     expect(result.current.isDown).toBe(false);
   });
 
+  it('ignores a pointerleave from a pointer that did not start the contact', async () => {
+    const { result } = await renderHook(() => useTouchTracker(true));
+
+    result.current.pointerHandlers.onPointerDown(pointerEvent(1));
+    await vi.waitFor(() => expect(result.current.isDown).toBe(true));
+
+    // The target shrinks on press (scale .92); a stale cursor crossing its edge
+    // must not truncate the contact opened by another pointer.
+    result.current.pointerHandlers.onPointerLeave(pointerEvent(2));
+    await sleep(30);
+
+    expect(result.current.isDown).toBe(true);
+    expect(result.current.metrics.count).toBe(0);
+
+    result.current.pointerHandlers.onPointerUp(pointerEvent(1));
+    await vi.waitFor(() => expect(result.current.metrics.count).toBe(1));
+    expect(result.current.metrics.totalContactMs).toBeGreaterThan(20);
+  });
+
   it('counts multiple sequential taps', async () => {
     const { result } = await renderHook(() => useTouchTracker(true));
 
     for (let i = 0; i < 3; i += 1) {
-      result.current.pointerHandlers.onPointerDown(pointerEvent);
+      result.current.pointerHandlers.onPointerDown(pointerEvent());
       await sleep(15);
-      result.current.pointerHandlers.onPointerUp();
+      result.current.pointerHandlers.onPointerUp(pointerEvent());
       await sleep(15);
     }
 

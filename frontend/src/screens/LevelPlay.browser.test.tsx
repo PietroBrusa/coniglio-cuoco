@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import LevelPlay from './LevelPlay';
-import type { Food, Level, Metrics } from '../types';
+import type { Food, Level } from '../types';
 
 const food: Food = { id: 'carota', label: 'Carota', emoji: '🥕' };
 
@@ -41,21 +41,6 @@ async function tap(screen: Awaited<ReturnType<typeof render>>, n: number) {
 const press = (el: Element) => el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
 const release = (el: Element) => el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-// TEMPORANEO: i due test sulla durata del contatto falliscono solo sulla CI e
-// non sono riproducibili in locale. Stampa lo stato reale della misura per
-// capire da dove arriva il contatto troncato. Da rimuovere a diagnosi fatta.
-function diag(label: string, result: Metrics, elapsedMs: number) {
-  console.log(
-    `[diag ${label}] elapsed=${Math.round(elapsedMs)} ` +
-      `duration=${Math.round(result.sessionDurationMs)} ` +
-      `contact=${Math.round(result.totalContactMs)} ` +
-      `count=${result.count} ` +
-      `latency=${result.latencyMs === null ? 'null' : Math.round(result.latencyMs)} ` +
-      `engagement=${result.engagementRatio.toFixed(1)} ` +
-      `touches=${JSON.stringify(result.touches.map((t) => [Math.round(t.down), Math.round(t.up)]))}`,
-  );
-}
 
 describe('LevelPlay', () => {
   it('starts in the intro phase and shows the starter-tap prompt', async () => {
@@ -101,14 +86,12 @@ describe('LevelPlay', () => {
     await expect.element(screen.getByText(/il tempo parte da lì/)).toBeInTheDocument();
     const el = await target(screen).element();
 
-    const pressedAt = performance.now();
     press(el);
     await wait(1300);
 
     await vi.waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
 
     const result = onComplete.mock.calls[0][0];
-    diag('hold-1s', result, performance.now() - pressedAt);
     expect(result.sessionDurationMs).toBe(1000);
     expect(result.totalContactMs).toBeLessThanOrEqual(1000);
     expect(result.engagementRatio).toBeGreaterThan(90);
@@ -126,7 +109,6 @@ describe('LevelPlay', () => {
     await expect.element(screen.getByText(/il tempo parte da lì/)).toBeInTheDocument();
     const el = await target(screen).element();
 
-    const pressedAt = performance.now();
     press(el);
     await wait(750);
     release(el);
@@ -138,7 +120,6 @@ describe('LevelPlay', () => {
     await vi.waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1), { timeout: 4000 });
 
     const result = onComplete.mock.calls[0][0];
-    diag('hold-3s', result, performance.now() - pressedAt);
     expect(result.sessionDurationMs).toBe(3000);
     expect(result.count).toBe(2);
     expect(result.engagementRatio).toBeGreaterThan(35);

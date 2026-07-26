@@ -4,15 +4,18 @@ import { computeMetrics, emptySnap, type Snapshot } from '../utils/computeMetric
 
 export const MAKEY_KEYS = ['Space'];
 
+/** Sentinel pointer id for the Makey Makey / keyboard path, which has no pointer. */
+const KEYBOARD_POINTER = -1;
+
 export interface TouchTracker {
   metrics: Metrics;
   isDown: boolean;
   hasStarted: boolean;
   pointerHandlers: {
     onPointerDown: (e: React.PointerEvent) => void;
-    onPointerUp: () => void;
-    onPointerLeave: () => void;
-    onPointerCancel: () => void;
+    onPointerUp: (e: React.PointerEvent) => void;
+    onPointerLeave: (e: React.PointerEvent) => void;
+    onPointerCancel: (e: React.PointerEvent) => void;
   };
   reset: () => void;
   getResult: (sessionDurationMs?: number) => Metrics;
@@ -23,6 +26,7 @@ export function useTouchTracker(active: boolean): TouchTracker {
   const startRef = useRef(0);
   const latencyRef = useRef<number | null>(null);
   const downAtRef = useRef<number | null>(null);
+  const activePointerRef = useRef<number | null>(null);
   const touchesRef = useRef<TouchRecord[]>([]);
 
   const [snap, setSnap] = useState<Snapshot>(emptySnap);
@@ -42,35 +46,48 @@ export function useTouchTracker(active: boolean): TouchTracker {
     startRef.current = 0;
     latencyRef.current = null;
     downAtRef.current = null;
+    activePointerRef.current = null;
     touchesRef.current = [];
     publish();
   }, [publish]);
 
-  const pressDown = useCallback(() => {
-    if (!active) return;
-    if (downAtRef.current !== null) return;
-    const now = performance.now();
-    if (startRef.current === 0) {
-      startRef.current = now;
-      latencyRef.current = now - playStartRef.current;
-    }
-    downAtRef.current = now;
-    publish();
-  }, [active, publish]);
+  const pressDown = useCallback(
+    (pointerId: number) => {
+      if (!active) return;
+      if (downAtRef.current !== null) return;
+      const now = performance.now();
+      if (startRef.current === 0) {
+        startRef.current = now;
+        latencyRef.current = now - playStartRef.current;
+      }
+      downAtRef.current = now;
+      activePointerRef.current = pointerId;
+      publish();
+    },
+    [active, publish],
+  );
 
-  const pressUp = useCallback(() => {
-    if (!active) return;
-    const downAt = downAtRef.current;
-    if (downAt === null) return;
-    const up = performance.now();
-    touchesRef.current.push({
-      down: downAt - startRef.current,
-      up: up - startRef.current,
-      duration: up - downAt,
-    });
-    downAtRef.current = null;
-    publish();
-  }, [active, publish]);
+  const pressUp = useCallback(
+    (pointerId: number) => {
+      if (!active) return;
+      const downAt = downAtRef.current;
+      if (downAt === null) return;
+      // Only the pointer that opened the contact may close it. The target shrinks
+      // on press, so an unrelated pointer resting near its edge would otherwise
+      // cross the boundary and truncate the measurement.
+      if (activePointerRef.current !== null && activePointerRef.current !== pointerId) return;
+      const up = performance.now();
+      touchesRef.current.push({
+        down: downAt - startRef.current,
+        up: up - startRef.current,
+        duration: up - downAt,
+      });
+      downAtRef.current = null;
+      activePointerRef.current = null;
+      publish();
+    },
+    [active, publish],
+  );
 
   useEffect(() => {
     if (active) reset();
@@ -82,12 +99,12 @@ export function useTouchTracker(active: boolean): TouchTracker {
       if (!MAKEY_KEYS.includes(e.code)) return;
       e.preventDefault();
       if (e.repeat) return;
-      pressDown();
+      pressDown(KEYBOARD_POINTER);
     };
     const onKeyUp = (e: KeyboardEvent) => {
       if (!MAKEY_KEYS.includes(e.code)) return;
       e.preventDefault();
-      pressUp();
+      pressUp(KEYBOARD_POINTER);
     };
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -108,11 +125,12 @@ export function useTouchTracker(active: boolean): TouchTracker {
   const pointerHandlers = {
     onPointerDown: (e: React.PointerEvent) => {
       e.preventDefault();
-      pressDown();
+      capturePointer(e);
+      pressDown(e.pointerId);
     },
-    onPointerUp: () => pressUp(),
-    onPointerLeave: () => pressUp(),
-    onPointerCancel: () => pressUp(),
+    onPointerUp: (e: React.PointerEvent) => pressUp(e.pointerId),
+    onPointerLeave: (e: React.PointerEvent) => pressUp(e.pointerId),
+    onPointerCancel: (e: React.PointerEvent) => pressUp(e.pointerId),
   };
 
   const getResult = useCallback((sessionDurationMs?: number) => {
@@ -142,6 +160,21 @@ export function useTouchTracker(active: boolean): TouchTracker {
     reset,
     getResult,
   };
+}
+
+/**
+ * Binds the pointer to the target for the whole contact. The food button shrinks
+ * (`transform: scale(.92)` over 0.1s) as soon as a press registers, so without
+ * capture a pointer resting near the edge leaves the shrinking element and
+ * `onPointerLeave` cuts the contact short after ~100ms, under-reporting it.
+ * Touch pointers get this implicitly from the browser; mouse pointers do not.
+ */
+function capturePointer(e: React.PointerEvent): void {
+  try {
+    e.currentTarget.setPointerCapture(e.pointerId);
+  } catch {
+    // Synthetic events have no live pointer to capture; tracking works without it.
+  }
 }
 
 function clipTouch(touch: TouchRecord, limit: number): TouchRecord | null {
