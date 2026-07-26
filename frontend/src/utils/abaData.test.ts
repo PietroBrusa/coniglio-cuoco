@@ -23,7 +23,7 @@ function session(
   const { food = 'Mela', foodId, difficulty = 'facile', levels = [{ levelId: 1, engagementRatio: 50 }] } = opts;
   return {
     _id: `id-${sessionNumber}`,
-    childId: 'Frodo',
+    childId: 'John Doe',
     sessionNumber,
     food,
     foodId,

@@ -7,6 +7,9 @@ const validPayload = {
   food: 'Carota',
   foodId: 'carota',
   difficulty: 'facile',
+  therapist: 'Mary Major',
+  problemBehaviors: ['rifiuto-cibo', 'pianto'],
+  notes: 'Bambino stanco a fine sessione.',
   date: new Date().toISOString(),
   levels: [
     {
@@ -79,5 +82,23 @@ describe('CreateSessionDto', () => {
     void foodId;
     void difficulty;
     expect(await validateDto(rest)).toHaveLength(0);
+  });
+
+  it('accepts a session recorded without therapist or problem behaviours', async () => {
+    const { therapist, problemBehaviors, notes, ...rest } = validPayload;
+    void therapist;
+    void problemBehaviors;
+    void notes;
+    expect(await validateDto(rest)).toHaveLength(0);
+  });
+
+  it('rejects problem behaviours that are not a list of strings', async () => {
+    const errors = await validateDto({ ...validPayload, problemBehaviors: [1, 2] });
+    expect(errors.map((e) => e.property)).toContain('problemBehaviors');
+  });
+
+  it('rejects a non-string therapist', async () => {
+    const errors = await validateDto({ ...validPayload, therapist: 42 });
+    expect(errors.map((e) => e.property)).toContain('therapist');
   });
 });

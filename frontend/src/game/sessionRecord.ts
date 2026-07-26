@@ -5,20 +5,33 @@ export function createSession({
   sessionNumber,
   foodLabel,
   difficulty,
+  therapist,
 }: {
   childId: string;
   sessionNumber: number;
   foodLabel: string;
   difficulty: Difficulty;
+  therapist?: string;
 }): Session {
   return {
     childId: childId || 'anonimo',
     sessionNumber: sessionNumber || 1,
     food: foodLabel,
     difficulty,
+    therapist: therapist?.trim() || undefined,
+    problemBehaviors: [],
+    notes: '',
     date: new Date().toISOString(),
     levels: [],
   };
+}
+
+/** Attaches the observations the therapist records once the session is over. */
+export function annotateSession(
+  session: Session,
+  { problemBehaviors, notes }: { problemBehaviors: string[]; notes: string }
+): Session {
+  return { ...session, problemBehaviors, notes: notes.trim() };
 }
 
 export function addLevelResult(

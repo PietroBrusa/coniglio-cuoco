@@ -29,28 +29,28 @@ describe('AuthContext', () => {
 
   it('logs in: stores the token and exposes the child', async () => {
     vi.spyOn(authApi, 'authControllerLogin').mockResolvedValue({
-      data: { access_token: 'jwt.tok', name: 'Frodo' },
+      data: { access_token: 'jwt.tok', name: 'John Doe' },
     } as never);
 
     const { result } = await renderHook(() => useAuth(), { wrapper: AuthProvider });
-    await result.current.login('Frodo', 'shire123');
+    await result.current.login('John Doe', 'password123');
 
     await vi.waitFor(() => expect(result.current.isLoggedIn).toBe(true));
-    expect(result.current.childId).toBe('Frodo');
+    expect(result.current.childId).toBe('John Doe');
     expect(localStorage.getItem('cc_token')).toBe('jwt.tok');
-    expect(localStorage.getItem('cc_child')).toBe('Frodo');
+    expect(localStorage.getItem('cc_child')).toBe('John Doe');
   });
 
   it('registers through the register endpoint', async () => {
     const spy = vi.spyOn(authApi, 'authControllerRegister').mockResolvedValue({
-      data: { access_token: 'jwt.tok', name: 'Sam' },
+      data: { access_token: 'jwt.tok', name: 'Jane Doe' },
     } as never);
 
     const { result } = await renderHook(() => useAuth(), { wrapper: AuthProvider });
-    await result.current.register('Sam', 'potatoes');
+    await result.current.register('Jane Doe', 'pass7890');
 
-    expect(spy).toHaveBeenCalledWith({ name: 'Sam', password: 'potatoes' });
-    await vi.waitFor(() => expect(result.current.childId).toBe('Sam'));
+    expect(spy).toHaveBeenCalledWith({ name: 'Jane Doe', password: 'pass7890' });
+    await vi.waitFor(() => expect(result.current.childId).toBe('Jane Doe'));
   });
 
   it('maps a backend string error message to the thrown Error', async () => {
@@ -59,7 +59,7 @@ describe('AuthContext', () => {
     );
     const { result } = await renderHook(() => useAuth(), { wrapper: AuthProvider });
 
-    await expect(result.current.login('Frodo', 'wrong')).rejects.toThrow(
+    await expect(result.current.login('John Doe', 'wrong')).rejects.toThrow(
       'Invalid name or password',
     );
     expect(result.current.isLoggedIn).toBe(false);
@@ -81,7 +81,7 @@ describe('AuthContext', () => {
     expired.response = { status: 401, data: {} } as AxiosError['response'];
     vi.spyOn(sessionsApi, 'sessionsControllerFindAll').mockRejectedValue(expired);
 
-    setAuth('jwt.tok', 'Frodo');
+    setAuth('jwt.tok', 'John Doe');
     const { result } = await renderHook(() => useAuth(), { wrapper: AuthProvider });
     expect(result.current.isLoggedIn).toBe(true);
 
@@ -94,8 +94,8 @@ describe('AuthContext', () => {
 
   it('starts logged out when the stored token has already expired', async () => {
     const exp = Math.floor((Date.now() - 60_000) / 1000);
-    const payload = btoa(JSON.stringify({ sub: 'Frodo', exp }));
-    setAuth(`header.${payload}.signature`, 'Frodo');
+    const payload = btoa(JSON.stringify({ sub: 'John Doe', exp }));
+    setAuth(`header.${payload}.signature`, 'John Doe');
 
     const { result } = await renderHook(() => useAuth(), { wrapper: AuthProvider });
 
@@ -105,11 +105,11 @@ describe('AuthContext', () => {
 
   it('logs out and clears the stored token', async () => {
     vi.spyOn(authApi, 'authControllerLogin').mockResolvedValue({
-      data: { access_token: 'jwt.tok', name: 'Frodo' },
+      data: { access_token: 'jwt.tok', name: 'John Doe' },
     } as never);
     const { result } = await renderHook(() => useAuth(), { wrapper: AuthProvider });
 
-    await result.current.login('Frodo', 'shire123');
+    await result.current.login('John Doe', 'password123');
     await vi.waitFor(() => expect(result.current.isLoggedIn).toBe(true));
 
     result.current.logout();

@@ -3,6 +3,7 @@ import { FOODS, getFood } from '../game/levels';
 import Rabbit from '../shared/Rabbit';
 import { nextSessionNumber } from '../utils/foodProgress';
 import type { ProgressByFood } from '../utils/foodProgress';
+import { loadTherapist, saveTherapist } from '../game/therapistStore';
 import type { Difficulty } from '../types';
 import s from '../styles/shared.module.scss';
 import c from './SetupScreen.module.scss';
@@ -11,6 +12,7 @@ export interface StartParams {
   sessionNumber: number;
   foodId: string;
   difficulty: Difficulty;
+  therapist: string;
 }
 
 const DIFFICULTIES: { id: Difficulty; emoji: string; label: string; hint: string }[] = [
@@ -41,6 +43,7 @@ const SetupScreen = ({
   const [foodId, setFoodId] = useState(FOODS[0].id);
   const [foodQuery, setFoodQuery] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty>('facile');
+  const [therapist, setTherapist] = useState(loadTherapist);
 
   const query = foodQuery.trim().toLowerCase();
   const visibleFoods = query
@@ -59,7 +62,9 @@ const SetupScreen = ({
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    onStart({ sessionNumber: Number(sessionNumber), foodId, difficulty });
+    const name = therapist.trim();
+    saveTherapist(name);
+    onStart({ sessionNumber: Number(sessionNumber), foodId, difficulty, therapist: name });
   };
 
   return (
@@ -77,6 +82,17 @@ const SetupScreen = ({
       </div>
 
       <form className={`${s.card} ${s.setupForm}`} onSubmit={submit}>
+        <label>
+          Terapista
+          <input
+            type="text"
+            required
+            placeholder="Chi conduce la sessione"
+            value={therapist}
+            onChange={(e) => setTherapist(e.target.value)}
+          />
+        </label>
+
         <label>
           Numero sessione
           <input

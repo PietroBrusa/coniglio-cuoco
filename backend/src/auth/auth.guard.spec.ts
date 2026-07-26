@@ -20,7 +20,7 @@ describe('AuthGuard', () => {
   });
 
   it('allows the request and populates req.user for a valid token', async () => {
-    const payload = { sub: 'Frodo', name: 'Frodo' };
+    const payload = { sub: 'John Doe', name: 'John Doe' };
     jwt.verifyAsync.mockResolvedValue(payload);
     const { ctx, req } = contextWith('Bearer good.token');
 

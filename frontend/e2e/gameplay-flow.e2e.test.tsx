@@ -48,7 +48,8 @@ async function holdUntilComplete(screen: Screen, rewardText: string, timeout: nu
 beforeEach(() => {
   localStorage.clear();
   localStorage.setItem('cc_token', 'fake.jwt.token');
-  localStorage.setItem('cc_child', 'Frodo');
+  localStorage.setItem('cc_child', 'John Doe');
+  localStorage.setItem('coniglio-cuoco:therapist', 'Mary Major');
   localStorage.setItem('coniglio-cuoco:settings', JSON.stringify({ soundEnabled: false }));
 });
 
@@ -84,6 +85,6 @@ describe('Gameplay journey (E2E)', () => {
     await expect.element(screen.getByText(/Livello 1 · La Raccolta/)).toBeInTheDocument();
     await expect.element(screen.getByText(/Livello 2 · L'Annusata/)).toBeInTheDocument();
     await expect.element(screen.getByText(/Livello 3 · L'Assaggio/)).toBeInTheDocument();
-    await expect.element(screen.getByText('Frodo')).toBeInTheDocument();
+    await expect.element(screen.getByText('John Doe')).toBeInTheDocument();
   }, 45_000);
 });

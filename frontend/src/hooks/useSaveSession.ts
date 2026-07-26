@@ -10,13 +10,17 @@ export interface UseSaveSessionOptions {
   onSaved?: () => void;
 }
 
+/**
+ * Saves a session on demand. The write is deliberately not automatic: the
+ * therapist first tags the problem behaviours observed, so the record reaches
+ * the database complete in a single POST.
+ */
 export function useSaveSession(session: Session, options: UseSaveSessionOptions = {}) {
   const { alreadySaved = false, onSaved } = options;
   const queryClient = useQueryClient();
   const { mutateAsync } = useMutation({ mutationFn: saveSession });
   const [status, setStatus] = useState<SaveStatus>(alreadySaved ? 'success' : 'idle');
   const [error, setError] = useState('');
-  const done = useRef(false);
 
   const savedCallback = useRef(onSaved);
   useEffect(() => {
@@ -36,12 +40,6 @@ export function useSaveSession(session: Session, options: UseSaveSessionOptions 
       setStatus('error');
     }
   }, [mutateAsync, session, queryClient]);
-
-  useEffect(() => {
-    if (alreadySaved || done.current) return;
-    done.current = true;
-    void save();
-  }, [alreadySaved, save]);
 
   return { save, status, error };
 }

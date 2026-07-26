@@ -13,7 +13,7 @@ function axios401(): AxiosError {
 beforeEach(() => {
   localStorage.clear();
   localStorage.setItem('cc_token', 'expired.token');
-  localStorage.setItem('cc_child', 'Frodo');
+  localStorage.setItem('cc_child', 'John Doe');
 });
 
 afterEach(() => {
@@ -22,7 +22,7 @@ afterEach(() => {
 
 describe('client wrappers', () => {
   it('fetchSessions returns the backend data on success', async () => {
-    const sessions = [{ _id: '1', childId: 'Frodo' }];
+    const sessions = [{ _id: '1', childId: 'John Doe' }];
     vi.spyOn(sessionsApi, 'sessionsControllerFindAll').mockResolvedValue({
       data: sessions,
     } as never);

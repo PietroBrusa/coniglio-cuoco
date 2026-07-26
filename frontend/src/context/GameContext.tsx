@@ -14,7 +14,14 @@ interface GameState {
 }
 
 type GameAction =
-  | { type: 'START'; childId: string; sessionNumber: number; foodId: string; difficulty: Difficulty }
+  | {
+      type: 'START';
+      childId: string;
+      sessionNumber: number;
+      foodId: string;
+      difficulty: Difficulty;
+      therapist: string;
+    }
   | { type: 'COMPLETE'; result: Metrics }
   | { type: 'NEXT' }
   | { type: 'SAVED' }
@@ -37,6 +44,7 @@ function reducer(state: GameState, action: GameAction): GameState {
           sessionNumber: action.sessionNumber,
           foodLabel: getFood(action.foodId).label,
           difficulty: action.difficulty,
+          therapist: action.therapist,
         }),
         foodId: action.foodId,
       };
@@ -75,7 +83,12 @@ interface GameContextType {
   difficulty: Difficulty;
   isLastLevel: boolean;
   sessionSaved: boolean;
-  startSession: (p: { sessionNumber: number; foodId: string; difficulty: Difficulty }) => void;
+  startSession: (p: {
+    sessionNumber: number;
+    foodId: string;
+    difficulty: Difficulty;
+    therapist: string;
+  }) => void;
   completeLevel: (result: Metrics) => void;
   next: () => void;
   markSessionSaved: () => void;
@@ -98,8 +111,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
       difficulty: state.session?.difficulty ?? 'facile',
       isLastLevel: state.levelIndex >= LEVELS.length - 1,
       sessionSaved: state.saved,
-      startSession: ({ sessionNumber, foodId, difficulty }) =>
-        dispatch({ type: 'START', childId: childId ?? 'anonimo', sessionNumber, foodId, difficulty }),
+      startSession: ({ sessionNumber, foodId, difficulty, therapist }) =>
+        dispatch({
+          type: 'START',
+          childId: childId ?? 'anonimo',
+          sessionNumber,
+          foodId,
+          difficulty,
+          therapist,
+        }),
       completeLevel: (result) => dispatch({ type: 'COMPLETE', result }),
       next: () => dispatch({ type: 'NEXT' }),
       markSessionSaved: () => dispatch({ type: 'SAVED' }),

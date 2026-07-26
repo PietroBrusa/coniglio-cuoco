@@ -57,26 +57,26 @@ describe('Backend E2E (auth + sessions)', () => {
     await mongo?.stop();
   });
 
-  let frodoToken: string;
+  let userToken: string;
   let sessionId: string;
 
   describe('authentication', () => {
     it('POST /auth/register creates an account and returns a token', async () => {
       const res = await request(app.getHttpServer())
         .post('/auth/register')
-        .send({ name: 'Frodo', password: 'shire123' })
+        .send({ name: 'John Doe', password: 'password123' })
         .expect(201);
 
       expect(res.body).toEqual(
-        expect.objectContaining({ name: 'Frodo', access_token: expect.any(String) }),
+        expect.objectContaining({ name: 'John Doe', access_token: expect.any(String) }),
       );
-      frodoToken = res.body.access_token;
+      userToken = res.body.access_token;
     });
 
     it('POST /auth/register rejects a duplicate name with 409', () =>
       request(app.getHttpServer())
         .post('/auth/register')
-        .send({ name: 'Frodo', password: 'other' })
+        .send({ name: 'John Doe', password: 'other' })
         .expect(409));
 
     it('POST /auth/register rejects an invalid body with 400 (ValidationPipe)', () =>
@@ -88,13 +88,13 @@ describe('Backend E2E (auth + sessions)', () => {
     it('POST /auth/login fails with 401 on wrong password', () =>
       request(app.getHttpServer())
         .post('/auth/login')
-        .send({ name: 'Frodo', password: 'wrong' })
+        .send({ name: 'John Doe', password: 'wrong' })
         .expect(401));
 
     it('POST /auth/login succeeds with correct credentials', () =>
       request(app.getHttpServer())
         .post('/auth/login')
-        .send({ name: 'Frodo', password: 'shire123' })
+        .send({ name: 'John Doe', password: 'password123' })
         .expect(200));
   });
 
@@ -105,12 +105,12 @@ describe('Backend E2E (auth + sessions)', () => {
     it('POST /sessions persists a session scoped to the authenticated child', async () => {
       const res = await request(app.getHttpServer())
         .post('/sessions')
-        .set('Authorization', `Bearer ${frodoToken}`)
+        .set('Authorization', `Bearer ${userToken}`)
         .send(sessionPayload)
         .expect(201);
 
       expect(res.body).toEqual(
-        expect.objectContaining({ childId: 'Frodo', food: 'Carota', sessionNumber: 1 }),
+        expect.objectContaining({ childId: 'John Doe', food: 'Carota', sessionNumber: 1 }),
       );
       sessionId = res.body._id;
       expect(sessionId).toBeDefined();
@@ -119,7 +119,7 @@ describe('Backend E2E (auth + sessions)', () => {
     it('GET /sessions returns the child\'s sessions', async () => {
       const res = await request(app.getHttpServer())
         .get('/sessions')
-        .set('Authorization', `Bearer ${frodoToken}`)
+        .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
       expect(Array.isArray(res.body)).toBe(true);
@@ -130,13 +130,13 @@ describe('Backend E2E (auth + sessions)', () => {
     it('GET /sessions/:id returns the owned session', () =>
       request(app.getHttpServer())
         .get(`/sessions/${sessionId}`)
-        .set('Authorization', `Bearer ${frodoToken}`)
+        .set('Authorization', `Bearer ${userToken}`)
         .expect(200));
 
     it('another child cannot read the session (ownership → 404)', async () => {
       const { body } = await request(app.getHttpServer())
         .post('/auth/register')
-        .send({ name: 'Sam', password: 'potatoes' })
+        .send({ name: 'Jane Doe', password: 'pass7890' })
         .expect(201);
 
       await request(app.getHttpServer())
@@ -148,12 +148,12 @@ describe('Backend E2E (auth + sessions)', () => {
     it('DELETE /sessions/:id removes the session, after which it is gone', async () => {
       await request(app.getHttpServer())
         .delete(`/sessions/${sessionId}`)
-        .set('Authorization', `Bearer ${frodoToken}`)
+        .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
       await request(app.getHttpServer())
         .get(`/sessions/${sessionId}`)
-        .set('Authorization', `Bearer ${frodoToken}`)
+        .set('Authorization', `Bearer ${userToken}`)
         .expect(404);
     });
   });

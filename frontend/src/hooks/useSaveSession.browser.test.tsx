@@ -6,7 +6,7 @@ import { useSaveSession } from './useSaveSession';
 import { sessionsApi } from '../api/apiClient';
 import type { Session } from '../types';
 
-const session = { childId: 'Frodo', sessionNumber: 1, levels: [] } as unknown as Session;
+const session = { childId: 'John Doe', sessionNumber: 1, levels: [] } as unknown as Session;
 
 function wrapper() {
   const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
@@ -19,12 +19,25 @@ beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());
 
 describe('useSaveSession', () => {
-  it('saves automatically on mount and reports success', async () => {
+  it('waits for an explicit save instead of writing on mount', async () => {
     const spy = vi
       .spyOn(sessionsApi, 'sessionsControllerCreate')
       .mockResolvedValue({ data: { _id: 'saved' } } as never);
 
     const { result } = await renderHook(() => useSaveSession(session), { wrapper: wrapper() });
+
+    await new Promise((r) => setTimeout(r, 50));
+    expect(spy).not.toHaveBeenCalled();
+    expect(result.current.status).toBe('idle');
+  });
+
+  it('reports success once save() is called', async () => {
+    const spy = vi
+      .spyOn(sessionsApi, 'sessionsControllerCreate')
+      .mockResolvedValue({ data: { _id: 'saved' } } as never);
+
+    const { result } = await renderHook(() => useSaveSession(session), { wrapper: wrapper() });
+    await result.current.save();
 
     await vi.waitFor(() => expect(result.current.status).toBe('success'));
     expect(spy).toHaveBeenCalledTimes(1);
@@ -34,6 +47,7 @@ describe('useSaveSession', () => {
     vi.spyOn(sessionsApi, 'sessionsControllerCreate').mockRejectedValue(new Error('save failed'));
 
     const { result } = await renderHook(() => useSaveSession(session), { wrapper: wrapper() });
+    await result.current.save();
 
     await vi.waitFor(() => expect(result.current.status).toBe('error'));
     expect(result.current.error).toBe('save failed');
@@ -48,6 +62,7 @@ describe('useSaveSession', () => {
     const { result } = await renderHook(() => useSaveSession(session, { onSaved }), {
       wrapper: wrapper(),
     });
+    await result.current.save();
 
     await vi.waitFor(() => expect(result.current.status).toBe('success'));
     expect(onSaved).toHaveBeenCalledTimes(1);
@@ -75,6 +90,7 @@ describe('useSaveSession', () => {
       .mockResolvedValueOnce({ data: { _id: 'saved' } } as never);
 
     const { result } = await renderHook(() => useSaveSession(session), { wrapper: wrapper() });
+    await result.current.save();
     await vi.waitFor(() => expect(result.current.status).toBe('error'));
 
     await result.current.save();

@@ -7,6 +7,9 @@ export class SessionDto {
   food!: string;
   foodId?: string;
   difficulty?: 'facile' | 'difficile';
+  therapist?: string;
+  problemBehaviors?: string[];
+  notes?: string;
   date!: string;
   levels!: LevelResultDto[];
   createdAt!: string;

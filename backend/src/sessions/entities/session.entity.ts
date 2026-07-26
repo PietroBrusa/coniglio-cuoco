@@ -48,6 +48,15 @@ export class SessionEntity {
   difficulty!: 'facile' | 'difficile';
 
   @Column()
+  therapist!: string;
+
+  @Column()
+  problemBehaviors!: string[];
+
+  @Column()
+  notes!: string;
+
+  @Column()
   date!: string;
 
   @Column()

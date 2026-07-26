@@ -1,6 +1,9 @@
+import { useMemo, useState } from 'react';
 import Rabbit from '../shared/Rabbit';
 import { formatMetrics } from '../utils/formatMetrics';
 import { useSaveSession } from '../hooks/useSaveSession';
+import { annotateSession } from '../game/sessionRecord';
+import { PROBLEM_BEHAVIORS, toggleProblemBehavior } from '../game/problemBehaviors';
 import type { Session } from '../types';
 import s from '../styles/shared.module.scss';
 import c from './SessionSummary.module.scss';
@@ -13,7 +16,16 @@ interface SessionSummaryProps {
 }
 
 const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: SessionSummaryProps) => {
-  const { save, status, error } = useSaveSession(session, { alreadySaved, onSaved });
+  const [problemBehaviors, setProblemBehaviors] = useState<string[]>([]);
+  const [notes, setNotes] = useState('');
+
+  const annotated = useMemo(
+    () => annotateSession(session, { problemBehaviors, notes }),
+    [session, problemBehaviors, notes],
+  );
+
+  const { save, status, error } = useSaveSession(annotated, { alreadySaved, onSaved });
+  const saved = status === 'success';
 
   return (
     <div className={s.screen}>
@@ -23,6 +35,9 @@ const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: Sessio
       <div className={`${s.card} ${c.sessionMeta}`}>
         <span>
           <strong>Bambino:</strong> {session.childId}
+        </span>
+        <span>
+          <strong>Terapista:</strong> {session.therapist || '—'}
         </span>
         <span>
           <strong>Sessione:</strong> n. {session.sessionNumber}
@@ -51,20 +66,65 @@ const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: Sessio
         </div>
       ))}
 
-      <p className={`${s.saveStatus} ${status === 'success' ? s.saveOk : ''} ${status === 'error' ? s.saveErr : ''}`}>
+      <fieldset className={`${s.card} ${c.behaviors}`} disabled={saved}>
+        <legend>Comportamenti osservati</legend>
+        <p className={c.behaviorsHint}>
+          Seleziona i comportamenti problema emersi durante la sessione.
+        </p>
+
+        <div className={c.behaviorList}>
+          {PROBLEM_BEHAVIORS.map((b) => {
+            const checked = problemBehaviors.includes(b.id);
+            return (
+              <label key={b.id} className={`${c.behavior} ${checked ? c.behaviorChecked : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => setProblemBehaviors((prev) => toggleProblemBehavior(prev, b.id))}
+                />
+                <span className={s.foodChipEmoji}>{b.emoji}</span>
+                {b.label}
+              </label>
+            );
+          })}
+        </div>
+
+        <label className={c.notesLabel}>
+          Note
+          <textarea
+            rows={3}
+            placeholder="Osservazioni aggiuntive (facoltativo)"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+        </label>
+      </fieldset>
+
+      <p
+        className={`${s.saveStatus} ${saved ? s.saveOk : ''} ${status === 'error' ? s.saveErr : ''}`}
+      >
+        {status === 'idle' && '📝 Compila i comportamenti osservati, poi salva la sessione'}
         {status === 'pending' && '💾 Salvataggio in corso...'}
-        {status === 'success' && '✅ Sessione salvata nel database'}
+        {saved && '✅ Sessione salvata nel database'}
         {status === 'error' && `⚠️ Salvataggio non riuscito: ${error}`}
-        {status === 'idle' && ' '}
       </p>
 
       <div className={s.rewardActions}>
-        {status === 'error' && (
-          <button type="button" className={s.btn} onClick={save}>
-            Riprova salvataggio ↻
+        {!saved && (
+          <button
+            type="button"
+            className={`${s.btn} ${s.btnPrimary}`}
+            onClick={save}
+            disabled={status === 'pending'}
+          >
+            {status === 'error' ? 'Riprova salvataggio ↻' : '💾 Salva sessione'}
           </button>
         )}
-        <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={onNewSession}>
+        <button
+          type="button"
+          className={`${s.btn} ${saved ? s.btnPrimary : ''}`}
+          onClick={onNewSession}
+        >
           Nuova sessione 🔄
         </button>
       </div>

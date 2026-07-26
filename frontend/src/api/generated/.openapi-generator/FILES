@@ -1,6 +1,5 @@
 .gitignore
 .npmignore
-.openapi-generator-ignore
 api.ts
 base.ts
 common.ts
@@ -15,5 +14,4 @@ docs/LevelResultMetricsDto.md
 docs/SessionDto.md
 docs/SessionsApi.md
 docs/TouchRecordDto.md
-git_push.sh
 index.ts

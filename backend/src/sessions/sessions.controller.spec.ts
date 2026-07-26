@@ -14,7 +14,7 @@ describe('SessionsController', () => {
     removeForChild: jest.Mock;
   };
 
-  const req = { user: { sub: 'Frodo', name: 'Frodo' } } as AuthedRequest;
+  const req = { user: { sub: 'John Doe', name: 'John Doe' } } as AuthedRequest;
 
   beforeEach(async () => {
     service = {
@@ -48,7 +48,7 @@ describe('SessionsController', () => {
 
     expect(result).toBe(saved);
     expect(service.create).toHaveBeenCalledWith(
-      expect.objectContaining({ childId: 'Frodo', sessionNumber: 1 }),
+      expect.objectContaining({ childId: 'John Doe', sessionNumber: 1 }),
     );
   });
 
@@ -57,16 +57,16 @@ describe('SessionsController', () => {
     service.findByChild.mockReturnValue(list);
 
     expect(controller.findAll(req)).toBe(list);
-    expect(service.findByChild).toHaveBeenCalledWith('Frodo');
+    expect(service.findByChild).toHaveBeenCalledWith('John Doe');
   });
 
   it('findOne forwards the id and the owner', () => {
     controller.findOne('abc', req);
-    expect(service.findOneForChild).toHaveBeenCalledWith('abc', 'Frodo');
+    expect(service.findOneForChild).toHaveBeenCalledWith('abc', 'John Doe');
   });
 
   it('remove forwards the id and the owner', () => {
     controller.remove('abc', req);
-    expect(service.removeForChild).toHaveBeenCalledWith('abc', 'Frodo');
+    expect(service.removeForChild).toHaveBeenCalledWith('abc', 'John Doe');
   });
 });

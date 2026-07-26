@@ -38,7 +38,7 @@ describe('SessionsService', () => {
   });
 
   it('create persists the built entity', async () => {
-    const dto = { childId: 'Frodo' } as CreateSessionDto;
+    const dto = { childId: 'John Doe' } as CreateSessionDto;
     const entity = { ...dto } as SessionEntity;
     repo.create.mockReturnValue(entity);
     repo.save.mockResolvedValue(entity);
@@ -49,27 +49,27 @@ describe('SessionsService', () => {
   });
 
   it('findByChild queries by owner, most recent first', async () => {
-    const list = [{ childId: 'Frodo' }] as SessionEntity[];
+    const list = [{ childId: 'John Doe' }] as SessionEntity[];
     repo.find.mockResolvedValue(list);
 
-    await expect(service.findByChild('Frodo')).resolves.toBe(list);
+    await expect(service.findByChild('John Doe')).resolves.toBe(list);
     expect(repo.find).toHaveBeenCalledWith({
-      where: { childId: 'Frodo' },
+      where: { childId: 'John Doe' },
       order: { createdAt: 'DESC' },
     });
   });
 
   describe('findOneForChild', () => {
     it('returns the session when it exists and belongs to the child', async () => {
-      const session = { childId: 'Frodo' } as SessionEntity;
+      const session = { childId: 'John Doe' } as SessionEntity;
       repo.findOneBy.mockResolvedValue(session);
 
-      await expect(service.findOneForChild(validId, 'Frodo')).resolves.toBe(session);
+      await expect(service.findOneForChild(validId, 'John Doe')).resolves.toBe(session);
     });
 
     it('throws 404 for a malformed id (without touching the repository)', async () => {
       await expect(
-        service.findOneForChild('not-an-objectid', 'Frodo'),
+        service.findOneForChild('not-an-objectid', 'John Doe'),
       ).rejects.toBeInstanceOf(NotFoundException);
       expect(repo.findOneBy).not.toHaveBeenCalled();
     });
@@ -77,24 +77,24 @@ describe('SessionsService', () => {
     it('throws 404 when the session does not exist', async () => {
       repo.findOneBy.mockResolvedValue(null);
       await expect(
-        service.findOneForChild(validId, 'Frodo'),
+        service.findOneForChild(validId, 'John Doe'),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('throws 404 when the session belongs to another child (ownership check)', async () => {
       repo.findOneBy.mockResolvedValue({ childId: 'Sauron' } as SessionEntity);
       await expect(
-        service.findOneForChild(validId, 'Frodo'),
+        service.findOneForChild(validId, 'John Doe'),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
   describe('removeForChild', () => {
     it('deletes the session after the ownership check passes', async () => {
-      repo.findOneBy.mockResolvedValue({ childId: 'Frodo' } as SessionEntity);
+      repo.findOneBy.mockResolvedValue({ childId: 'John Doe' } as SessionEntity);
       repo.deleteOne.mockResolvedValue({ deletedCount: 1 });
 
-      await expect(service.removeForChild(validId, 'Frodo')).resolves.toEqual({
+      await expect(service.removeForChild(validId, 'John Doe')).resolves.toEqual({
         deleted: true,
         id: validId,
       });
@@ -105,7 +105,7 @@ describe('SessionsService', () => {
       repo.findOneBy.mockResolvedValue({ childId: 'Sauron' } as SessionEntity);
 
       await expect(
-        service.removeForChild(validId, 'Frodo'),
+        service.removeForChild(validId, 'John Doe'),
       ).rejects.toBeInstanceOf(NotFoundException);
       expect(repo.deleteOne).not.toHaveBeenCalled();
     });

@@ -43,22 +43,22 @@ describe('AuthService', () => {
       children.findByName.mockResolvedValue(null);
       children.create.mockResolvedValue({} as ChildEntity);
 
-      const result = await service.register({ name: 'Frodo', password: 'shire123' });
+      const result = await service.register({ name: 'John Doe', password: 'password123' });
 
-      expect(result).toEqual({ access_token: 'signed.jwt.token', name: 'Frodo' });
+      expect(result).toEqual({ access_token: 'signed.jwt.token', name: 'John Doe' });
       expect(children.create).toHaveBeenCalledTimes(1);
       const [nameArg, hashArg] = children.create.mock.calls[0];
-      expect(nameArg).toBe('Frodo');
-      expect(hashArg).not.toBe('shire123');
-      await expect(bcrypt.compare('shire123', hashArg)).resolves.toBe(true);
-      expect(jwt.signAsync).toHaveBeenCalledWith({ sub: 'Frodo', name: 'Frodo' });
+      expect(nameArg).toBe('John Doe');
+      expect(hashArg).not.toBe('password123');
+      await expect(bcrypt.compare('password123', hashArg)).resolves.toBe(true);
+      expect(jwt.signAsync).toHaveBeenCalledWith({ sub: 'John Doe', name: 'John Doe' });
     });
 
     it('throws 409 Conflict when the name is already taken', async () => {
-      children.findByName.mockResolvedValue({ name: 'Frodo' } as ChildEntity);
+      children.findByName.mockResolvedValue({ name: 'John Doe' } as ChildEntity);
 
       await expect(
-        service.register({ name: 'Frodo', password: 'x' }),
+        service.register({ name: 'John Doe', password: 'x' }),
       ).rejects.toBeInstanceOf(ConflictException);
       expect(children.create).not.toHaveBeenCalled();
     });
@@ -66,12 +66,12 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('returns a token when the password matches', async () => {
-      const passwordHash = await bcrypt.hash('mellon', 10);
-      children.findByName.mockResolvedValue({ name: 'Gandalf', passwordHash } as ChildEntity);
+      const passwordHash = await bcrypt.hash('secret456', 10);
+      children.findByName.mockResolvedValue({ name: 'Richard Roe', passwordHash } as ChildEntity);
 
-      const result = await service.login({ name: 'Gandalf', password: 'mellon' });
+      const result = await service.login({ name: 'Richard Roe', password: 'secret456' });
 
-      expect(result).toEqual({ access_token: 'signed.jwt.token', name: 'Gandalf' });
+      expect(result).toEqual({ access_token: 'signed.jwt.token', name: 'Richard Roe' });
     });
 
     it('throws 401 when the child does not exist', async () => {
@@ -84,10 +84,10 @@ describe('AuthService', () => {
 
     it('throws 401 when the password is wrong', async () => {
       const passwordHash = await bcrypt.hash('correct', 10);
-      children.findByName.mockResolvedValue({ name: 'Gandalf', passwordHash } as ChildEntity);
+      children.findByName.mockResolvedValue({ name: 'Richard Roe', passwordHash } as ChildEntity);
 
       await expect(
-        service.login({ name: 'Gandalf', password: 'wrong' }),
+        service.login({ name: 'Richard Roe', password: 'wrong' }),
       ).rejects.toBeInstanceOf(UnauthorizedException);
     });
   });

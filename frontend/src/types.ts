@@ -53,6 +53,9 @@ export interface Session {
   food: string;
   foodId?: string;
   difficulty?: Difficulty;
+  therapist?: string;
+  problemBehaviors?: string[];
+  notes?: string;
   date: string;
   levels: LevelResult[];
 }

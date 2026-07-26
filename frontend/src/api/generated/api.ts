@@ -37,6 +37,9 @@ export interface CreateSessionDto {
     'food': string;
     'foodId'?: string;
     'difficulty'?: CreateSessionDtoDifficultyEnum;
+    'therapist'?: string;
+    'problemBehaviors'?: Array<string>;
+    'notes'?: string;
     'date': string;
     'levels': Array<LevelResultDto>;
 }
@@ -85,6 +88,9 @@ export interface SessionDto {
     'food': string;
     'foodId'?: string;
     'difficulty'?: SessionDtoDifficultyEnum;
+    'therapist'?: string;
+    'problemBehaviors'?: Array<string>;
+    'notes'?: string;
     'date': string;
     'levels': Array<LevelResultDto>;
     'createdAt': string;

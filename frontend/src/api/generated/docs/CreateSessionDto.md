@@ -10,6 +10,9 @@ Name | Type | Description | Notes
 **food** | **string** |  | [default to undefined]
 **foodId** | **string** |  | [optional] [default to undefined]
 **difficulty** | **string** |  | [optional] [default to undefined]
+**therapist** | **string** |  | [optional] [default to undefined]
+**problemBehaviors** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**notes** | **string** |  | [optional] [default to undefined]
 **date** | **string** |  | [default to undefined]
 **levels** | [**Array&lt;LevelResultDto&gt;**](LevelResultDto.md) |  | [default to undefined]
 
@@ -24,6 +27,9 @@ const instance: CreateSessionDto = {
     food,
     foodId,
     difficulty,
+    therapist,
+    problemBehaviors,
+    notes,
     date,
     levels,
 };

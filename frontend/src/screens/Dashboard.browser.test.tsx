@@ -8,7 +8,7 @@ import type { SavedSession } from '../api/client';
 
 const savedSession = {
   _id: 's1',
-  childId: 'Frodo',
+  childId: 'John Doe',
   sessionNumber: 1,
   food: 'Carota',
   foodId: 'carota',
@@ -51,7 +51,7 @@ function Providers({ children }: { children: ReactNode }) {
 }
 
 const renderDashboard = () =>
-  render(<Dashboard childId="Frodo" onBack={vi.fn()} />, { wrapper: Providers });
+  render(<Dashboard childId="John Doe" onBack={vi.fn()} />, { wrapper: Providers });
 
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());

@@ -27,7 +27,12 @@ function wrapper({ children }: { children: ReactNode }) {
 
 async function startedGame() {
   const { result } = await renderHook(() => useGame(), { wrapper });
-  result.current.startSession({ sessionNumber: 1, foodId: 'carota', difficulty: 'facile' });
+  result.current.startSession({
+    sessionNumber: 1,
+    foodId: 'carota',
+    difficulty: 'facile',
+    therapist: 'Mary Major',
+  });
   await vi.waitFor(() => expect(result.current.session).not.toBeNull());
   return result;
 }
@@ -82,7 +87,12 @@ describe('GameContext', () => {
     result.current.markSessionSaved();
     await vi.waitFor(() => expect(result.current.sessionSaved).toBe(true));
 
-    result.current.startSession({ sessionNumber: 2, foodId: 'mela', difficulty: 'facile' });
+    result.current.startSession({
+      sessionNumber: 2,
+      foodId: 'mela',
+      difficulty: 'facile',
+      therapist: 'Mary Major',
+    });
     await vi.waitFor(() => expect(result.current.sessionSaved).toBe(false));
   });
 });

@@ -25,11 +25,11 @@ describe('ChildrenService', () => {
   });
 
   it('findByName delegates to the repository', async () => {
-    const child = { name: 'Sam' } as ChildEntity;
+    const child = { name: 'Jane Doe' } as ChildEntity;
     repo.findOneBy.mockResolvedValue(child);
 
-    await expect(service.findByName('Sam')).resolves.toBe(child);
-    expect(repo.findOneBy).toHaveBeenCalledWith({ name: 'Sam' });
+    await expect(service.findByName('Jane Doe')).resolves.toBe(child);
+    expect(repo.findOneBy).toHaveBeenCalledWith({ name: 'Jane Doe' });
   });
 
   it('findByName returns null when not found', async () => {

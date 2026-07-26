@@ -10,7 +10,7 @@ async function failingProps(payload: unknown): Promise<string[]> {
 
 describe('AuthCredentialsDto', () => {
   it('accepts a valid name/password pair', async () => {
-    expect(await failingProps({ name: 'B001', password: 'shire123' })).toEqual([]);
+    expect(await failingProps({ name: 'B001', password: 'password123' })).toEqual([]);
   });
 
   it('rejects a password shorter than 4 characters', async () => {
@@ -18,11 +18,11 @@ describe('AuthCredentialsDto', () => {
   });
 
   it('rejects an empty name', async () => {
-    expect(await failingProps({ name: '', password: 'shire123' })).toContain('name');
+    expect(await failingProps({ name: '', password: 'password123' })).toContain('name');
   });
 
   it('rejects a name longer than 50 characters', async () => {
-    expect(await failingProps({ name: 'x'.repeat(51), password: 'shire123' })).toContain('name');
+    expect(await failingProps({ name: 'x'.repeat(51), password: 'password123' })).toContain('name');
   });
 
   it('rejects non-string types', async () => {

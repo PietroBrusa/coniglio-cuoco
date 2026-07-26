@@ -1,7 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from 'vitest-browser-react';
 import SetupScreen from './SetupScreen';
 import type { ProgressByFood } from '../utils/foodProgress';
+
+// The therapist field is required, so every submit path needs one; the screen
+// pre-fills it from the previous session.
+beforeEach(() => {
+  localStorage.clear();
+  localStorage.setItem('coniglio-cuoco:therapist', 'Mary Major');
+});
 
 function setup(props: { progressByFood?: ProgressByFood; progressLoading?: boolean } = {}) {
   const onStart = vi.fn();
@@ -63,6 +70,7 @@ describe('SetupScreen', () => {
       sessionNumber: 1,
       foodId: 'carota',
       difficulty: 'difficile',
+      therapist: 'Mary Major',
     });
   });
 
@@ -82,6 +90,7 @@ describe('SetupScreen', () => {
       sessionNumber: 5,
       foodId: 'carota',
       difficulty: 'facile',
+      therapist: 'Mary Major',
     });
   });
 
@@ -99,6 +108,7 @@ describe('SetupScreen', () => {
       sessionNumber: 1,
       foodId: 'banana',
       difficulty: 'facile',
+      therapist: 'Mary Major',
     });
   });
 
@@ -115,6 +125,7 @@ describe('SetupScreen', () => {
       sessionNumber: 9,
       foodId: 'carota',
       difficulty: 'facile',
+      therapist: 'Mary Major',
     });
   });
 
@@ -131,7 +142,38 @@ describe('SetupScreen', () => {
       sessionNumber: 5,
       foodId: 'carota',
       difficulty: 'facile',
+      therapist: 'Mary Major',
     });
+  });
+
+  it('pre-fills the therapist recorded in the previous session', async () => {
+    const { screen } = setup();
+    const page = await screen;
+    await expect
+      .element(page.getByPlaceholder('Chi conduce la sessione'))
+      .toHaveValue('Mary Major');
+  });
+
+  it('emits and remembers a newly typed therapist', async () => {
+    const { screen, onStart } = setup();
+    const page = await screen;
+
+    await page.getByPlaceholder('Chi conduce la sessione').fill('  John Smith  ');
+    await page.getByRole('button', { name: /Inizia la storia/ }).click();
+
+    expect(onStart).toHaveBeenCalledWith(
+      expect.objectContaining({ therapist: 'John Smith' }),
+    );
+    expect(localStorage.getItem('coniglio-cuoco:therapist')).toBe('John Smith');
+  });
+
+  it('blocks the start when no therapist is given', async () => {
+    localStorage.clear();
+    const { screen, onStart } = setup();
+    const page = await screen;
+
+    await page.getByRole('button', { name: /Inizia la storia/ }).click();
+    expect(onStart).not.toHaveBeenCalled();
   });
 
   it('does not claim a first session while the history is still loading', async () => {

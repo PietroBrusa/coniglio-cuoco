@@ -22,7 +22,7 @@ describe('useSessions', () => {
       data: sessions,
     } as never);
 
-    const { result } = await renderHook(() => useSessions('Frodo'), { wrapper: wrapper() });
+    const { result } = await renderHook(() => useSessions('John Doe'), { wrapper: wrapper() });
 
     await vi.waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(sessions);
@@ -31,7 +31,7 @@ describe('useSessions', () => {
   it('surfaces an error state when the request fails', async () => {
     vi.spyOn(sessionsApi, 'sessionsControllerFindAll').mockRejectedValue(new Error('boom'));
 
-    const { result } = await renderHook(() => useSessions('Frodo'), { wrapper: wrapper() });
+    const { result } = await renderHook(() => useSessions('John Doe'), { wrapper: wrapper() });
 
     await vi.waitFor(() => expect(result.current.isError).toBe(true));
   });

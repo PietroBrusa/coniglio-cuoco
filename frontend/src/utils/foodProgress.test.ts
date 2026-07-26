@@ -13,7 +13,7 @@ function session(
   } = opts;
   return {
     _id: `id-${food}-${sessionNumber}`,
-    childId: 'Frodo',
+    childId: 'John Doe',
     sessionNumber,
     food,
     foodId,

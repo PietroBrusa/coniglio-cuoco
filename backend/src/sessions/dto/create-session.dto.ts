@@ -95,6 +95,19 @@ export class CreateSessionDto {
   @IsIn(['facile', 'difficile'])
   difficulty?: 'facile' | 'difficile';
 
+  @IsOptional()
+  @IsString()
+  therapist?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  problemBehaviors?: string[];
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
   @IsString()
   date!: string;
 

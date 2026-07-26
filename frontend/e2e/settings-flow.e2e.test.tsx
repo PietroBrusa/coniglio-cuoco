@@ -26,7 +26,7 @@ function renderApp(initialPath: string) {
 beforeEach(() => {
   localStorage.clear();
   localStorage.setItem('cc_token', 'fake.jwt.token');
-  localStorage.setItem('cc_child', 'Frodo');
+  localStorage.setItem('cc_child', 'John Doe');
 });
 
 describe('Settings user journey (E2E)', () => {
