@@ -5,6 +5,7 @@ import IntervalGrid from '../shared/IntervalGrid';
 import { useDeleteSession, useSessions } from '../hooks/useSessions';
 import { getFood } from '../game/levels';
 import { loadSettings } from '../game/settings';
+import { getProblemBehavior } from '../game/problemBehaviors';
 import {
   buildAbaSeries,
   findPhaseChanges,
@@ -128,6 +129,42 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
 
             {open && (
               <div className={c.sessionDetail}>
+                <dl className={c.sessionInfo}>
+                  <div>
+                    <dt>Terapista</dt>
+                    <dd>{session.therapist || <span className={c.muted}>non registrato</span>}</dd>
+                  </div>
+                  <div>
+                    <dt>Difficoltà</dt>
+                    <dd>{session.difficulty ?? 'facile'}</dd>
+                  </div>
+                  <div className={c.sessionInfoWide}>
+                    <dt>Comportamenti osservati</dt>
+                    <dd>
+                      {session.problemBehaviors?.length ? (
+                        <span className={c.behaviorTags}>
+                          {session.problemBehaviors.map((id) => {
+                            const b = getProblemBehavior(id);
+                            return (
+                              <span key={id} className={c.behaviorTag}>
+                                {b ? `${b.emoji} ${b.label}` : id}
+                              </span>
+                            );
+                          })}
+                        </span>
+                      ) : (
+                        <span className={c.muted}>nessuno registrato</span>
+                      )}
+                    </dd>
+                  </div>
+                  {session.notes && (
+                    <div className={c.sessionInfoWide}>
+                      <dt>Note</dt>
+                      <dd>{session.notes}</dd>
+                    </div>
+                  )}
+                </dl>
+
                 {session.levels.map((lv) => (
                   <div key={lv.levelId} className={s.metricsSummary}>
                     <h3>

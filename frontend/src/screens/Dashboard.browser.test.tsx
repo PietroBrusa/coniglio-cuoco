@@ -13,6 +13,9 @@ const savedSession = {
   food: 'Carota',
   foodId: 'carota',
   difficulty: 'facile',
+  therapist: 'Mary Major',
+  problemBehaviors: ['rifiuto-cibo', 'pianto'],
+  notes: 'Bambino stanco a fine sessione.',
   date: '2026-07-07T10:00:00.000Z',
   createdAt: '2026-07-07T10:00:00.000Z',
   levels: [
@@ -119,6 +122,36 @@ describe('Dashboard', () => {
 
     const screen = await renderDashboard();
     await expect.element(screen.getByText(/Impossibile caricare le sessioni/)).toBeInTheDocument();
+  });
+
+  it('shows therapist, problem behaviours and notes when a session is expanded', async () => {
+    vi.spyOn(sessionsApi, 'sessionsControllerFindAll').mockResolvedValue({
+      data: [savedSession],
+    } as never);
+
+    const screen = await renderDashboard();
+    await screen.getByRole('button', { name: /sessione 1 · Carota/ }).click();
+
+    await expect.element(screen.getByText('Mary Major')).toBeInTheDocument();
+    await expect.element(screen.getByText('🚫 Rifiuto del cibo')).toBeInTheDocument();
+    await expect.element(screen.getByText('😢 Pianto o lamento')).toBeInTheDocument();
+    await expect.element(screen.getByText('Bambino stanco a fine sessione.')).toBeInTheDocument();
+  });
+
+  it('marks legacy sessions saved before these fields existed', async () => {
+    const legacy = { ...savedSession } as Record<string, unknown>;
+    delete legacy.therapist;
+    delete legacy.problemBehaviors;
+    delete legacy.notes;
+    vi.spyOn(sessionsApi, 'sessionsControllerFindAll').mockResolvedValue({
+      data: [legacy],
+    } as never);
+
+    const screen = await renderDashboard();
+    await screen.getByRole('button', { name: /sessione 1 · Carota/ }).click();
+
+    await expect.element(screen.getByText('non registrato')).toBeInTheDocument();
+    await expect.element(screen.getByText('nessuno registrato')).toBeInTheDocument();
   });
 
   it('deletes a session after confirmation', async () => {
