@@ -81,6 +81,9 @@ describe('LevelPlay', () => {
     );
 
     await tap(screen, STARTER_TAPS);
+    // The window opens on the first contact, not on entering the play phase:
+    // wait for the "no contact yet" hint so the press below starts the clock.
+    await expect.element(screen.getByText(/il tempo parte da lì/)).toBeInTheDocument();
     const el = await target(screen).element();
 
     press(el);
@@ -101,6 +104,9 @@ describe('LevelPlay', () => {
     );
 
     await tap(screen, STARTER_TAPS);
+    // Same as above: the 3s window must start on the first press below, or the
+    // measured contact only covers whatever is left of it.
+    await expect.element(screen.getByText(/il tempo parte da lì/)).toBeInTheDocument();
     const el = await target(screen).element();
 
     press(el);
