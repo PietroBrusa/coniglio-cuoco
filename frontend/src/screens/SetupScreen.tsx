@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { FOODS } from '../game/levels';
+import { FOODS, getFood } from '../game/levels';
 import Rabbit from '../shared/Rabbit';
+import { nextSessionNumber } from '../utils/foodProgress';
+import type { ProgressByFood } from '../utils/foodProgress';
 import type { Difficulty } from '../types';
 import s from '../styles/shared.module.scss';
 import c from './SetupScreen.module.scss';
@@ -18,6 +20,8 @@ const DIFFICULTIES: { id: Difficulty; emoji: string; label: string; hint: string
 
 interface SetupScreenProps {
   childId: string;
+  progressByFood?: ProgressByFood;
+  progressLoading?: boolean;
   onStart: (params: StartParams) => void;
   onOpenDashboard: () => void;
   onOpenSettings: () => void;
@@ -26,12 +30,14 @@ interface SetupScreenProps {
 
 const SetupScreen = ({
   childId,
+  progressByFood = {},
+  progressLoading = false,
   onStart,
   onOpenDashboard,
   onOpenSettings,
   onLogout,
 }: SetupScreenProps) => {
-  const [sessionNumber, setSessionNumber] = useState(1);
+  const [manualNumber, setManualNumber] = useState<number | null>(null);
   const [foodId, setFoodId] = useState(FOODS[0].id);
   const [foodQuery, setFoodQuery] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty>('facile');
@@ -40,6 +46,16 @@ const SetupScreen = ({
   const visibleFoods = query
     ? FOODS.filter((f) => f.label.toLowerCase().includes(query))
     : FOODS;
+
+  // The proposed number follows the selected food until the therapist overrides it.
+  const food = getFood(foodId);
+  const progress = progressByFood[foodId];
+  const sessionNumber = manualNumber ?? nextSessionNumber(progress);
+
+  const selectFood = (id: string) => {
+    setFoodId(id);
+    setManualNumber(null);
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,8 +83,17 @@ const SetupScreen = ({
             type="number"
             min="1"
             value={sessionNumber}
-            onChange={(e) => setSessionNumber(Number(e.target.value))}
+            onChange={(e) =>
+              setManualNumber(e.target.value === '' ? null : Number(e.target.value))
+            }
           />
+          <p className={c.progressHint}>
+            {progressLoading
+              ? 'Carico lo storico del bambino…'
+              : progress
+                ? `Ultima con ${food.emoji} ${food.label}: n.${progress.lastSessionNumber} del ${new Date(progress.lastDate).toLocaleDateString('it-IT')}`
+                : `Prima sessione con ${food.emoji} ${food.label}`}
+          </p>
         </label>
 
         <label>
@@ -86,7 +111,7 @@ const SetupScreen = ({
                 type="button"
                 key={f.id}
                 className={`${c.foodChip} ${foodId === f.id ? c.foodChipSelected : ''}`}
-                onClick={() => setFoodId(f.id)}
+                onClick={() => selectFood(f.id)}
               >
                 <span className={s.foodChipEmoji}>{f.emoji}</span>
                 {f.label}

@@ -21,6 +21,12 @@
   color: var(--farm-brown);
   font-size: 0.9rem;
 }
+.progressHint {
+  margin: 0.3rem 0 0;
+  color: var(--farm-brown);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
 .foodChip {
   display: flex;
   align-items: center;

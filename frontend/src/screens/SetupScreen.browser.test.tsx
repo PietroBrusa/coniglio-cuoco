@@ -1,21 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import SetupScreen from './SetupScreen';
+import type { ProgressByFood } from '../utils/foodProgress';
 
-/**
- * COMPONENT test for the setup screen (Vitest browser mode, real Chromium).
- *
- * SetupScreen is a self-contained form: it takes the logged-in child and a set
- * of callbacks, and emits the chosen session parameters via `onStart`. We test
- * its contract and interactions the way a therapist would use it:
- *   - the child id is displayed;
- *   - the food search filters the pickable items (incl. the empty state);
- *   - selecting a food + difficulty and submitting emits the right parameters;
- *   - the secondary buttons trigger their callbacks.
- */
-
-/** Renders SetupScreen with spy callbacks; returns the screen and the spies. */
-function setup() {
+function setup(props: { progressByFood?: ProgressByFood; progressLoading?: boolean } = {}) {
   const onStart = vi.fn();
   const onOpenDashboard = vi.fn();
   const onOpenSettings = vi.fn();
@@ -27,10 +15,15 @@ function setup() {
       onOpenDashboard={onOpenDashboard}
       onOpenSettings={onOpenSettings}
       onLogout={onLogout}
+      {...props}
     />,
   );
   return { screen, onStart, onOpenDashboard, onOpenSettings, onLogout };
 }
+
+const PROGRESS: ProgressByFood = {
+  carota: { lastSessionNumber: 4, lastDate: '2026-03-12T10:00:00.000Z', total: 4 },
+};
 
 describe('SetupScreen', () => {
   it('shows the logged-in child', async () => {
@@ -45,7 +38,6 @@ describe('SetupScreen', () => {
     const search = page.getByPlaceholder('Cerca un alimento…');
     await search.fill('carota');
 
-    // Only the matching food remains selectable.
     await expect.element(page.getByRole('button', { name: /Carota/ })).toBeInTheDocument();
     expect(page.getByRole('button', { name: /Banana/ }).elements()).toHaveLength(0);
   });
@@ -63,7 +55,6 @@ describe('SetupScreen', () => {
 
     await page.getByPlaceholder('Cerca un alimento…').fill('carota');
     await page.getByRole('button', { name: /Carota/ }).click();
-    // The difficulty chips carry a unique tooltip; use it to disambiguate.
     await page.getByTitle('tocchi a tempo (piano tiles)').click();
     await page.getByRole('button', { name: /Inizia la storia/ }).click();
 
@@ -73,6 +64,80 @@ describe('SetupScreen', () => {
       foodId: 'carota',
       difficulty: 'difficile',
     });
+  });
+
+  it('proposes the session after the last one reached with the chosen food', async () => {
+    const { screen, onStart } = setup({ progressByFood: PROGRESS });
+    const page = await screen;
+
+    await page.getByPlaceholder('Cerca un alimento…').fill('carota');
+    await page.getByRole('button', { name: /Carota/ }).click();
+
+    await expect
+      .element(page.getByText('Ultima con 🥕 Carota: n.4 del 12/03/2026'))
+      .toBeInTheDocument();
+
+    await page.getByRole('button', { name: /Inizia la storia/ }).click();
+    expect(onStart).toHaveBeenCalledWith({
+      sessionNumber: 5,
+      foodId: 'carota',
+      difficulty: 'facile',
+    });
+  });
+
+  it('restarts from 1 on a food the child never worked on', async () => {
+    const { screen, onStart } = setup({ progressByFood: PROGRESS });
+    const page = await screen;
+
+    await page.getByPlaceholder('Cerca un alimento…').fill('banana');
+    await page.getByRole('button', { name: /Banana/ }).click();
+
+    await expect.element(page.getByText('Prima sessione con 🍌 Banana')).toBeInTheDocument();
+
+    await page.getByRole('button', { name: /Inizia la storia/ }).click();
+    expect(onStart).toHaveBeenCalledWith({
+      sessionNumber: 1,
+      foodId: 'banana',
+      difficulty: 'facile',
+    });
+  });
+
+  it('lets the therapist override the proposed number', async () => {
+    const { screen, onStart } = setup({ progressByFood: PROGRESS });
+    const page = await screen;
+
+    await page.getByPlaceholder('Cerca un alimento…').fill('carota');
+    await page.getByRole('button', { name: /Carota/ }).click();
+    await page.getByRole('spinbutton').fill('9');
+    await page.getByRole('button', { name: /Inizia la storia/ }).click();
+
+    expect(onStart).toHaveBeenCalledWith({
+      sessionNumber: 9,
+      foodId: 'carota',
+      difficulty: 'facile',
+    });
+  });
+
+  it('drops a manual override when another food is picked', async () => {
+    const { screen, onStart } = setup({ progressByFood: PROGRESS });
+    const page = await screen;
+
+    await page.getByRole('spinbutton').fill('9');
+    await page.getByPlaceholder('Cerca un alimento…').fill('carota');
+    await page.getByRole('button', { name: /Carota/ }).click();
+    await page.getByRole('button', { name: /Inizia la storia/ }).click();
+
+    expect(onStart).toHaveBeenCalledWith({
+      sessionNumber: 5,
+      foodId: 'carota',
+      difficulty: 'facile',
+    });
+  });
+
+  it('does not claim a first session while the history is still loading', async () => {
+    const { screen } = setup({ progressLoading: true });
+    const page = await screen;
+    await expect.element(page.getByText('Carico lo storico del bambino…')).toBeInTheDocument();
   });
 
   it('wires the secondary navigation buttons', async () => {
