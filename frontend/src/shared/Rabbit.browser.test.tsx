@@ -3,15 +3,15 @@ import { render } from 'vitest-browser-react';
 import Rabbit from './Rabbit';
 
 describe('Rabbit', () => {
-  it('renders the idle face and default message by default', async () => {
+  it('renders the idle rabbit and default message by default', async () => {
     const screen = await render(<Rabbit />);
-    await expect.element(screen.getByText('🐰')).toBeInTheDocument();
+    await expect.element(screen.getByRole('img', { name: 'Il coniglio aspetta' })).toBeInTheDocument();
     await expect.element(screen.getByText('Pronti?')).toBeInTheDocument();
   });
 
-  it('shows the mood-specific face and message', async () => {
+  it('shows the mood-specific drawing and message', async () => {
     const screen = await render(<Rabbit mood="eat" />);
-    await expect.element(screen.getByText('😋')).toBeInTheDocument();
+    await expect.element(screen.getByRole('img', { name: 'Il coniglio mangia' })).toBeInTheDocument();
     await expect.element(screen.getByText('Buonissimo!')).toBeInTheDocument();
   });
 
