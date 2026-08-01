@@ -13,6 +13,8 @@ import {
   wholeIntervalRecording,
 } from '../utils/abaData';
 import { formatMetrics } from '../utils/formatMetrics';
+import { abaWorkbookFileName, buildAbaWorkbook } from '../utils/abaWorkbook';
+import { XLSX_MIME, downloadFile } from '../utils/downloadFile';
 import type { SavedSession } from '../api/client';
 import s from '../styles/shared.module.scss';
 import c from './Dashboard.module.scss';
@@ -27,6 +29,7 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
   const deleteMutation = useDeleteSession();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedFood, setSelectedFood] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const sessions = useMemo(() => data ?? [], [data]);
 
@@ -41,6 +44,19 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
   const listed = useMemo(() => (group ? [...group.sessions].reverse() : []), [group]);
   const ordinalOf = (sessionNumber: number) =>
     (group?.sessions.findIndex((s) => s.sessionNumber === sessionNumber) ?? -1) + 1;
+
+  const handleExport = () => {
+    try {
+      setExportError(null);
+      downloadFile(
+        buildAbaWorkbook({ childId, sessions, criterion }),
+        abaWorkbookFileName(childId),
+        XLSX_MIME,
+      );
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : 'errore sconosciuto');
+    }
+  };
 
   const handleDelete = (session: SavedSession) => {
     const when = new Date(session.date).toLocaleString('it-IT');
@@ -58,7 +74,17 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
         <button type="button" className={s.btn} onClick={() => refetch()} disabled={isFetching}>
           {isFetching ? '⏳' : '↻'} Aggiorna
         </button>
+        <button
+          type="button"
+          className={s.btn}
+          onClick={handleExport}
+          disabled={sessions.length === 0}
+          title="Scarica le schede ABA, un foglio per alimento con il suo grafico"
+        >
+          ⬇ Esporta Excel
+        </button>
       </div>
+      {exportError && <p className={s.saveErr}>⚠️ Esportazione non riuscita: {exportError}</p>}
 
       {groups.length > 1 && (
         <div className={c.foodTabs} role="tablist" aria-label="Alimento">

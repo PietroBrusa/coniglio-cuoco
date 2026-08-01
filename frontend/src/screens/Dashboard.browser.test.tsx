@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ReactNode } from 'react';
 import { render } from 'vitest-browser-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { unzipSync } from 'fflate';
 import Dashboard from './Dashboard';
 import { sessionsApi } from '../api/apiClient';
 import type { SavedSession } from '../api/client';
@@ -152,6 +153,47 @@ describe('Dashboard', () => {
 
     await expect.element(screen.getByText('non registrato')).toBeInTheDocument();
     await expect.element(screen.getByText('nessuno registrato')).toBeInTheDocument();
+  });
+
+  it('downloads the ABA sheets, one per food, when exporting', async () => {
+    vi.spyOn(sessionsApi, 'sessionsControllerFindAll').mockResolvedValue({
+      data: [savedSession, otherFoodSession],
+    } as never);
+
+    const blobs: Blob[] = [];
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+      blobs.push(blob as Blob);
+      return 'blob:stub';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const clicks: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      clicks.push(this.download);
+    });
+
+    const screen = await renderDashboard();
+    await screen.getByRole('button', { name: /Esporta Excel/ }).click();
+
+    expect(clicks).toEqual([expect.stringMatching(/^schede-aba_John-Doe_\d{4}-\d{2}-\d{2}\.xlsx$/)]);
+    expect(blobs).toHaveLength(1);
+
+    const bytes = new Uint8Array(await blobs[0].arrayBuffer());
+    const files = unzipSync(bytes);
+    expect(files['xl/charts/chart2.xml']).toBeDefined();
+    expect(screen.container.textContent).not.toContain('Esportazione non riuscita');
+  });
+
+  it('cannot export when there is nothing to export', async () => {
+    vi.spyOn(sessionsApi, 'sessionsControllerFindAll').mockResolvedValue({ data: [] } as never);
+
+    const screen = await renderDashboard();
+    await expect
+      .element(screen.getByText('Nessuna sessione salvata per questo bambino.'))
+      .toBeInTheDocument();
+
+    await expect.element(screen.getByRole('button', { name: /Esporta Excel/ })).toBeDisabled();
   });
 
   it('deletes a session after confirmation', async () => {

@@ -91,9 +91,12 @@ linea per livello, con linea di criterio e linee di cambio fase), l'elenco delle
 sedute con il dettaglio delle metriche e la **griglia a intervalli** di ciascun
 livello, e la **cancellazione** dal database.
 
-I dati non vengono esportati su file: si leggono in dashboard o si prelevano
-dall'API REST. Un file esportato è una copia che invecchia ed esce dal perimetro
-di controllo, mentre il grafico è sempre allineato al database.
+Dalla dashboard si **esportano le schede ABA in Excel** (`⬇ Esporta Excel`): un
+file per bambino, con **un foglio per alimento** — intestazione della scheda
+cartacea, una riga per seduta e il **grafico nativo di Excel** (una serie per
+livello, linea di criterio e linee verticali ai cambi di condizione). Il file si
+genera nel browser dai dati già caricati, quindi non passa dal backend. Resta
+comunque una copia che invecchia: la fonte allineata al database è la dashboard.
 
 Senza hardware si può giocare con il **mouse/touch** sull'alimento oppure con la
 **barra spaziatrice** — l'unico tasto accettato, perché il Makey-Makey è
@@ -146,7 +149,14 @@ src/
     computeMetrics.ts       Matematica delle metriche (funzione pura)
     abaData.ts              Derivazione delle viste cliniche (funzioni pure)
     formatMetrics.ts        Metriche grezze → etichette e unità per la UI
+    abaWorkbook.ts          Sedute → schede ABA (un foglio per alimento + grafico)
+    downloadFile.ts         Consegna dei byte al browser come download
     sound.ts                Jingle di vittoria (Web Audio API, nessun asset)
+    xlsx/                   Scrittura di un .xlsx a mano (OOXML + fflate)
+      xml.ts                Escaping e dichiarazione XML
+      sheet.ts              Fogli, riferimenti di cella e stili
+      chart.ts              Grafico a dispersione DrawingML (nessuna libreria lo fa)
+      package.ts            Parti, relazioni e zip del pacchetto
   api/
     generated/              Client API generato da OpenAPI (axios) — non editare
     apiClient.ts            Configurazione + istanze authApi/sessionsApi
