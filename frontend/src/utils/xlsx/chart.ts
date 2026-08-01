@@ -14,6 +14,7 @@ const THICK = 22225;
 const THIN = 12700;
 
 export type MarkerSymbol = 'circle' | 'square' | 'diamond' | 'triangle' | 'none';
+export type DashStyle = 'dash' | 'lgDash' | 'sysDash' | 'dot';
 
 export interface ChartSeries {
   name: string;
@@ -27,8 +28,10 @@ export interface ChartSeries {
   /** Six hex digits, no leading hash. */
   color: string;
   marker?: MarkerSymbol;
-  dashed?: boolean;
+  dash?: DashStyle;
   thin?: boolean;
+  /** Writes the series name at its last point, the way the paper form labels its lines. */
+  labelLastPoint?: boolean;
   /** Keeps the series out of the legend without hiding the line. */
   hideFromLegend?: boolean;
 }
@@ -79,7 +82,7 @@ export function buildChartXml(spec: ChartSpec): string {
 }
 
 function seriesXml(s: ChartSeries, index: number): string {
-  const dash = s.dashed ? '<a:prstDash val="dash"/>' : '';
+  const dash = s.dash ? `<a:prstDash val="${s.dash}"/>` : '';
   const line =
     `<a:ln w="${s.thin ? THIN : THICK}" cap="rnd">` +
     `<a:solidFill><a:srgbClr val="${s.color}"/></a:solidFill>${dash}<a:round/>` +
@@ -100,10 +103,39 @@ function seriesXml(s: ChartSeries, index: number): string {
     `<c:tx><c:v>${esc(s.name)}</c:v></c:tx>` +
     `<c:spPr>${line}</c:spPr>` +
     marker +
+    (s.labelLastPoint ? lastPointLabel(s) : '') +
     `<c:xVal>${numRef(s.xRef, s.xValues)}</c:xVal>` +
     `<c:yVal>${numRef(s.yRef, s.yValues)}</c:yVal>` +
     `<c:smooth val="0"/>` +
     `</c:ser>`
+  );
+}
+
+/** Every flag CT_DLbls needs, in the order the schema fixes. */
+const SHOW = (serName: boolean): string =>
+  `<c:showLegendKey val="0"/><c:showVal val="0"/><c:showCatName val="0"/>` +
+  `<c:showSerName val="${serName ? 1 : 0}"/><c:showPercent val="0"/><c:showBubbleSize val="0"/>`;
+
+/**
+ * Names the line where it ends, so a reference line stays readable even when a data
+ * series happens to run along it and the legend alone is not enough.
+ */
+function lastPointLabel(s: ChartSeries): string {
+  const idx = s.yValues.reduce<number>((last, v, i) => (v === null ? last : i), -1);
+  if (idx < 0) return '';
+
+  return (
+    `<c:dLbls><c:dLbl>` +
+    `<c:idx val="${idx}"/>` +
+    `<c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr>` +
+    `<c:txPr><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="900" b="1">` +
+    `<a:solidFill><a:srgbClr val="${s.color}"/></a:solidFill>` +
+    `</a:defRPr></a:pPr><a:endParaRPr lang="it-IT"/></a:p></c:txPr>` +
+    `<c:dLblPos val="t"/>` +
+    SHOW(true) +
+    `</c:dLbl>` +
+    SHOW(false) +
+    `</c:dLbls>`
   );
 }
 

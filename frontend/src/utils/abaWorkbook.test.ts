@@ -199,6 +199,20 @@ describe('the chart of a food sheet', () => {
     ]);
   });
 
+  it('sets the criterion apart from the level lines and names it on the chart', () => {
+    const [sheet] = build([session(1), session(2)]);
+    const criterion = sheet.chart.series.find((s) => s.name === 'Criterio 40%');
+
+    expect(criterion?.dash).toBe('lgDash');
+    expect(criterion?.labelLastPoint).toBe(true);
+    expect(criterion?.marker).toBeUndefined();
+    // a colour of its own, or it disappears under whichever level runs along it
+    const levelColors = sheet.chart.series
+      .filter((s) => s.name.startsWith('L'))
+      .map((s) => s.color);
+    expect(levelColors).not.toContain(criterion?.color);
+  });
+
   it('adds a hidden series for each change line', () => {
     const [sheet] = build([
       session(1, { difficulty: 'facile' }),

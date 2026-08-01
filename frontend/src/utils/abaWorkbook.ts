@@ -34,7 +34,8 @@ const COL_THERAPIST = 2;
 const COL_CONDITION = 3;
 const COL_LEVELS = 4;
 
-const CRITERION_COLOR = '757575';
+/** Green, outside the level palette, so the criterion reads as the target and not as data. */
+const CRITERION_COLOR = '2E7D32';
 const CHANGE_COLOR = '212121';
 const MARKERS = ['circle', 'square', 'diamond', 'triangle'] as const;
 
@@ -162,8 +163,8 @@ function buildFoodSheet(
     yRef: dataRange(colCriterion),
     yValues: ordinals.map(() => criterion),
     color: CRITERION_COLOR,
-    dashed: true,
-    thin: true,
+    dash: 'lgDash',
+    labelLastPoint: true,
   });
 
   changes.forEach((change, i) => {

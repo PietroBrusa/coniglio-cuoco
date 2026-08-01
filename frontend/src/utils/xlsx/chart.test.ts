@@ -58,10 +58,33 @@ describe('buildChartXml', () => {
   });
 
   it('dashes and thins the lines that are references, not data', () => {
-    const xml = buildChartXml(spec({ series: [series({ dashed: true, thin: true, marker: 'none' })] }));
-    expect(xml).toContain('<a:prstDash val="dash"/>');
+    const xml = buildChartXml(spec({ series: [series({ dash: 'lgDash', thin: true, marker: 'none' })] }));
+    expect(xml).toContain('<a:prstDash val="lgDash"/>');
     expect(xml).toContain('<a:ln w="12700" cap="rnd">');
     expect(xml).toContain('<c:symbol val="none"/>');
+  });
+
+  it('names a reference line at its last point, in the colour of the line', () => {
+    const xml = buildChartXml(spec({ series: [series({ labelLastPoint: true, color: '2E7D32' })] }));
+    expect(xml).toContain('<c:dLbls><c:dLbl><c:idx val="2"/>');
+    expect(xml).toContain('<a:srgbClr val="2E7D32"/></a:solidFill></a:defRPr>');
+    // the named point shows the series name, the rest of the series shows nothing
+    expect(xml).toContain('<c:showSerName val="1"/>');
+    expect(xml).toContain('<c:showSerName val="0"/>');
+  });
+
+  it('labels the last point that has a value, not a gap', () => {
+    const xml = buildChartXml(
+      spec({ series: [series({ labelLastPoint: true, yValues: [10, 20, null] })] }),
+    );
+    expect(xml).toContain('<c:dLbl><c:idx val="1"/>');
+  });
+
+  it('leaves out the label when the series has no point to put it on', () => {
+    const xml = buildChartXml(
+      spec({ series: [series({ labelLastPoint: true, yValues: [null, null, null] })] }),
+    );
+    expect(xml).not.toContain('<c:dLbls>');
   });
 
   it('hides the change lines from the legend without hiding the line', () => {
