@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { renderHook } from 'vitest-browser-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSaveSession } from './useSaveSession';
-import { sessionsApi } from '../api/apiClient';
-import type { Session } from '../types';
+import { sessionsApi } from '@/api/apiClient';
+import type { Session } from '@/types';
 
 const session = { childId: 'John Doe', sessionNumber: 1, levels: [] } as unknown as Session;
 

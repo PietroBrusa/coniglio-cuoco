@@ -1,14 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { AxiosError } from 'axios';
-import { authApi } from '../api/apiClient';
+import { authApi } from '@/api/apiClient';
 import {
   clearAuth,
   getStoredChild,
   isSessionExpired,
   onAuthCleared,
   setAuth,
-} from '../auth/tokenStore';
+} from '@/storage/tokenStore';
 
 interface AuthContextType {
   childId: string | null;

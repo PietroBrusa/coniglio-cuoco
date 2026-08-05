@@ -1,0 +1,66 @@
+@use '../../app/styles/tokens' as t;
+
+.form {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.intro {
+  margin: 0;
+  color: var(--farm-brown);
+  font-size: 0.9rem;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.fieldLabel {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+
+  small {
+    font-weight: 400;
+    color: var(--farm-brown);
+  }
+}
+.inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  input {
+    width: 6rem;
+    padding: 0.5rem 0.7rem;
+    border: 2px solid t.$border;
+    border-radius: 12px;
+    font-size: 1rem;
+  }
+}
+.unit {
+  color: var(--farm-brown);
+  font-size: 0.9rem;
+}
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+
+  input {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+}
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+.savedMsg {
+  margin: 0;
+  color: var(--farm-green-d);
+  font-weight: 600;
+}

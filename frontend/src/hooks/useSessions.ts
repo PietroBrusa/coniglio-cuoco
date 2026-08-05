@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteSession, fetchSessions } from '../api/client';
+import { deleteSession, fetchSessions } from '@/api/client';
 
 export function useSessions(childId?: string) {
   return useQuery({

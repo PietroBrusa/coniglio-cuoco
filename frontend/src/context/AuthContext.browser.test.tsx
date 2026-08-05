@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook } from 'vitest-browser-react';
 import { AxiosError } from 'axios';
 import { AuthProvider, useAuth } from './AuthContext';
-import { authApi, sessionsApi } from '../api/apiClient';
-import { fetchSessions } from '../api/client';
-import { setAuth } from '../auth/tokenStore';
+import { authApi, sessionsApi } from '@/api/apiClient';
+import { fetchSessions } from '@/api/client';
+import { setAuth } from '@/storage/tokenStore';
 
 function axiosError(message: string | string[]): AxiosError {
   const e = new AxiosError('Request failed');

@@ -1,8 +1,8 @@
 import { AxiosError } from 'axios';
-import type { Session } from '../types';
+import type { Session } from '@/types';
 import { sessionsApi } from './apiClient';
 import type { CreateSessionDto, SessionDto } from './generated';
-import { clearAuth } from '../auth/tokenStore';
+import { clearAuth } from '@/storage/tokenStore';
 
 export type SavedSession = SessionDto;
 

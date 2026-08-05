@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, cleanup } from 'vitest-browser-react';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import App from '../src/App';
-import { AuthProvider } from '../src/context/AuthContext';
-import { GameProvider } from '../src/context/GameContext';
+import App from '@/app/App';
+import { AuthProvider } from '@/context/AuthContext';
+import { GameProvider } from '@/context/GameContext';
 
 type Screen = Awaited<ReturnType<typeof render>>;
 
@@ -25,23 +25,35 @@ function renderApp(initialPath: string) {
 
 const foodTarget = (screen: Screen) => screen.getByRole('button', { name: /^Tocca / });
 
-async function tapFood(screen: Screen, times = 1) {
-  for (let i = 0; i < times; i += 1) await foodTarget(screen).click();
-}
+// The Makey Makey is the only input: touching the food closes the circuit and
+// sends Space, held down for as long as the contact lasts.
+const press = () => window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }));
+const release = () => window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space' }));
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * Taps the starter sequence. The key listeners are attached in an effect, so a
+ * tap fired in the same tick the level mounts can land before the level is
+ * listening; re-checking the phase before every tap covers that without ever
+ * tapping once play has begun (which would start the measurement window).
+ */
 async function enterPlay(screen: Screen, progressAtZero: string) {
   await expect.element(foodTarget(screen), { timeout: 5000 }).toBeInTheDocument();
-  await tapFood(screen, 3);
+  for (let i = 0; i < 8; i += 1) {
+    if (screen.getByText(progressAtZero).query()) break;
+    press();
+    release();
+    await wait(30);
+  }
   await expect.element(screen.getByText(progressAtZero), { timeout: 5000 }).toBeInTheDocument();
 }
 
 async function holdUntilComplete(screen: Screen, rewardText: string, timeout: number) {
-  const el = foodTarget(screen).element();
-  el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+  press();
   try {
     await expect.element(screen.getByText(rewardText), { timeout }).toBeInTheDocument();
   } finally {
-    el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+    release();
   }
 }
 
@@ -56,14 +68,6 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('Gameplay journey (E2E)', () => {
-  it('plays the first (hold) level: setup → play → reward', async () => {
-    const screen = await renderApp('/setup');
-    await screen.getByRole('button', { name: /Inizia la storia/ }).click();
-
-    await enterPlay(screen, 'Cesto 0%');
-    await holdUntilComplete(screen, 'Livello 1 completato!', 12_000);
-  }, 20_000);
-
   it('completes the full three-level session through to the summary', async () => {
     const screen = await renderApp('/setup');
     await screen.getByRole('button', { name: /Inizia la storia/ }).click();

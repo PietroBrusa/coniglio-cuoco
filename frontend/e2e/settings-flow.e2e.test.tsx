@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import App from '../src/App';
-import { AuthProvider } from '../src/context/AuthContext';
-import { GameProvider } from '../src/context/GameContext';
+import App from '@/app/App';
+import { AuthProvider } from '@/context/AuthContext';
+import { GameProvider } from '@/context/GameContext';
 
 const SETTINGS_KEY = 'coniglio-cuoco:settings';
 

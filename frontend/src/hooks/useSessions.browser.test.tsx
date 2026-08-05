@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { renderHook } from 'vitest-browser-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSessions, useDeleteSession } from './useSessions';
-import { sessionsApi } from '../api/apiClient';
+import { sessionsApi } from '@/api/apiClient';
 
 function wrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });

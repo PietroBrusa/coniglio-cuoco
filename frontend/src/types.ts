@@ -30,7 +30,7 @@ export interface Level {
 
 export type RabbitMood = 'idle' | 'happy' | 'sniff' | 'eat' | 'cheer';
 
-import type { TouchRecordDto, LevelResultMetricsDto, LevelResultDto } from './api/generated';
+import type { TouchRecordDto, LevelResultMetricsDto, LevelResultDto } from '@/api/generated';
 export type TouchRecord = TouchRecordDto;
 export type LevelResultMetrics = LevelResultMetricsDto;
 export type LevelResult = LevelResultDto;

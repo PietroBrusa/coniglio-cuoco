@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { saveSession } from '../api/client';
-import type { Session } from '../types';
+import { saveSession } from '@/api/client';
+import type { Session } from '@/types';
 
 type SaveStatus = 'idle' | 'pending' | 'success' | 'error';
 

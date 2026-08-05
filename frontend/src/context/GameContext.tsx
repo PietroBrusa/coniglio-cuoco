@@ -1,8 +1,8 @@
 import { createContext, useContext, useMemo, useReducer } from 'react';
 import type { ReactNode } from 'react';
-import type { Difficulty, Food, Level, Metrics, Session } from '../types';
-import { LEVELS, getFood } from '../game/levels';
-import { addLevelResult, createSession } from '../game/sessionRecord';
+import type { Difficulty, Food, Level, Metrics, Session } from '@/types';
+import { LEVELS, getFood } from '@/domain/levels';
+import { addLevelResult, createSession } from '@/domain/sessionRecord';
 import { useAuth } from './AuthContext';
 
 interface GameState {

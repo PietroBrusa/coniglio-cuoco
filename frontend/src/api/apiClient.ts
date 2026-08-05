@@ -1,5 +1,5 @@
 import { AuthApi, Configuration, SessionsApi } from './generated';
-import { getToken } from '../auth/tokenStore';
+import { getToken } from '@/storage/tokenStore';
 
 const config = new Configuration({
   basePath: import.meta.env.VITE_API_URL ?? 'http://localhost:3000',

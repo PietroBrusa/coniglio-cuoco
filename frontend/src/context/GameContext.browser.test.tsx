@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { renderHook } from 'vitest-browser-react';
 import { AuthProvider } from './AuthContext';
 import { GameProvider, useGame } from './GameContext';
-import type { Metrics } from '../types';
+import type { Metrics } from '@/types';
 
 const metrics = (count: number): Metrics => ({
   count,

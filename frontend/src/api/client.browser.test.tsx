@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AxiosError } from 'axios';
 import { fetchSessions, saveSession, deleteSession } from './client';
 import { sessionsApi } from './apiClient';
-import type { Session } from '../types';
+import type { Session } from '@/types';
 
 function axios401(): AxiosError {
   const e = new AxiosError('Unauthorized');

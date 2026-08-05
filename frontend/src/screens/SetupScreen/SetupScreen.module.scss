@@ -1,0 +1,61 @@
+@use '../../app/styles/tokens' as t;
+
+.foodPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 0.2rem;
+}
+.foodSearch {
+  width: 100%;
+  margin: 0.3rem 0 0.5rem;
+  padding: 0.5rem 0.8rem;
+  border: 2px solid t.$border;
+  border-radius: 999px;
+  font-size: 0.95rem;
+}
+.foodEmpty {
+  margin: 0.4rem;
+  color: var(--farm-brown);
+  font-size: 0.9rem;
+}
+.progressHint {
+  margin: 0.3rem 0 0;
+  color: var(--farm-brown);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.foodChip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.8rem;
+  border: 2px solid t.$border;
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.foodChipSelected {
+  border-color: var(--farm-orange);
+  background: #fff3e0;
+}
+
+.childBar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--farm-brown);
+}
+.linkBtn {
+  border: none;
+  background: transparent;
+  color: var(--farm-green-d);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
