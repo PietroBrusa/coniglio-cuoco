@@ -5,10 +5,20 @@ import type { AppSettings } from '@/storage/settings';
 import s from '@/app/styles/shared.module.scss';
 import c from './SettingsScreen.module.scss';
 
+/** Che cosa serve alla schermata delle impostazioni. */
 interface SettingsScreenProps {
+  /** Richiamata del pulsante di ritorno. */
   onBack: () => void;
 }
 
+/**
+ * Schermata delle impostazioni: soglie del rinforzo e suono.
+ *
+ * Le modifiche restano in una copia di lavoro finché non si preme «Salva», così
+ * un valore digitato per sbaglio non cambia i criteri già in uso. La soglia di
+ * contatto sostenuto è anche il criterio del programma riportato sul grafico
+ * ABA e nelle schede Excel.
+ */
 const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const [draft, setDraft] = useState<AppSettings>(() => loadSettings());
   const [saved, setSaved] = useState(false);
@@ -79,25 +89,6 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
               }
             />
             <span className={c.unit}>%</span>
-          </span>
-        </label>
-
-        <label className={c.field}>
-          <span className={c.fieldLabel}>
-            3ª stella — contatto sostenuto (livelli “a tocchi” / difficile)
-            <small>Tempo totale di contatto richiesto.</small>
-          </span>
-          <span className={c.inputWrap}>
-            <input
-              type="number"
-              min="0"
-              step="0.5"
-              value={draft.tapContactMs / 1000}
-              onChange={(e) =>
-                update({ tapContactMs: Math.max(0, Number(e.target.value) * 1000) })
-              }
-            />
-            <span className={c.unit}>secondi</span>
           </span>
         </label>
 

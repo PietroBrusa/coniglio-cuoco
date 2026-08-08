@@ -156,26 +156,6 @@ describe('buildFoodSheets', () => {
     expect(cellAt(sheets[0], FIRST_DATA_ROW, 7)).toBe('Bambino stanco.');
   });
 
-  it('puts a change line halfway between the sessions that differ in condition', () => {
-    const sheets = build([
-      session(1, { difficulty: 'facile' }),
-      session(2, { difficulty: 'difficile' }),
-    ]);
-    const sheet = sheets[0];
-    // one level: criterio 5, comportamenti 6, note 7, blank 8, Y cambio 9, X cambio 10
-    expect(cellAt(sheet, HEADER_ROW, 9)).toBe('Y cambio');
-    expect(cellAt(sheet, HEADER_ROW, 10)).toBe('X Mela · difficile');
-    expect(cellAt(sheet, FIRST_DATA_ROW, 9)).toBe(0);
-    expect(cellAt(sheet, FIRST_DATA_ROW + 1, 9)).toBe(100);
-    expect(cellAt(sheet, FIRST_DATA_ROW, 10)).toBe(1.5);
-    expect(cellAt(sheet, FIRST_DATA_ROW + 1, 10)).toBe(1.5);
-  });
-
-  it('adds no change columns when the condition never changes', () => {
-    const sheets = build([session(1), session(2)]);
-    expect(cellAt(sheets[0], HEADER_ROW, 10)).toBeUndefined();
-  });
-
   it('splits by food, so a sheet only ever holds its own sessions', () => {
     const sheets = build([
       session(1, { food: 'Mela', foodId: 'mela' }),
@@ -211,18 +191,6 @@ describe('the chart of a food sheet', () => {
       .filter((s) => s.name.startsWith('L'))
       .map((s) => s.color);
     expect(levelColors).not.toContain(criterion?.color);
-  });
-
-  it('adds a hidden series for each change line', () => {
-    const [sheet] = build([
-      session(1, { difficulty: 'facile' }),
-      session(2, { difficulty: 'difficile' }),
-    ]);
-    const change = sheet.chart.series.at(-1);
-    expect(change?.name).toBe('Cambio · Mela · difficile');
-    expect(change?.hideFromLegend).toBe(true);
-    expect(change?.xValues).toEqual([1.5, 1.5]);
-    expect(change?.yValues).toEqual([0, 100]);
   });
 
   it('points the series at the rows the data actually occupies', () => {

@@ -3,10 +3,18 @@ import Rabbit from '@/components/Rabbit/Rabbit';
 import { useAuth } from '@/context/AuthContext';
 import s from '@/app/styles/shared.module.scss';
 
+/** Che cosa serve alla schermata di accesso. */
 interface LoginScreenProps {
+  /** Richiamata ad accesso o registrazione riusciti. */
   onLogin: () => void;
 }
 
+/**
+ * Schermata di accesso e registrazione.
+ *
+ * Il nome del bambino è pensato come codice pseudonimo (per esempio `B001`):
+ * nel database non finisce nessun dato anagrafico.
+ */
 const LoginScreen = ({ onLogin }: LoginScreenProps) => {
   const { login, register } = useAuth();
   const [name, setName] = useState('');

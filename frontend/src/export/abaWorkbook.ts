@@ -1,5 +1,12 @@
+/**
+ * Costruisce le schede ABA: un foglio per alimento, ognuno con il grafico che
+ * porta il modulo cartaceo — una linea per livello e la linea di criterio.
+ *
+ * @module
+ */
+
 import type { SavedSession } from '@/api/client';
-import { buildAbaSeries, conditionOf, findPhaseChanges, groupByFood } from './abaData';
+import { buildAbaSeries, conditionOf, groupByFood } from './abaData';
 import { NO_PROBLEM_ID, problemBehaviorLabels } from '@/domain/problemBehaviors';
 import { colorForLevel } from '@/export/seriesColors';
 import type { ChartSpec, ChartSeries } from './xlsx/chart';
@@ -9,22 +16,19 @@ import { buildSheetXml, columnRange, sanitizeSheetName } from './xlsx/sheet';
 import type { ChartAnchor, XlsxSheet } from './xlsx/package';
 import { buildXlsxParts, zipXlsx } from './xlsx/package';
 
-/**
- * Turns the saved sessions into one ABA data sheet per food, each with the chart the
- * paper form carries: a line per level, the criterion line, and a vertical change line
- * wherever the condition switches.
- */
-
+/** Dati di partenza dell'esportazione. */
 export interface AbaExportInput {
+  /** Bambino a cui appartengono le sessioni; finisce nell'intestazione della scheda. */
   childId: string;
+  /** Tutte le sue sessioni salvate: vengono raggruppate per alimento, un foglio ciascuno. */
   sessions: SavedSession[];
-  /** Engagement percentage the programme aims at, from the app settings. */
+  /** Percentuale di contatto che il programma si pone come obiettivo, dalle impostazioni dell'app. */
   criterion: number;
 }
 
-/** Header block copied from the paper form, above the table. */
+/** Righe del blocco di intestazione ricopiato dal modulo cartaceo, sopra la tabella. */
 const HEADER_ROWS = 8;
-/** 1-based row of the column headers; the blank row 9 separates them from the block. */
+/** Riga (da 1) delle intestazioni di colonna; la riga 9 vuota le stacca dal blocco. */
 const HEADER_ROW = HEADER_ROWS + 2;
 const FIRST_DATA_ROW = HEADER_ROW + 1;
 
@@ -34,23 +38,35 @@ const COL_THERAPIST = 2;
 const COL_CONDITION = 3;
 const COL_LEVELS = 4;
 
-/** Green, outside the level palette, so the criterion reads as the target and not as data. */
+/** Verde, fuori dalla palette dei livelli: il criterio si legge come obiettivo e non come dato. */
 const CRITERION_COLOR = '2E7D32';
-const CHANGE_COLOR = '212121';
 const MARKERS = ['circle', 'square', 'diamond', 'triangle'] as const;
 
 const Y_MAX = 100;
 const CHART_ROWS = 24;
 const CHART_COLS = 10;
 
+/** Un foglio già pronto: contenuto della tabella, larghezze, grafico e sua collocazione. */
 export interface FoodSheet {
+  /** Nome del foglio, ripulito dei caratteri che Excel vieta. */
   name: string;
+  /** Righe della scheda: blocco di intestazione, riga vuota, intestazioni di colonna, dati. */
   rows: SheetRow[];
+  /** Larghezza delle colonne in caratteri. */
   columnWidths: number[];
+  /** Definizione del grafico da disegnare sotto la tabella. */
   chart: ChartSpec;
+  /** Celle fra cui il grafico è ancorato. */
   anchor: ChartAnchor;
 }
 
+/**
+ * Prepara un foglio per ogni alimento presente nelle sessioni.
+ *
+ * @param input - Bambino, sessioni e criterio del programma.
+ * @returns I fogli nell'ordine in cui gli alimenti compaiono, con i nomi già resi
+ * univoci fra loro.
+ */
 export function buildFoodSheets({ childId, sessions, criterion }: AbaExportInput): FoodSheet[] {
   const taken: string[] = [];
 
@@ -69,14 +85,10 @@ function buildFoodSheet(
   criterion: number,
 ): FoodSheet {
   const levels = buildAbaSeries(sessions).map((s) => ({ id: s.levelId, name: s.levelName }));
-  const changes = findPhaseChanges(sessions);
 
   const colCriterion = COL_LEVELS + levels.length;
   const colBehaviors = colCriterion + 1;
   const colNotes = colBehaviors + 1;
-  // One blank column keeps the change-line helpers clear of the table proper.
-  const colChangeY = colNotes + 2;
-  const colChangeX = (index: number) => colChangeY + 1 + index;
 
   const rows: SheetRow[] = [
     [{ value: 'Nome studente', bold: true }, childId],
@@ -101,10 +113,6 @@ function buildFoodSheet(
   header[colCriterion] = { value: 'Criterio', bold: true };
   header[colBehaviors] = { value: 'Comportamenti', bold: true };
   header[colNotes] = { value: 'Note', bold: true };
-  header[colChangeY] = { value: 'Y cambio', bold: true };
-  changes.forEach((change, i) => {
-    header[colChangeX(i)] = { value: `X ${change.condition}`, bold: true };
-  });
   rows.push(header);
 
   const levelValues: (number | null)[][] = levels.map(() => []);
@@ -131,20 +139,11 @@ function buildFoodSheet(
     row[colBehaviors] = problemBehaviorLabels(session.problemBehaviors).join(', ');
     row[colNotes] = session.notes ?? '';
 
-    // The change lines only need two points each: floor and ceiling of the Y axis.
-    if (index < 2) {
-      row[colChangeY] = index === 0 ? 0 : Y_MAX;
-      changes.forEach((change, i) => {
-        row[colChangeX(i)] = change.atOrdinal - 0.5;
-      });
-    }
-
     rows.push(row);
   });
 
   const lastDataRow = FIRST_DATA_ROW + sessions.length - 1;
   const dataRange = (column: number) => columnRange(name, column, FIRST_DATA_ROW, lastDataRow);
-  const changeRange = (column: number) => columnRange(name, column, FIRST_DATA_ROW, FIRST_DATA_ROW + 1);
 
   const series: ChartSeries[] = levels.map((level, i) => ({
     name: `L${level.id} · ${level.name}`,
@@ -165,19 +164,6 @@ function buildFoodSheet(
     color: CRITERION_COLOR,
     dash: 'lgDash',
     labelLastPoint: true,
-  });
-
-  changes.forEach((change, i) => {
-    series.push({
-      name: `Cambio · ${change.condition}`,
-      xRef: changeRange(colChangeX(i)),
-      xValues: [change.atOrdinal - 0.5, change.atOrdinal - 0.5],
-      yRef: changeRange(colChangeY),
-      yValues: [0, Y_MAX],
-      color: CHANGE_COLOR,
-      thin: true,
-      hideFromLegend: true,
-    });
   });
 
   const columnWidths = [12, 10, 18, 24, ...levels.map(() => 16), 10, 30, 32];
@@ -204,6 +190,13 @@ function buildFoodSheet(
   };
 }
 
+/**
+ * Genera il file .xlsx completo delle schede ABA.
+ *
+ * @param input - Bambino, sessioni e criterio del programma.
+ * @returns I byte del file, pronti da consegnare al browser come download.
+ * @throws Error se non c'è nessuna sessione da esportare.
+ */
 export function buildAbaWorkbook(input: AbaExportInput): Uint8Array<ArrayBuffer> {
   const sheets: XlsxSheet[] = buildFoodSheets(input).map((sheet) => ({
     name: sheet.name,
@@ -215,16 +208,31 @@ export function buildAbaWorkbook(input: AbaExportInput): Uint8Array<ArrayBuffer>
   return zipXlsx(buildXlsxParts(sheets));
 }
 
+/**
+ * Nome del file da scaricare, es. `schede-aba_B001_2026-08-05.xlsx`.
+ *
+ * Il nome del bambino viene ridotto a lettere e cifre (accenti compresi): il
+ * risultato è un nome di file valido su Windows, macOS e Linux.
+ *
+ * @param childId - Bambino a cui appartengono le schede.
+ * @param at - Data da riportare nel nome; per impostazione predefinita oggi.
+ * @returns Il nome del file, con estensione.
+ */
 export function abaWorkbookFileName(childId: string, at: Date = new Date()): string {
   const name = childId.trim().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'bambino';
   const day = `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`;
   return `schede-aba_${name}_${day}.xlsx`;
 }
 
+/** Elenca senza ripetizioni gli operatori che hanno condotto le sessioni, per la voce STAFF. */
 function listTherapists(sessions: SavedSession[]): string {
   return [...new Set(sessions.map((s) => s.therapist?.trim()).filter(Boolean))].join(', ');
 }
 
+/**
+ * Elenca i comportamenti problema emersi almeno una volta, per la voce CP.
+ * Scarta il segnaposto «nessuno», che non è un comportamento.
+ */
 function listBehaviors(sessions: SavedSession[]): string {
   const ids = sessions.flatMap((s) => s.problemBehaviors ?? []).filter((id) => id !== NO_PROBLEM_ID);
   const labels = problemBehaviorLabels([...new Set(ids)]);

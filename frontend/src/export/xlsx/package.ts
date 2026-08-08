@@ -1,19 +1,43 @@
+/**
+ * Assemblaggio del pacchetto .xlsx.
+ *
+ * Un file Excel è un archivio ZIP di parti XML legate fra loro da relazioni:
+ * nessuna parte cita un'altra per percorso, ma tramite un identificativo
+ * risolto dal file `.rels` corrispondente. Qui quella catena viene ricostruita
+ * per intero.
+ *
+ * @module
+ */
+
 import { zipSync, strToU8 } from 'fflate';
 import { XML_DECL, esc } from './xml';
 import { stylesXml } from './sheet';
 
-/** Where the chart sits on its sheet, in zero-based cell coordinates. */
+/** Dove sta il grafico sul suo foglio, in coordinate di cella a partire da 0. */
 export interface ChartAnchor {
+  /** Colonna dell'angolo in alto a sinistra. */
   fromCol: number;
+  /** Riga dell'angolo in alto a sinistra. */
   fromRow: number;
+  /** Colonna dell'angolo in basso a destra. */
   toCol: number;
+  /** Riga dell'angolo in basso a destra. */
   toRow: number;
 }
 
+/** Un foglio pronto da impacchettare, con il suo eventuale grafico. */
 export interface XlsxSheet {
+  /** Nome del foglio, già ripulito e reso univoco. */
   name: string;
+  /** Contenuto XML del foglio. */
   sheetXml: string;
-  chart?: { xml: string; anchor: ChartAnchor };
+  /** Grafico da ancorare al foglio; assente se il foglio non ne ha. */
+  chart?: {
+    /** Contenuto XML del grafico. */
+    xml: string;
+    /** Celle fra cui il grafico va ancorato. */
+    anchor: ChartAnchor;
+  };
 }
 
 const PKG_RELS = 'http://schemas.openxmlformats.org/package/2006/relationships';
@@ -27,8 +51,15 @@ const CT = {
 };
 
 /**
- * Lays out the parts of an .xlsx package, keyed by their path inside the zip.
- * Deliberately free of docProps: the workbook then carries no author or path metadata.
+ * Dispone le parti del pacchetto .xlsx, indicizzate per percorso dentro l'archivio.
+ *
+ * Volutamente priva di `docProps`, la parte che normalmente contiene autore,
+ * organizzazione e percorsi locali: il file esportato non porta con sé metadati
+ * sull'operatore o sulla macchina che lo ha prodotto.
+ *
+ * @param sheets - I fogli da impacchettare, nell'ordine in cui compariranno.
+ * @returns Le parti del pacchetto, pronte per {@link zipXlsx}.
+ * @throws Error se non viene passato nessun foglio.
  */
 export function buildXlsxParts(sheets: XlsxSheet[]): Record<string, string> {
   if (sheets.length === 0) throw new Error('Un workbook deve avere almeno un foglio');
@@ -137,9 +168,15 @@ function drawingXml(anchor: ChartAnchor): string {
   );
 }
 
+/**
+ * Comprime le parti nell'archivio ZIP che costituisce il file .xlsx.
+ *
+ * @param parts - Parti del pacchetto, indicizzate per percorso interno.
+ * @returns I byte del file, pronti da consegnare al browser come download.
+ */
 export function zipXlsx(parts: Record<string, string>): Uint8Array<ArrayBuffer> {
   const files: Record<string, Uint8Array> = {};
   for (const [path, xml] of Object.entries(parts)) files[path] = strToU8(xml);
-  // fflate always allocates a plain ArrayBuffer, which Blob needs but the typing hides.
+  // fflate alloca sempre un ArrayBuffer semplice, quello che serve a Blob, ma la tipizzazione lo nasconde.
   return zipSync(files, { level: 6 }) as Uint8Array<ArrayBuffer>;
 }

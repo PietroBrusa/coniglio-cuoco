@@ -4,32 +4,58 @@ import Rabbit from '@/components/Rabbit/Rabbit';
 import { nextSessionNumber } from '@/domain/foodProgress';
 import type { ProgressByFood } from '@/domain/foodProgress';
 import { loadTherapist, saveTherapist } from '@/storage/therapistStore';
+import { collectsData } from '@/domain/sessionRecord';
 import type { Difficulty } from '@/types';
 import s from '@/app/styles/shared.module.scss';
 import c from './SetupScreen.module.scss';
 
+/** Scelte con cui si apre una sessione. */
 export interface StartParams {
+  /** Numero progressivo della sessione, proposto in automatico e correggibile. */
   sessionNumber: number;
+  /** Alimento su cui si lavora. */
   foodId: string;
+  /** Condizione sperimentale scelta. */
   difficulty: Difficulty;
+  /** Operatore che conduce la sessione. */
   therapist: string;
 }
 
 const DIFFICULTIES: { id: Difficulty; emoji: string; label: string; hint: string }[] = [
-  { id: 'facile', emoji: '🌱', label: 'Facile', hint: 'tocchi liberi' },
-  { id: 'difficile', emoji: '🎵', label: 'Difficile', hint: 'tocchi a tempo (piano tiles)' },
+  { id: 'facile', emoji: '🌱', label: 'Facile', hint: 'tocchi liberi, con raccolta dati' },
+  { id: 'difficile', emoji: '🎵', label: 'Difficile', hint: 'tocchi a tempo, solo gioco' },
 ];
 
+/** Che cosa serve alla schermata di setup. */
 interface SetupScreenProps {
+  /** Bambino autenticato. */
   childId: string;
+  /** Storico per alimento, da cui si ricava il numero di sessione da proporre. */
   progressByFood?: ProgressByFood;
+  /** Lo storico è ancora in caricamento. */
   progressLoading?: boolean;
+  /** Richiamata di avvio della sessione. */
   onStart: (params: StartParams) => void;
+  /** Apre la dashboard delle sessioni salvate. */
   onOpenDashboard: () => void;
+  /** Apre le impostazioni. */
   onOpenSettings: () => void;
+  /** Chiude la sessione di accesso e cambia bambino. */
   onLogout: () => void;
 }
 
+/**
+ * Schermata di apertura: si scelgono terapista, numero di sessione, alimento e
+ * difficoltà.
+ *
+ * Il numero di sessione segue l'alimento selezionato — è quello successivo
+ * all'ultima sessione svolta con quell'alimento — finché il terapista non lo
+ * corregge a mano, nel qual caso la correzione ha la precedenza.
+ *
+ * La difficoltà non è solo una meccanica: scegliendo *difficile* si gioca e
+ * basta, senza raccolta dati. Va detto qui, prima di iniziare, perché è dopo che
+ * non si può più rimediare.
+ */
 const SetupScreen = ({
   childId,
   progressByFood = {},
@@ -155,6 +181,11 @@ const SetupScreen = ({
               </button>
             ))}
           </div>
+          {!collectsData(difficulty) && (
+            <p className={c.progressHint}>
+              🎵 Solo gioco: la partita non viene salvata e non entra nei grafici.
+            </p>
+          )}
         </label>
 
         <button type="submit" className={`${s.btn} ${s.btnPrimary}`}>

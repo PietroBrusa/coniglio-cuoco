@@ -1,5 +1,19 @@
+/**
+ * Catalogo degli alimenti proponibili in sessione.
+ *
+ * @module
+ */
+
 import type { Food } from '@/types';
 
+/**
+ * I 106 alimenti selezionabili, raggruppati per categoria nell'ordine in cui
+ * compaiono nel selettore: frutta, verdura, cereali e derivati, piatti e
+ * proteine, pesce, dolci, bevande.
+ *
+ * L'identificativo è stabile e non va cambiato: è la chiave con cui le sessioni
+ * salvate vengono raggruppate per alimento.
+ */
 export const FOODS: Food[] = [
   { id: 'mela', label: 'Mela', emoji: '🍎' },
   { id: 'mela-verde', label: 'Mela verde', emoji: '🍏' },

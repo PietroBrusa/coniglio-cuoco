@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import type { AbaSeries, PhaseChange } from '@/export/abaData';
+import type { AbaSeries } from '@/export/abaData';
 import { colorForLevel } from '@/export/seriesColors';
 import c from './AbaChart.module.scss';
 
@@ -11,14 +11,29 @@ const PLOT_H = H - M.top - M.bottom;
 
 const Y_TICKS = [0, 25, 50, 75, 100];
 
+/** Dati da rappresentare nel grafico. */
 interface AbaChartProps {
+  /** Una linea per livello, con i suoi punti. */
   series: AbaSeries[];
-  phaseChanges: PhaseChange[];
+  /** Percentuale obiettivo, disegnata come linea orizzontale di riferimento. */
   criterion: number;
+  /** Alimento a cui il grafico si riferisce, citato nella descrizione accessibile. */
   foodLabel?: string;
 }
 
-const AbaChart = ({ series, phaseChanges, criterion, foodLabel }: AbaChartProps) => {
+/**
+ * Grafico ABA dell'andamento del programma: percentuale di contatto per
+ * sessione, una linea per livello.
+ *
+ * È SVG scritto a mano e non una libreria di grafici: le esigenze sono precise
+ * (asse verticale fisso da 0 a 100, linea di criterio etichettata, progressivo
+ * denso sull'asse orizzontale) e così il progetto non dipende da nessun
+ * pacchetto per disegnare un dato clinico.
+ *
+ * L'area sensibile attorno a ogni punto è molto più larga del punto stesso,
+ * altrimenti su tablet sarebbe impossibile centrarlo.
+ */
+const AbaChart = ({ series, criterion, foodLabel }: AbaChartProps) => {
   const titleId = useId();
   const [hover, setHover] = useState<{
     x: number;
@@ -65,20 +80,6 @@ const AbaChart = ({ series, phaseChanges, criterion, foodLabel }: AbaChartProps)
             </text>
           </g>
         ))}
-
-        {phaseChanges.map((change) => {
-          const i = ordinals.indexOf(change.atOrdinal);
-          if (i <= 0) return null;
-          const px = x(change.atOrdinal) - step / 2;
-          return (
-            <g key={`${change.atOrdinal}-${change.condition}`}>
-              <line className={c.phaseLine} x1={px} x2={px} y1={M.top} y2={M.top + PLOT_H} />
-              <text className={c.phaseLabel} x={px + 5} y={M.top + 12}>
-                {change.condition}
-              </text>
-            </g>
-          );
-        })}
 
         <line
           className={c.criterionLine}

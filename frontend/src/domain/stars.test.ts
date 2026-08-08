@@ -3,8 +3,7 @@ import { computeStars } from './stars';
 import { DEFAULT_SETTINGS } from '@/storage/settings';
 import type { Level, Metrics } from '@/types';
 
-const holdLevel = { id: 2, mode: 'hold' } as Level;
-const countLevel = { id: 1, mode: 'count' } as Level;
+const holdLevel = { id: 2, mode: 'hold', hardBeat: { beatTarget: 2 } } as Level;
 
 const metrics = (partial: Partial<Metrics>): Metrics =>
   ({
@@ -22,7 +21,7 @@ const metrics = (partial: Partial<Metrics>): Metrics =>
 
 describe('computeStars', () => {
   it('always awards at least 1 star for completing the level', () => {
-    const stars = computeStars(metrics({}), holdLevel, 'facile', DEFAULT_SETTINGS);
+    const stars = computeStars(metrics({}), holdLevel, DEFAULT_SETTINGS, null);
     expect(stars).toBe(1);
   });
 
@@ -30,8 +29,8 @@ describe('computeStars', () => {
     const stars = computeStars(
       metrics({ latencyMs: DEFAULT_SETTINGS.promptLatencyMs - 1 }),
       holdLevel,
-      'facile',
       DEFAULT_SETTINGS,
+      null,
     );
     expect(stars).toBe(2);
   });
@@ -40,46 +39,45 @@ describe('computeStars', () => {
     const stars = computeStars(
       metrics({ latencyMs: DEFAULT_SETTINGS.promptLatencyMs + 1 }),
       holdLevel,
-      'facile',
       DEFAULT_SETTINGS,
+      null,
     );
     expect(stars).toBe(1);
   });
 
-  it('hold mechanic: uses engagement ratio for the sustained-contact star', () => {
+  it('easy mode: uses engagement ratio for the third star', () => {
     const engaged = computeStars(
       metrics({ engagementRatio: DEFAULT_SETTINGS.holdEngagementPct }),
       holdLevel,
-      'facile',
       DEFAULT_SETTINGS,
+      null,
     );
     expect(engaged).toBe(2);
 
     const notEngaged = computeStars(
       metrics({ engagementRatio: DEFAULT_SETTINGS.holdEngagementPct - 1 }),
       holdLevel,
-      'facile',
       DEFAULT_SETTINGS,
+      null,
     );
     expect(notEngaged).toBe(1);
   });
 
-  it('count level forces the "tap" mechanic even on "facile" (uses contact time)', () => {
-    const stars = computeStars(
-      metrics({ totalContactMs: DEFAULT_SETTINGS.tapContactMs }),
-      countLevel,
-      'facile',
-      DEFAULT_SETTINGS,
-    );
-    expect(stars).toBe(2);
+  it('hard mode: uses the beats scored for the third star', () => {
+    const onTarget = computeStars(metrics({}), holdLevel, DEFAULT_SETTINGS, 2);
+    expect(onTarget).toBe(2);
+
+    const short = computeStars(metrics({}), holdLevel, DEFAULT_SETTINGS, 1);
+    expect(short).toBe(1);
   });
 
-  it('"difficile" forces the "tap" mechanic even on a hold level', () => {
+  it('hard mode: holding the contact throughout earns no star on its own', () => {
+    // Il caso da non premiare: contatto pieno, nessuna finestra centrata.
     const stars = computeStars(
-      metrics({ engagementRatio: 100, totalContactMs: 0 }),
+      metrics({ engagementRatio: 100, totalContactMs: 6000 }),
       holdLevel,
-      'difficile',
       DEFAULT_SETTINGS,
+      0,
     );
     expect(stars).toBe(1);
   });
@@ -88,15 +86,15 @@ describe('computeStars', () => {
     const stars = computeStars(
       metrics({ latencyMs: 0, engagementRatio: 100 }),
       holdLevel,
-      'facile',
       DEFAULT_SETTINGS,
+      null,
     );
     expect(stars).toBe(3);
   });
 
   it('respects custom operator thresholds', () => {
     const strict = { ...DEFAULT_SETTINGS, promptLatencyMs: 1000 };
-    const stars = computeStars(metrics({ latencyMs: 2000 }), holdLevel, 'facile', strict);
+    const stars = computeStars(metrics({ latencyMs: 2000 }), holdLevel, strict, null);
     expect(stars).toBe(1);
   });
 });

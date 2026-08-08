@@ -5,7 +5,18 @@ import { playwright } from '@vitest/browser-playwright';
 
 const alias = { '@': fileURLToPath(new URL('./src', import.meta.url)) };
 
+/**
+ * Configurazione unica di Vite: sviluppo, build di produzione e test.
+ *
+ * Erano due file — `vite.config.js` per la build e questo per i test — con lo
+ * stesso alias scritto due volte. Vitest però ignora del tutto il primo, quindi
+ * le due configurazioni potevano divergere senza che nulla se ne accorgesse: chi
+ * gira in sviluppo e chi gira nei test non sarebbero più stati lo stesso
+ * programma. Il plugin React resta ripetuto in ogni progetto perché i progetti
+ * di Vitest non ereditano i plugin della radice.
+ */
 export default defineConfig({
+  plugins: [react()],
   resolve: { alias },
   optimizeDeps: {
     include: ['axios', '@tanstack/react-query', 'react', 'react-dom', 'react-router'],

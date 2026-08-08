@@ -46,6 +46,11 @@ describe('CreateSessionDto', () => {
     expect(errors.map((e) => e.property)).toContain('sessionNumber');
   });
 
+  it('rejects a date that is not a real ISO 8601 timestamp', async () => {
+    const errors = await validateDto({ ...validPayload, date: 'ieri pomeriggio' });
+    expect(errors.map((e) => e.property)).toContain('date');
+  });
+
   it('rejects an unknown difficulty value (enum)', async () => {
     const errors = await validateDto({ ...validPayload, difficulty: 'impossibile' });
     expect(errors.map((e) => e.property)).toContain('difficulty');

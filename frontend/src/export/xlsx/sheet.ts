@@ -1,27 +1,48 @@
+/**
+ * Costruzione di un foglio di lavoro: celle, righe, larghezze delle colonne,
+ * riferimenti usati dalle formule del grafico e foglio di stili minimo.
+ *
+ * @module
+ */
+
 import { XML_DECL, esc } from './xml';
 
-/** Style indexes into the cellXfs list written by {@link stylesXml}. */
+/** Stile predefinito: indice nella lista `cellXfs` scritta da {@link stylesXml}. */
 export const STYLE_DEFAULT = 0;
+/** Stile grassetto, usato dalle intestazioni. */
 export const STYLE_BOLD = 1;
 
+/** Valore che può finire in una cella; `null` e `undefined` la lasciano vuota. */
 export type CellValue = string | number | null | undefined;
 
+/** Una cella con la sua formattazione. */
 export interface Cell {
+  /** Contenuto della cella. */
   value: CellValue;
+  /** Scrive il contenuto in grassetto. */
   bold?: boolean;
 }
 
+/** Una cella si può indicare per esteso oppure con il solo valore. */
 export type CellInput = Cell | CellValue;
+
+/** Una riga del foglio; le posizioni non assegnate restano vuote. */
 export type SheetRow = CellInput[];
 
+/** Opzioni di generazione del foglio. */
 export interface SheetOptions {
-  /** Column widths in characters, left to right; missing entries keep the default. */
+  /** Larghezza delle colonne in caratteri, da sinistra a destra; le mancanti restano predefinite. */
   columnWidths?: number[];
-  /** Emits the <drawing> reference the worksheet rels point at the chart. */
+  /** Emette il riferimento al disegno che le relazioni del foglio puntano al grafico. */
   hasDrawing?: boolean;
 }
 
-/** 0 -> A, 25 -> Z, 26 -> AA. */
+/**
+ * Converte un indice di colonna nella lettera usata da Excel.
+ *
+ * @param index - Indice a partire da 0.
+ * @returns `A` per 0, `Z` per 25, `AA` per 26 e così via.
+ */
 export function columnLetter(index: number): string {
   let n = index + 1;
   let out = '';
@@ -33,10 +54,22 @@ export function columnLetter(index: number): string {
   return out;
 }
 
-/** Sheet names are quoted in formulas, and a quote inside one is doubled. */
+/**
+ * Racchiude fra apici il nome del foglio come vogliono le formule; un apice
+ * contenuto nel nome va raddoppiato.
+ */
 export const quoteSheetName = (name: string): string => `'${name.replace(/'/g, "''")}'`;
 
-/** An absolute single-column range such as 'Mela'!$B$11:$B$20, as chart formulas want it. */
+/**
+ * Intervallo assoluto su una sola colonna, nella forma che le formule del
+ * grafico si aspettano.
+ *
+ * @param sheetName - Nome del foglio a cui l'intervallo appartiene.
+ * @param column - Indice della colonna, a partire da 0.
+ * @param firstRow - Prima riga dell'intervallo, a partire da 1.
+ * @param lastRow - Ultima riga dell'intervallo, inclusa.
+ * @returns Un riferimento come `'Mela'!$B$11:$B$20`.
+ */
 export function columnRange(
   sheetName: string,
   column: number,
@@ -48,8 +81,15 @@ export function columnRange(
 }
 
 /**
- * Excel rejects these characters in a sheet name and truncates past 31 characters,
- * so we do it ourselves rather than let it offer to repair the file.
+ * Ripulisce il nome di un foglio.
+ *
+ * Excel rifiuta i caratteri `[ ] : * ? / \` nei nomi dei fogli e tronca oltre i
+ * 31 caratteri: meglio farlo qui che lasciargli proporre la riparazione del
+ * file. I nomi già usati vengono resi univoci con un suffisso numerico.
+ *
+ * @param name - Nome desiderato, tipicamente quello dell'alimento.
+ * @param taken - Nomi già assegnati ad altri fogli.
+ * @returns Un nome valido e diverso da quelli già assegnati.
  */
 export function sanitizeSheetName(name: string, taken: string[] = []): string {
   const cleaned = name.replace(/[[\]:*?/\\]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -78,6 +118,16 @@ function cellXml(ref: string, input: CellInput): string {
   return `<c r="${ref}"${style} t="inlineStr"><is><t xml:space="preserve">${esc(value)}</t></is></c>`;
 }
 
+/**
+ * Costruisce la parte XML di un foglio di lavoro.
+ *
+ * Le righe e le celle vuote non vengono emesse affatto: il file resta più
+ * piccolo ed Excel le tratta comunque come vuote.
+ *
+ * @param rows - Contenuto del foglio, riga per riga.
+ * @param options - Larghezze delle colonne ed eventuale riferimento al disegno.
+ * @returns Il contenuto di `xl/worksheets/sheetN.xml`.
+ */
 export function buildSheetXml(rows: SheetRow[], options: SheetOptions = {}): string {
   const { columnWidths = [], hasDrawing = false } = options;
 
@@ -105,8 +155,13 @@ export function buildSheetXml(rows: SheetRow[], options: SheetOptions = {}): str
 }
 
 /**
- * The smallest style sheet Excel accepts. Colours are explicit sRGB so the workbook
- * needs no theme part.
+ * Il foglio di stili più piccolo che Excel accetti: due font, normale e
+ * grassetto.
+ *
+ * I colori sono indicati in sRGB esplicito, così il file non ha bisogno della
+ * parte del tema.
+ *
+ * @returns Il contenuto di `xl/styles.xml`.
  */
 export function stylesXml(): string {
   return (

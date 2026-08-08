@@ -11,7 +11,7 @@ const quickLevel: Level = {
   behavior: 'Approccio e contatto con le dita',
   mode: 'hold',
   target: 1,
-  hardBeat: { onMs: [600, 600], offMs: [700, 700], score: 'tap' },
+  hardBeat: { onMs: [600, 600], offMs: [700, 700], score: 'tap', beatTarget: 3 },
   intro: ({ foodLabel }) => `Raccogli ${foodLabel}!`,
   hint: 'Tocca il cibo',
   progressLabel: (done, target) => `Cesto ${Math.min(100, Math.round((done / target) * 100))}%`,
@@ -23,7 +23,7 @@ const holdLevel: Level = {
   behavior: 'Sollevare e avvicinare al viso, annusare',
   mode: 'hold',
   target: 3,
-  hardBeat: { onMs: [1000, 1000], offMs: [1000, 1000], score: 'hold' },
+  hardBeat: { onMs: [1000, 1000], offMs: [1000, 1000], score: 'hold', beatTarget: 2 },
   intro: ({ foodLabel }) => `Annusa ${foodLabel}!`,
   hint: 'Tocca e mantieni con il naso',
   progressLabel: (done, target) => `Profumo ${Math.min(100, Math.round((done / target) * 100))}%`,
@@ -167,7 +167,7 @@ describe('LevelPlay in hard mode on a hold level', () => {
     press();
     await wait(1200);
 
-    await expect.element(screen.getByText('🎵 1')).toBeInTheDocument();
+    await expect.element(screen.getByText('🎵 Ritmo 1/2')).toBeInTheDocument();
   });
 
   it('does not score the beat when the contact is released too early', async () => {
@@ -178,6 +178,43 @@ describe('LevelPlay in hard mode on a hold level', () => {
     release();
     await wait(1200);
 
-    await expect.element(screen.getByText('🎵 0')).toBeInTheDocument();
+    await expect.element(screen.getByText('🎵 Ritmo 0/2')).toBeInTheDocument();
+  });
+
+  it('scores nothing when the contact is simply held from before the window opens', async () => {
+    // È la scorciatoia da non premiare: il dito appoggiato attraversa le
+    // finestre senza mai rispondere al ritmo, quindi la barra non deve muoversi.
+    const screen = await render(
+      <LevelPlay level={holdLevel} food={food} difficulty="difficile" onComplete={vi.fn()} />,
+    );
+    await startPlay(screen);
+
+    press();
+    await wait(2200);
+
+    await expect.element(screen.getByText('🎵 Ritmo 0/2')).toBeInTheDocument();
+    release();
+  });
+
+  it('hands the beats scored to onComplete, and null when the mode is not timed', async () => {
+    const hard = vi.fn();
+    const hardScreen = await render(
+      <LevelPlay level={holdLevel} food={food} difficulty="difficile" onComplete={hard} />,
+    );
+    await startPlay(hardScreen);
+    press();
+    await vi.waitFor(() => expect(hard).toHaveBeenCalledTimes(1), { timeout: 5000 });
+    release();
+    expect(hard.mock.calls[0][1]).toBe(0);
+
+    const easy = vi.fn();
+    const easyScreen = await render(
+      <LevelPlay level={quickLevel} food={food} difficulty="facile" onComplete={easy} />,
+    );
+    await startPlay(easyScreen);
+    press();
+    await vi.waitFor(() => expect(easy).toHaveBeenCalledTimes(1), { timeout: 4000 });
+    release();
+    expect(easy.mock.calls[0][1]).toBeNull();
   });
 });

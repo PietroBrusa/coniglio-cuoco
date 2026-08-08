@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createSession, addLevelResult } from './sessionRecord';
+import { createSession, addLevelResult, collectsData } from './sessionRecord';
 import type { Level, Metrics, Session } from '@/types';
 
 const level = {
@@ -21,6 +21,17 @@ const metrics = {
   engagementRatio: 25,
   touches: [{ down: 0, up: 500, duration: 500 }],
 } as Metrics;
+
+describe('collectsData', () => {
+  it('records an easy session and treats a hard one as play only', () => {
+    expect(collectsData('facile')).toBe(true);
+    expect(collectsData('difficile')).toBe(false);
+  });
+
+  it('records a session saved before the difficulty existed', () => {
+    expect(collectsData(undefined)).toBe(true);
+  });
+});
 
 describe('createSession', () => {
   it('builds an empty session from the given metadata', () => {

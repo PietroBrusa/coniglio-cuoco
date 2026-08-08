@@ -3,7 +3,7 @@ import { render } from 'vitest-browser-react';
 import RewardScreen from './RewardScreen';
 import type { Level, Metrics } from '@/types';
 
-const level = { id: 2, mode: 'hold', name: "L'Annusata" } as Level;
+const level = { id: 2, mode: 'hold', name: "L'Annusata", hardBeat: { beatTarget: 1 } } as Level;
 
 const threeStarMetrics = {
   count: 5,
@@ -28,6 +28,7 @@ describe('RewardScreen', () => {
         level={level}
         metrics={threeStarMetrics}
         difficulty="facile"
+        beatsScored={null}
         isLastLevel={false}
         onNext={vi.fn()}
         onRepeat={vi.fn()}
@@ -46,6 +47,7 @@ describe('RewardScreen', () => {
         level={level}
         metrics={weak}
         difficulty="facile"
+        beatsScored={null}
         isLastLevel={false}
         onNext={vi.fn()}
         onRepeat={vi.fn()}
@@ -62,6 +64,7 @@ describe('RewardScreen', () => {
         level={level}
         metrics={threeStarMetrics}
         difficulty="facile"
+        beatsScored={null}
         isLastLevel={false}
         onNext={onNext}
         onRepeat={onRepeat}
@@ -75,12 +78,31 @@ describe('RewardScreen', () => {
     expect(onNext).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the stars but drops the metrics on a "difficile" level', async () => {
+    const screen = await render(
+      <RewardScreen
+        level={level}
+        metrics={threeStarMetrics}
+        difficulty="difficile"
+        beatsScored={1}
+        isLastLevel={false}
+        onNext={vi.fn()}
+        onRepeat={vi.fn()}
+      />,
+    );
+
+    await expect.element(screen.getByLabelText('3 stelle su 3')).toBeInTheDocument();
+    await expect.element(screen.getByText(/nessuna misurazione registrata/)).toBeInTheDocument();
+    expect(screen.getByText('Riepilogo misurazioni').elements()).toHaveLength(0);
+  });
+
   it('labels the advance button differently on the last level', async () => {
     const screen = await render(
       <RewardScreen
         level={level}
         metrics={threeStarMetrics}
         difficulty="facile"
+        beatsScored={null}
         isLastLevel={true}
         onNext={vi.fn()}
         onRepeat={vi.fn()}

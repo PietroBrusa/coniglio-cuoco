@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import {
   buildAbaSeries,
   conditionOf,
-  findPhaseChanges,
   groupByFood,
   wholeIntervalRecording,
 } from './abaData';
@@ -102,7 +101,7 @@ describe('buildAbaSeries', () => {
     ]);
 
     expect(series).toHaveLength(1);
-    expect(series[0].points.map((p) => p.sessionNumber)).toEqual([1, 2, 3]);
+    expect(series[0].points.map((p) => p.ordinal)).toEqual([1, 2, 3]);
     expect(series[0].points.map((p) => p.value)).toEqual([30, 50, 70]);
   });
 
@@ -110,7 +109,6 @@ describe('buildAbaSeries', () => {
     const series = buildAbaSeries([session(2), session(5), session(9)]);
 
     expect(series[0].points.map((p) => p.ordinal)).toEqual([1, 2, 3]);
-    expect(series[0].points.map((p) => p.sessionNumber)).toEqual([2, 5, 9]);
   });
 
   it('gives every level of one session the same ordinal', () => {
@@ -157,7 +155,7 @@ describe('buildAbaSeries', () => {
     ]);
 
     const level2 = series.find((s) => s.levelId === 2);
-    expect(level2?.points.map((p) => p.sessionNumber)).toEqual([1, 3]);
+    expect(level2?.points.map((p) => p.ordinal)).toEqual([1, 3]);
   });
 
   it('returns no series for no sessions', () => {
@@ -165,56 +163,7 @@ describe('buildAbaSeries', () => {
   });
 });
 
-describe('findPhaseChanges', () => {
-  it('marks a change when the food changes', () => {
-    const changes = findPhaseChanges([
-      session(1, { food: 'Mela' }),
-      session(2, { food: 'Mela' }),
-      session(3, { food: 'Carota' }),
-    ]);
-
-    expect(changes).toEqual([
-      { atSessionNumber: 3, atOrdinal: 3, condition: 'Carota · facile' },
-    ]);
-  });
-
-  it('marks a change when the difficulty changes for the same food', () => {
-    const changes = findPhaseChanges([
-      session(1, { food: 'Mela', difficulty: 'facile' }),
-      session(2, { food: 'Mela', difficulty: 'difficile' }),
-    ]);
-
-    expect(changes).toEqual([
-      { atSessionNumber: 2, atOrdinal: 2, condition: 'Mela · difficile' },
-    ]);
-  });
-
-  it('positions the line by ordinal, not by the session number', () => {
-    const changes = findPhaseChanges([
-      session(4, { difficulty: 'facile' }),
-      session(7, { difficulty: 'facile' }),
-      session(11, { difficulty: 'difficile' }),
-    ]);
-
-    expect(changes).toEqual([
-      { atSessionNumber: 11, atOrdinal: 3, condition: 'Mela · difficile' },
-    ]);
-  });
-
-  it('never marks the first session as a change', () => {
-    expect(findPhaseChanges([session(1)])).toEqual([]);
-  });
-
-  it('compares in session order, not array order', () => {
-    const changes = findPhaseChanges([
-      session(3, { food: 'Mela' }),
-      session(1, { food: 'Mela' }),
-      session(2, { food: 'Carota' }),
-    ]);
-
-    expect(changes.map((ch) => ch.atSessionNumber)).toEqual([2, 3]);
-  });
-
+describe('conditionOf', () => {
   it('labels the condition with both food and difficulty', () => {
     expect(conditionOf(session(1, { food: 'Pera', difficulty: 'difficile' }))).toBe(
       'Pera · difficile',

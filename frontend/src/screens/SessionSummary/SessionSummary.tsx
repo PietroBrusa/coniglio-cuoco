@@ -8,13 +8,27 @@ import type { Session } from '@/types';
 import s from '@/app/styles/shared.module.scss';
 import c from './SessionSummary.module.scss';
 
+/** Che cosa serve alla schermata di riepilogo. */
 interface SessionSummaryProps {
+  /** Sessione conclusa, con i risultati di tutti i livelli. */
   session: Session;
+  /** La sessione è già stata scritta nel database. */
   alreadySaved?: boolean;
+  /** Richiamata a salvataggio riuscito. */
   onSaved?: () => void;
+  /** Chiude la sessione e torna al setup. */
   onNewSession: () => void;
 }
 
+/**
+ * Riepilogo di fine sessione: misurazioni di ogni livello, comportamenti
+ * problema osservati, note e salvataggio.
+ *
+ * È il punto in cui il record diventa completo. I comportamenti problema si
+ * raccolgono qui e non durante il gioco perché richiedono uno sguardo
+ * d'insieme; solo dopo la sessione viene scritta nel database, una volta sola e
+ * con una sola richiesta.
+ */
 const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: SessionSummaryProps) => {
   const [problemBehaviors, setProblemBehaviors] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
@@ -56,7 +70,7 @@ const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: Sessio
             Livello {lv.levelId} · {lv.levelName}
           </h3>
           <dl className={s.metricsGrid}>
-            {formatMetrics({ ...lv.metrics, count: lv.metrics.n }).map((m) => (
+            {formatMetrics(lv.metrics).map((m) => (
               <div key={m.label} className={s.metric}>
                 <dt>{m.label}</dt>
                 <dd>{m.value}</dd>

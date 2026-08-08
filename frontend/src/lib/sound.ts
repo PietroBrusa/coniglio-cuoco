@@ -1,5 +1,20 @@
+/**
+ * Suono di rinforzo di fine livello.
+ *
+ * @module
+ */
+
+/** Safari espone il costruttore audio con il prefisso del motore. */
 type WebkitWindow = Window & { webkitAudioContext?: typeof AudioContext };
 
+/**
+ * Suona l'arpeggio di vittoria: do, mi, sol, do, con inviluppo esponenziale.
+ *
+ * Le note sono sintetizzate con la Web Audio API invece di riprodurre un file
+ * audio: niente da scaricare, nessuna licenza da rispettare e nessun ritardo
+ * alla prima esecuzione. Se il browser blocca l'audio o non offre l'API, il
+ * gioco prosegue in silenzio.
+ */
 export function playVictory(): void {
   try {
     const Ctx = window.AudioContext ?? (window as WebkitWindow).webkitAudioContext;

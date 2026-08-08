@@ -1,57 +1,79 @@
-import { XML_DECL, esc } from './xml';
-
 /**
- * A hand-written DrawingML scatter chart. No mainstream JavaScript spreadsheet library
- * emits Excel charts, so the chart part is built here element by element; the order of
- * the children matters, Excel refuses to open the file when it is wrong.
+ * Grafico a dispersione DrawingML scritto a mano.
+ *
+ * Nessuna libreria JavaScript di uso comune produce grafici Excel, quindi la
+ * parte del grafico viene costruita qui elemento per elemento. L'ordine dei
+ * figli è vincolante: se sbagliato, Excel dichiara il file danneggiato e si
+ * offre di ripararlo invece di aprirlo.
+ *
+ * È un grafico *scatter* e non *line* perché solo il primo ha un asse X
+ * numerico: le sessioni sono numeri, non categorie, e su un asse numerico si
+ * possono fissare gli estremi (mezzo passo prima della prima sessione e mezzo
+ * dopo l'ultima) invece di lasciarli decidere a Excel.
+ *
+ * @module
  */
+
+import { XML_DECL, esc } from './xml';
 
 const X_AXIS_ID = 111111111;
 const Y_AXIS_ID = 222222222;
 
-/** Line weight in EMU (1 pt = 12700). */
-const THICK = 22225;
-const THIN = 12700;
+/** Spessore delle linee, in EMU (1 pt = 12.700 EMU). */
+const LINE_WEIGHT = 22225;
 
+/** Simbolo con cui vengono marcati i punti di una serie. */
 export type MarkerSymbol = 'circle' | 'square' | 'diamond' | 'triangle' | 'none';
+
+/** Tratteggio della linea, nei nomi previsti da OOXML. */
 export type DashStyle = 'dash' | 'lgDash' | 'sysDash' | 'dot';
 
+/** Una linea del grafico. */
 export interface ChartSeries {
+  /** Nome mostrato in legenda. */
   name: string;
-  /** Formula pointing at the X column, e.g. 'Mela'!$B$11:$B$20 */
+  /** Formula che punta alla colonna delle ascisse, es. `'Mela'!$B$11:$B$20`. */
   xRef: string;
+  /** Ascisse, scritte anche nella cache così il grafico si vede senza ricalcolo. */
   xValues: number[];
-  /** Formula pointing at the Y column. */
+  /** Formula che punta alla colonna delle ordinate. */
   yRef: string;
-  /** null leaves a gap in the line, for a level not run in that session. */
+  /** `null` lascia un buco nella linea: livello non eseguito in quella sessione. */
   yValues: (number | null)[];
-  /** Six hex digits, no leading hash. */
+  /** Sei cifre esadecimali, senza cancelletto iniziale. */
   color: string;
+  /** Simbolo dei punti; assente equivale a nessun marcatore. */
   marker?: MarkerSymbol;
+  /** Tratteggio; assente disegna una linea continua. */
   dash?: DashStyle;
-  thin?: boolean;
-  /** Writes the series name at its last point, the way the paper form labels its lines. */
+  /** Scrive il nome della serie sul suo ultimo punto, come il modulo cartaceo etichetta le linee. */
   labelLastPoint?: boolean;
-  /** Keeps the series out of the legend without hiding the line. */
-  hideFromLegend?: boolean;
 }
 
+/** Definizione completa del grafico da scrivere nel file. */
 export interface ChartSpec {
+  /** Titolo in cima al grafico. */
   title: string;
+  /** Titolo dell'asse orizzontale. */
   xTitle: string;
+  /** Titolo dell'asse verticale. */
   yTitle: string;
-  /** Highest X value plotted; the axis is padded half a step on either side. */
+  /** Ascissa massima rappresentata; l'asse viene allargato di mezzo passo per lato. */
   xMax: number;
+  /** Ordinata massima: 100, perché il dato è una percentuale. */
   yMax: number;
+  /** Le linee da disegnare, nell'ordine in cui compaiono in legenda. */
   series: ChartSeries[];
 }
 
+/**
+ * Costruisce la parte XML del grafico.
+ *
+ * @param spec - Titoli, scale e serie da rappresentare.
+ * @returns Il contenuto di `xl/charts/chartN.xml`.
+ */
 export function buildChartXml(spec: ChartSpec): string {
   const series = spec.series.map(seriesXml).join('');
-
-  const hidden = spec.series
-    .map((s, i) => (s.hideFromLegend ? `<c:legendEntry><c:idx val="${i}"/><c:delete val="1"/></c:legendEntry>` : ''))
-    .join('');
 
   return (
     `${XML_DECL}<c:chartSpace` +
@@ -73,7 +95,7 @@ export function buildChartXml(spec: ChartSpec): string {
     xAxisXml(spec) +
     yAxisXml(spec) +
     `</c:plotArea>` +
-    `<c:legend><c:legendPos val="b"/>${hidden}<c:overlay val="0"/></c:legend>` +
+    `<c:legend><c:legendPos val="b"/><c:overlay val="0"/></c:legend>` +
     `<c:plotVisOnly val="1"/>` +
     `<c:dispBlanksAs val="gap"/>` +
     `</c:chart>` +
@@ -84,7 +106,7 @@ export function buildChartXml(spec: ChartSpec): string {
 function seriesXml(s: ChartSeries, index: number): string {
   const dash = s.dash ? `<a:prstDash val="${s.dash}"/>` : '';
   const line =
-    `<a:ln w="${s.thin ? THIN : THICK}" cap="rnd">` +
+    `<a:ln w="${LINE_WEIGHT}" cap="rnd">` +
     `<a:solidFill><a:srgbClr val="${s.color}"/></a:solidFill>${dash}<a:round/>` +
     `</a:ln>`;
 
@@ -111,14 +133,15 @@ function seriesXml(s: ChartSeries, index: number): string {
   );
 }
 
-/** Every flag CT_DLbls needs, in the order the schema fixes. */
+/** Tutti i flag richiesti da `CT_DLbls`, nell'ordine fissato dallo schema. */
 const SHOW = (serName: boolean): string =>
   `<c:showLegendKey val="0"/><c:showVal val="0"/><c:showCatName val="0"/>` +
   `<c:showSerName val="${serName ? 1 : 0}"/><c:showPercent val="0"/><c:showBubbleSize val="0"/>`;
 
 /**
- * Names the line where it ends, so a reference line stays readable even when a data
- * series happens to run along it and the legend alone is not enough.
+ * Scrive il nome della linea dove finisce, così una linea di riferimento resta
+ * riconoscibile anche quando una serie di dati le corre sopra e la legenda da
+ * sola non basta a distinguerle.
  */
 function lastPointLabel(s: ChartSeries): string {
   const idx = s.yValues.reduce<number>((last, v, i) => (v === null ? last : i), -1);
@@ -140,8 +163,9 @@ function lastPointLabel(s: ChartSeries): string {
 }
 
 /**
- * Excel recomputes the cache from the formula on open, but writing it means the chart
- * also renders in viewers that never recalculate.
+ * Excel ricalcola la cache dalla formula all'apertura, ma scriverla significa
+ * che il grafico si vede anche nei visualizzatori che non ricalcolano mai:
+ * anteprime, LibreOffice, applicazioni mobili.
  */
 function numRef(formula: string, values: (number | null)[]): string {
   const points = values

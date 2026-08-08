@@ -62,7 +62,7 @@ describe('SetupScreen', () => {
 
     await page.getByPlaceholder('Cerca un alimento…').fill('carota');
     await page.getByRole('button', { name: /Carota/ }).click();
-    await page.getByTitle('tocchi a tempo (piano tiles)').click();
+    await page.getByTitle('tocchi a tempo, solo gioco').click();
     await page.getByRole('button', { name: /Inizia la storia/ }).click();
 
     expect(onStart).toHaveBeenCalledTimes(1);
@@ -72,6 +72,19 @@ describe('SetupScreen', () => {
       difficulty: 'difficile',
       therapist: 'Mary Major',
     });
+  });
+
+  it('warns that the hard mode collects no data, before the session starts', async () => {
+    const { screen } = setup();
+    const page = await screen;
+
+    expect(page.getByText(/Solo gioco/).elements()).toHaveLength(0);
+
+    await page.getByTitle('tocchi a tempo, solo gioco').click();
+    await expect.element(page.getByText(/Solo gioco/)).toBeInTheDocument();
+
+    await page.getByTitle('tocchi liberi, con raccolta dati').click();
+    expect(page.getByText(/Solo gioco/).elements()).toHaveLength(0);
   });
 
   it('proposes the session after the last one reached with the chosen food', async () => {

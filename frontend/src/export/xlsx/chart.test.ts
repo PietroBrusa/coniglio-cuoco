@@ -57,10 +57,9 @@ describe('buildChartXml', () => {
     expect(xml).toContain('<c:idx val="1"/><c:order val="1"/>');
   });
 
-  it('dashes and thins the lines that are references, not data', () => {
-    const xml = buildChartXml(spec({ series: [series({ dash: 'lgDash', thin: true, marker: 'none' })] }));
+  it('dashes the lines that are references, not data', () => {
+    const xml = buildChartXml(spec({ series: [series({ dash: 'lgDash', marker: 'none' })] }));
     expect(xml).toContain('<a:prstDash val="lgDash"/>');
-    expect(xml).toContain('<a:ln w="12700" cap="rnd">');
     expect(xml).toContain('<c:symbol val="none"/>');
   });
 
@@ -85,14 +84,6 @@ describe('buildChartXml', () => {
       spec({ series: [series({ labelLastPoint: true, yValues: [null, null, null] })] }),
     );
     expect(xml).not.toContain('<c:dLbls>');
-  });
-
-  it('hides the change lines from the legend without hiding the line', () => {
-    const xml = buildChartXml(
-      spec({ series: [series(), series({ name: 'Cambio', hideFromLegend: true })] }),
-    );
-    expect(xml).toContain('<c:legendEntry><c:idx val="1"/><c:delete val="1"/></c:legendEntry>');
-    expect(xml).not.toContain('<c:idx val="0"/><c:delete val="1"/>');
   });
 
   it('pads the session axis half a step on either side', () => {

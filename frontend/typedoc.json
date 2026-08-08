@@ -1,0 +1,24 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "Coniglio Cuoco — Frontend",
+  "entryPoints": ["src"],
+  "entryPointStrategy": "expand",
+  "exclude": [
+    "src/api/generated/**",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.browser.test.tsx",
+    "src/app/main.tsx",
+    "src/vite-env.d.ts"
+  ],
+  "out": "../docs/api/frontend",
+  "readme": "none",
+  "hideGenerator": true,
+  "sort": ["source-order"],
+  "categorizeByGroup": true,
+  "validation": {
+    "notExported": false,
+    "invalidLink": true,
+    "notDocumented": true
+  }
+}

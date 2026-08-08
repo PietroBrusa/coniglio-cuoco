@@ -1,0 +1,18 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "Coniglio Cuoco — Backend",
+  "entryPoints": ["src"],
+  "entryPointStrategy": "expand",
+  "exclude": ["src/**/*.spec.ts", "src/main.ts"],
+  "out": "../docs/api/backend",
+  "readme": "none",
+  "hideGenerator": true,
+  "sort": ["source-order"],
+  "categorizeByGroup": true,
+  "excludeExternals": true,
+  "validation": {
+    "notExported": false,
+    "invalidLink": true,
+    "notDocumented": true
+  }
+}

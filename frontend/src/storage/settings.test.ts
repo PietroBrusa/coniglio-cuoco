@@ -48,7 +48,7 @@ describe('loadSettings', () => {
 
 describe('saveSettings', () => {
   it('round-trips through storage (save then load)', () => {
-    const custom = { ...DEFAULT_SETTINGS, tapContactMs: 2500, soundEnabled: false };
+    const custom = { ...DEFAULT_SETTINGS, holdEngagementPct: 65, soundEnabled: false };
     saveSettings(custom);
     expect(loadSettings()).toEqual(custom);
   });

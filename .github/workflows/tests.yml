@@ -1,13 +1,15 @@
 name: tests
 
-# Runs the full test pyramid on every push and pull request.
+# Runs the full test pyramid on every push and pull request, plus the checks
+# that decide whether the code can ship at all: lint and a production build.
+# A type error or a broken bundle must fail here, not on the therapist's laptop.
 on:
   push:
   pull_request:
 
 jobs:
   backend:
-    name: Backend (unit + E2E)
+    name: Backend (lint + build + unit + E2E)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -20,6 +22,10 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Build (also typechecks)
+        run: npm run build
       - name: Unit & integration tests
         run: npm test
       # Docker is available on ubuntu-latest, so Testcontainers can start MongoDB.
@@ -27,7 +33,7 @@ jobs:
         run: npm run test:e2e
 
   frontend:
-    name: Frontend (unit + component + E2E)
+    name: Frontend (lint + build + unit + component + E2E)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -40,6 +46,14 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - name: Lint
+        run: npm run lint
+      # `npm run build` is `tsc --noEmit && vite build`: it typechecks the app
+      # sources and proves the bundle still builds.
+      - name: Build (also typechecks)
+        run: npm run build
+      - name: Typecheck the test sources
+        run: npm run typecheck:tests
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Run all test projects (unit, browser, e2e)

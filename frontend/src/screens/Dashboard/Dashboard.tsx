@@ -6,12 +6,7 @@ import { useDeleteSession, useSessions } from '@/hooks/useSessions';
 import { getFood } from '@/domain/levels';
 import { loadSettings } from '@/storage/settings';
 import { getProblemBehavior } from '@/domain/problemBehaviors';
-import {
-  buildAbaSeries,
-  findPhaseChanges,
-  groupByFood,
-  wholeIntervalRecording,
-} from '@/export/abaData';
+import { buildAbaSeries, groupByFood, wholeIntervalRecording } from '@/export/abaData';
 import { formatMetrics } from '@/domain/formatMetrics';
 import { abaWorkbookFileName, buildAbaWorkbook } from '@/export/abaWorkbook';
 import { XLSX_MIME, downloadFile } from '@/lib/downloadFile';
@@ -19,11 +14,26 @@ import type { SavedSession } from '@/api/client';
 import s from '@/app/styles/shared.module.scss';
 import c from './Dashboard.module.scss';
 
+/** Che cosa serve alla dashboard. */
 interface DashboardProps {
+  /** Bambino di cui mostrare le sessioni. */
   childId: string;
+  /** Richiamata del pulsante di ritorno al setup. */
   onBack: () => void;
 }
 
+/**
+ * Dashboard delle sessioni salvate: grafico dell'andamento, dettaglio di ogni
+ * sessione ed esportazione delle schede ABA.
+ *
+ * Le sessioni sono divise per alimento, una linguetta ciascuno: ogni alimento è
+ * un programma a sé e ha il suo grafico. La linea di criterio del grafico è la
+ * stessa soglia configurata per la terza stella, così l'obiettivo del gioco e
+ * quello del programma coincidono.
+ *
+ * L'esportazione avviene interamente nel browser: i dati non vengono inviati a
+ * nessun servizio per produrre il file.
+ */
 const Dashboard = ({ childId, onBack }: DashboardProps) => {
   const { data, isLoading, isError, error, refetch, isFetching } = useSessions(childId);
   const deleteMutation = useDeleteSession();
@@ -39,7 +49,6 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
   const group = groups.find((g) => g.key === selectedFood) ?? groups[0];
 
   const series = useMemo(() => (group ? buildAbaSeries(group.sessions) : []), [group]);
-  const phaseChanges = useMemo(() => (group ? findPhaseChanges(group.sessions) : []), [group]);
 
   const listed = useMemo(() => (group ? [...group.sessions].reverse() : []), [group]);
   const ordinalOf = (sessionNumber: number) =>
@@ -114,12 +123,7 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
       {group && series.length > 0 && (
         <div className={`${s.card} ${c.chartCard}`}>
           <h3 className={c.chartTitle}>Andamento del programma · {group.food}</h3>
-          <AbaChart
-            series={series}
-            phaseChanges={phaseChanges}
-            criterion={criterion}
-            foodLabel={group.food}
-          />
+          <AbaChart series={series} criterion={criterion} foodLabel={group.food} />
         </div>
       )}
 

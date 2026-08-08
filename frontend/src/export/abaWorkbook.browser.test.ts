@@ -117,7 +117,7 @@ describe('the exported workbook', () => {
     });
   });
 
-  it('gives the chart of a three-session sheet a series per level, the criterion and the change line', () => {
+  it('gives the chart of a three-session sheet a series per level plus the criterion', () => {
     const chart = parse(strFromU8(workbook()['xl/charts/chart1.xml']));
     const names = [...chart.getElementsByTagName('c:ser')].map(
       (ser) => ser.getElementsByTagName('c:v')[0]?.textContent,
@@ -127,7 +127,6 @@ describe('the exported workbook', () => {
       'L1 · Livello 1',
       'L2 · Livello 2',
       'Criterio 40%',
-      'Cambio · Mela · difficile',
     ]);
   });
 });

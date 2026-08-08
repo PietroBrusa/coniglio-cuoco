@@ -6,7 +6,9 @@ import tseslint from 'typescript-eslint'
 import { globalIgnores } from 'eslint/config'
 
 export default tseslint.config([
-  globalIgnores(['dist', 'src/api/generated']),
+  // `coverage/` è il rapporto generato da Vitest: contiene JavaScript di terze
+  // parti che non ha senso analizzare e che produrrebbe solo rumore.
+  globalIgnores(['dist', 'coverage', 'src/api/generated']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
