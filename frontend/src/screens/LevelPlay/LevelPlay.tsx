@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Rabbit from '@/components/Rabbit/Rabbit';
-import { useTouchTracker, MAKEY_KEYS } from '@/hooks/useTouchTracker';
-import { sampleBeatMs, isHeldThrough } from '@/domain/hardBeat';
+import { useTouchTracker } from '@/hooks/useTouchTracker';
+import { useMakeyKey } from '@/hooks/useMakeyKey';
+import { useHardBeat } from '@/hooks/useHardBeat';
 import type { Difficulty, Food, Level, Metrics, RabbitMood } from '@/types';
 import s from '@/app/styles/shared.module.scss';
 import c from './LevelPlay.module.scss';
@@ -16,11 +17,6 @@ import c from './LevelPlay.module.scss';
  * variabilità.
  */
 const STARTER_TAPS = 3;
-
-/** Attesa prima della prima finestra utile, per non cogliere di sorpresa il bambino. */
-const FIRST_BEAT_MS = 800;
-/** Durata del lampeggio rosso che segnala un errore: breve, segnala senza punire. */
-const MISS_FLASH_MS = 250;
 
 /** Espressione del coniglio mentre il contatto è in corso, livello per livello. */
 const ACTIVE_MOOD: Record<number, RabbitMood> = { 1: 'happy', 2: 'sniff', 3: 'eat' };
@@ -52,153 +48,35 @@ interface LevelPlayProps {
  * finestra e viene registrato a parte come latenza. Così tutti hanno la stessa
  * opportunità effettiva e le percentuali restano confrontabili fra sessioni.
  *
- * In modalità difficile gira in parallelo il ciclo delle finestre utili: si
- * apre, si chiude, si riapre dopo una pausa, con durate estratte a caso negli
- * intervalli del livello. Lì cambia anche il significato della barra di
- * avanzamento, che conta le finestre centrate invece dei secondi di contatto:
- * la misura del tempo continua comunque a girare, ma serve solo a chiudere il
+ * In modalità difficile gira in parallelo il ciclo delle finestre utili, condotto
+ * da {@link hooks/useHardBeat}: lì cambia anche il significato della barra di
+ * avanzamento, che conta le finestre centrate invece dei secondi di contatto. La
+ * misura del tempo continua comunque a girare, ma serve solo a chiudere il
  * livello allo scadere della finestra, non a valutarlo.
  */
 const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
   const isHard = difficulty === 'difficile';
 
   const windowMs = level.target * 1000;
+  const beat = level.hardBeat;
 
   const [starterTaps, setStarterTaps] = useState(0);
   const phase: 'intro' | 'play' = starterTaps >= STARTER_TAPS ? 'play' : 'intro';
   const completedRef = useRef(false);
 
   const { metrics, isDown, hasStarted, getResult } = useTouchTracker(phase === 'play');
+  const rhythm = useHardBeat(beat, isHard && phase === 'play');
 
   const onCompleteRef = useRef(onComplete);
   useEffect(() => {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  const beat = level.hardBeat;
+  useMakeyKey(phase === 'intro', {
+    onPress: () => setStarterTaps((prev) => prev + 1),
+  });
 
-  const [beatActive, setBeatActive] = useState(false);
-  const [goodTaps, setGoodTaps] = useState(0);
-  const [miss, setMiss] = useState(false);
-  const beatActiveRef = useRef(false);
-  const missTimer = useRef<number | undefined>(undefined);
-  const windowRef = useRef<{ openedAt: number } | null>(null);
-  const pressStartRef = useRef<number | null>(null);
-  const touchedRef = useRef(false);
-  const scoredRef = useRef(false);
-  /**
-   * Le finestre centrate servono anche al timer di fine livello, che legge una
-   * volta sola: se leggesse lo stato, ogni punto ne farebbe ripartire il conto
-   * alla rovescia.
-   */
-  const goodTapsRef = useRef(0);
-
-  useEffect(() => {
-    beatActiveRef.current = beatActive;
-  }, [beatActive]);
-
-  const registerStarterTap = useCallback(() => {
-    setStarterTaps((prev) => prev + 1);
-  }, []);
-
-  useEffect(() => {
-    if (phase !== 'intro') return undefined;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (!MAKEY_KEYS.includes(e.code) || e.repeat) return;
-      e.preventDefault();
-      registerStarterTap();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [phase, registerStarterTap]);
-
-  const triggerMiss = useCallback(() => {
-    setMiss(true);
-    window.clearTimeout(missTimer.current);
-    missTimer.current = window.setTimeout(() => setMiss(false), MISS_FLASH_MS);
-  }, []);
-
-  const scoreBeat = useCallback(() => {
-    goodTapsRef.current += 1;
-    setGoodTaps(goodTapsRef.current);
-  }, []);
-
-  useEffect(() => {
-    if (!isHard || phase !== 'play') return undefined;
-    let timer: number;
-
-    const closeWindow = () => {
-      const openedAt = windowRef.current?.openedAt ?? 0;
-      windowRef.current = null;
-      setBeatActive(false);
-
-      if (beat.score === 'hold') {
-        if (isHeldThrough(openedAt, pressStartRef.current)) scoreBeat();
-        // Il contatto già in corso da prima dell'accensione non vale il punto:
-        // senza questo lampeggio il bambino che tiene il dito appoggiato non
-        // riceverebbe alcun riscontro, né positivo né negativo, per tutto il
-        // livello. Chi invece non sta toccando non viene segnalato: aspettare la
-        // finestra è il comportamento corretto, non un errore.
-        else if (touchedRef.current || pressStartRef.current !== null) triggerMiss();
-      } else if (!scoredRef.current && pressStartRef.current !== null) {
-        triggerMiss();
-      }
-      touchedRef.current = false;
-      scoredRef.current = false;
-
-      timer = window.setTimeout(openWindow, sampleBeatMs(beat.offMs));
-    };
-
-    const openWindow = () => {
-      windowRef.current = { openedAt: performance.now() };
-      touchedRef.current = false;
-      scoredRef.current = false;
-      setBeatActive(true);
-      timer = window.setTimeout(closeWindow, sampleBeatMs(beat.onMs));
-    };
-
-    timer = window.setTimeout(openWindow, FIRST_BEAT_MS);
-    return () => window.clearTimeout(timer);
-  }, [isHard, phase, beat, triggerMiss, scoreBeat]);
-
-  const onBeatPress = useCallback(() => {
-    if (pressStartRef.current !== null) return;
-    pressStartRef.current = performance.now();
-    if (!beatActiveRef.current) triggerMiss();
-    else if (beat.score === 'tap') {
-      scoreBeat();
-      scoredRef.current = true;
-    } else touchedRef.current = true;
-  }, [beat, triggerMiss, scoreBeat]);
-
-  const onBeatRelease = useCallback(() => {
-    if (pressStartRef.current === null) return;
-    pressStartRef.current = null;
-    if (beat.score === 'hold' && beatActiveRef.current && touchedRef.current) {
-      touchedRef.current = false;
-      triggerMiss();
-    }
-  }, [beat, triggerMiss]);
-
-  useEffect(() => {
-    if (!isHard || phase !== 'play') return undefined;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (MAKEY_KEYS.includes(e.code) && !e.repeat) onBeatPress();
-    };
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (MAKEY_KEYS.includes(e.code)) onBeatRelease();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-    };
-  }, [isHard, phase, onBeatPress, onBeatRelease]);
-
-  useEffect(() => () => window.clearTimeout(missTimer.current), []);
-
-  const contactSeconds = metrics.liveContactMs / 1000;
+  const { getScored } = rhythm;
 
   useEffect(() => {
     if (phase !== 'play' || !hasStarted || completedRef.current) return undefined;
@@ -206,19 +84,21 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
     const id = window.setTimeout(() => {
       if (completedRef.current) return;
       completedRef.current = true;
-      onCompleteRef.current(getResult(windowMs), isHard ? goodTapsRef.current : null);
+      onCompleteRef.current(getResult(windowMs), isHard ? getScored() : null);
     }, windowMs);
 
     return () => window.clearTimeout(id);
-  }, [phase, hasStarted, windowMs, getResult, isHard]);
+  }, [phase, hasStarted, windowMs, getResult, isHard, getScored]);
+
+  const contactSeconds = metrics.liveContactMs / 1000;
 
   // In difficile l'obiettivo del livello sono le finestre centrate, non i secondi
   // di contatto: la barra deve misurare quello che il gioco chiede davvero.
   const progressPct = isHard
-    ? Math.min(100, (goodTaps / beat.beatTarget) * 100)
+    ? Math.min(100, (rhythm.scored / beat.beatTarget) * 100)
     : Math.min(100, (contactSeconds / level.target) * 100);
   const progressText = isHard
-    ? `🎵 Ritmo ${Math.min(goodTaps, beat.beatTarget)}/${beat.beatTarget}`
+    ? `🎵 Ritmo ${Math.min(rhythm.scored, beat.beatTarget)}/${beat.beatTarget}`
     : level.progressLabel(contactSeconds, level.target);
   const remainingSeconds = hasStarted
     ? Math.max(0, (windowMs - metrics.sessionDurationMs) / 1000)
@@ -230,9 +110,9 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
   const foodClass = [
     c.foodTarget,
     isDown ? c.foodTargetTouched : '',
-    isHard && phase === 'play' && beatActive ? c.foodTargetActive : '',
-    isHard && phase === 'play' && !beatActive ? c.foodTargetDim : '',
-    miss ? c.foodTargetMiss : '',
+    isHard && phase === 'play' && rhythm.windowOpen ? c.foodTargetActive : '',
+    isHard && phase === 'play' && !rhythm.windowOpen ? c.foodTargetDim : '',
+    rhythm.miss ? c.foodTargetMiss : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -274,7 +154,7 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
           </div>
           <div className={c.liveMetrics}>
             <span>👆 {metrics.count}</span>
-            <span>⏱ {(metrics.liveContactMs / 1000).toFixed(1)}s</span>
+            <span>⏱ {contactSeconds.toFixed(1)}s</span>
             <span>⏳ {remainingSeconds.toFixed(1)}s</span>
           </div>
         </div>
@@ -283,7 +163,7 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
       {/* Solo visualizzazione: il contatto si legge dal Makey Makey (Space) su
           `window`, mai da questo elemento. Se contasse il tocco sullo schermo il
           bambino potrebbe completare il livello senza toccare l'alimento, e il
-          dato non misurerebbe più il comportamento target. Vedi useTouchTracker. */}
+          dato non misurerebbe più il comportamento target. Vedi useMakeyKey. */}
       <button type="button" className={foodClass} aria-label={`Tocca ${food.label}`}>
         <span className={c.foodTargetEmoji}>{food.emoji}</span>
       </button>
@@ -292,7 +172,7 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
         {phase !== 'play'
           ? ''
           : isHard
-            ? !beatActive
+            ? !rhythm.windowOpen
               ? 'Aspetta che si illumini…'
               : beat.score === 'hold'
                 ? '🎵 Tieni premuto!'

@@ -1,9 +1,10 @@
 /**
  * Registrazione dei contatti con l'alimento.
  *
- * È l'unico punto in cui l'applicazione legge l'hardware. Il calcolo delle
- * metriche è delegato a {@link domain/computeMetrics.computeMetrics}, che è una
- * funzione pura: qui restano solo gli eventi e il tempo.
+ * È l'unico punto in cui i contatti diventano una misura. L'ascolto
+ * dell'hardware è delegato a {@link hooks/useMakeyKey}, il calcolo delle
+ * metriche a {@link domain/computeMetrics.computeMetrics}, che è una funzione
+ * pura: qui restano solo la registrazione degli eventi e il tempo.
  *
  * @module
  */
@@ -11,17 +12,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Metrics, TouchRecord } from '@/types';
 import { computeMetrics, emptySnap, type Snapshot } from '@/domain/computeMetrics';
-
-/**
- * Tasti che il Makey Makey invia quando il bambino chiude il circuito toccando
- * l'alimento.
- *
- * La scheda emula una tastiera e tiene il tasto premuto per tutta la durata del
- * contatto: `keydown` → `keyup` **è** il contatto. Sono gli stessi tasti di una
- * tastiera normale, che è il modo in cui il gioco si conduce durante le prove
- * senza la scheda collegata.
- */
-export const MAKEY_KEYS = ['Space'];
+import { useMakeyKey } from './useMakeyKey';
 
 /** Ciò che l'hook espone alla schermata di gioco. */
 export interface TouchTracker {
@@ -112,29 +103,7 @@ export function useTouchTracker(active: boolean): TouchTracker {
     if (active) reset();
   }, [active, reset]);
 
-  useEffect(() => {
-    if (!active) return undefined;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (!MAKEY_KEYS.includes(e.code)) return;
-      e.preventDefault();
-      // Un tasto tenuto premuto si ripete da solo: senza questo controllo il
-      // sistema operativo aprirebbe un nuovo contatto ogni ~30 ms e un contatto
-      // lungo verrebbe frantumato in decine di tocchi brevissimi.
-      if (e.repeat) return;
-      pressDown();
-    };
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (!MAKEY_KEYS.includes(e.code)) return;
-      e.preventDefault();
-      pressUp();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-    };
-  }, [active, pressDown, pressUp]);
+  useMakeyKey(active, { onPress: pressDown, onRelease: pressUp });
 
   useEffect(() => {
     if (!active) return undefined;
