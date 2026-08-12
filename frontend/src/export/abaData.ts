@@ -138,8 +138,17 @@ export function buildAbaSeries(sessions: SavedSession[]): AbaSeries[] {
 /**
  * Costruisce la corrispondenza fra numero clinico della sessione e posizione
  * sull'asse X.
+ *
+ * È esportata perché la stessa numerazione compare anche nell'elenco delle
+ * sessioni della dashboard: ricavarla lì in un altro modo farebbe divergere le
+ * due letture non appena due sessioni condividono lo stesso numero clinico —
+ * cosa possibile, dato che il numero proposto dal setup è correggibile a mano.
+ *
+ * @param ordered - Sessioni di un alimento, già ordinate per numero crescente.
+ * @returns Una funzione che traduce il numero clinico nella sua posizione, a
+ * partire da 1. Numeri ripetuti condividono la stessa posizione.
  */
-function ordinalsFor(ordered: SavedSession[]): (sessionNumber: number) => number {
+export function ordinalsFor(ordered: SavedSession[]): (sessionNumber: number) => number {
   const ordinals = new Map<number, number>();
   for (const session of ordered) {
     if (!ordinals.has(session.sessionNumber)) {

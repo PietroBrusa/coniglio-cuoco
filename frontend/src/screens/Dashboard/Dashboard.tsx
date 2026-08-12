@@ -6,7 +6,7 @@ import { useDeleteSession, useSessions } from '@/hooks/useSessions';
 import { getFood } from '@/domain/levels';
 import { loadSettings } from '@/storage/settings';
 import { getProblemBehavior } from '@/domain/problemBehaviors';
-import { buildAbaSeries, groupByFood, wholeIntervalRecording } from '@/export/abaData';
+import { buildAbaSeries, groupByFood, ordinalsFor, wholeIntervalRecording } from '@/export/abaData';
 import { formatMetrics } from '@/domain/formatMetrics';
 import { abaWorkbookFileName, buildAbaWorkbook } from '@/export/abaWorkbook';
 import { XLSX_MIME, downloadFile } from '@/lib/downloadFile';
@@ -51,8 +51,9 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
   const series = useMemo(() => (group ? buildAbaSeries(group.sessions) : []), [group]);
 
   const listed = useMemo(() => (group ? [...group.sessions].reverse() : []), [group]);
-  const ordinalOf = (sessionNumber: number) =>
-    (group?.sessions.findIndex((s) => s.sessionNumber === sessionNumber) ?? -1) + 1;
+  // La stessa numerazione dell'asse X del grafico: se l'elenco la ricavasse per
+  // conto suo, le due letture divergerebbero con numeri di sessione ripetuti.
+  const ordinalOf = useMemo(() => ordinalsFor(group?.sessions ?? []), [group]);
 
   const handleExport = () => {
     try {

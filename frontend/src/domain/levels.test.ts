@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LEVELS, FOODS, getFood, getLevel } from './levels';
+import { LEVELS, FOODS, getFood } from './levels';
 
 describe('getFood', () => {
   it('returns the matching food by id', () => {
@@ -17,23 +17,17 @@ describe('getFood', () => {
   });
 });
 
-describe('getLevel', () => {
-  it('returns the matching level by id', () => {
-    expect(getLevel(2).name).toBe("L'Annusata");
-  });
-
-  it('falls back to level 1 for an unknown id', () => {
-    expect(getLevel(999)).toBe(LEVELS[0]);
-  });
-});
-
 describe('LEVELS data integrity', () => {
   it('defines exactly three levels with ids 1..3', () => {
     expect(LEVELS.map((l) => l.id)).toEqual([1, 2, 3]);
   });
 
+  it('names the second step of the hierarchy', () => {
+    expect(LEVELS[1].name).toBe("L'Annusata");
+  });
+
   it('exposes intro and progressLabel as functions of the game state', () => {
-    const level = getLevel(1);
+    const level = LEVELS[0];
     expect(level.intro({ foodLabel: 'Carota' })).toContain('Carota'.toLowerCase());
     expect(level.progressLabel(3, 6)).toBe('Cesto 50%');
   });

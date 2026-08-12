@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { sampleBeatMs, isHeldThrough, HOLD_EARLY_MS, HOLD_GRACE_MS } from './hardBeat';
-import { getLevel } from './levels';
+import { LEVELS } from './levels';
+
+/** I livelli sono dichiarati in ordine di id, verificato in `levels.test.ts`. */
+const level = (id: number) => LEVELS[id - 1];
 
 describe('sampleBeatMs', () => {
   it('returns the fixed value when min equals max (level 1 cadence)', () => {
@@ -48,20 +51,20 @@ describe('isHeldThrough', () => {
 
 describe('LEVELS hard-beat configuration', () => {
   it('keeps level 1 on a fixed tap cadence', () => {
-    const { hardBeat } = getLevel(1);
+    const { hardBeat } = level(1);
     expect(hardBeat.score).toBe('tap');
     expect(hardBeat.onMs[0]).toBe(hardBeat.onMs[1]);
     expect(hardBeat.offMs[0]).toBe(hardBeat.offMs[1]);
   });
 
   it.each([2, 3])('randomises wait and hold on level %i', (id) => {
-    const { hardBeat } = getLevel(id);
+    const { hardBeat } = level(id);
     expect(hardBeat.score).toBe('hold');
     expect(hardBeat.onMs[0]).toBeLessThan(hardBeat.onMs[1]);
     expect(hardBeat.offMs[0]).toBeLessThan(hardBeat.offMs[1]);
   });
 
   it('makes level 3 demand longer holds than level 2', () => {
-    expect(getLevel(3).hardBeat.onMs[1]).toBeGreaterThan(getLevel(2).hardBeat.onMs[1]);
+    expect(level(3).hardBeat.onMs[1]).toBeGreaterThan(level(2).hardBeat.onMs[1]);
   });
 });

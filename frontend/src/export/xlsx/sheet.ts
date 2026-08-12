@@ -7,9 +7,7 @@
 
 import { XML_DECL, esc } from './xml';
 
-/** Stile predefinito: indice nella lista `cellXfs` scritta da {@link stylesXml}. */
-export const STYLE_DEFAULT = 0;
-/** Stile grassetto, usato dalle intestazioni. */
+/** Stile grassetto, usato dalle intestazioni: indice nella lista `cellXfs` scritta da {@link stylesXml}. */
 export const STYLE_BOLD = 1;
 
 /** Valore che può finire in una cella; `null` e `undefined` la lasciano vuota. */

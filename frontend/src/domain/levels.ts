@@ -97,13 +97,3 @@ export const LEVELS: Level[] = [
 export function getFood(foodId: string | undefined): Food {
   return FOODS.find((f) => f.id === foodId) ?? FOODS[0];
 }
-
-/**
- * Cerca un livello per numero.
- *
- * @param levelId - Numero del livello.
- * @returns Il livello richiesto, o il primo della gerarchia se non esiste.
- */
-export function getLevel(levelId: number): Level {
-  return LEVELS.find((l) => l.id === levelId) ?? LEVELS[0];
-}
