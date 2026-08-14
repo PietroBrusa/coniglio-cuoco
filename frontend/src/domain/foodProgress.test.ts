@@ -8,7 +8,7 @@ function session(
 ): SavedSession {
   const {
     food = 'Mela',
-    foodId,
+    foodId = food.toLowerCase(),
     date = `2026-07-${String(sessionNumber).padStart(2, '0')}T10:00:00.000Z`,
   } = opts;
   return {
@@ -18,6 +18,9 @@ function session(
     food,
     foodId,
     difficulty: 'facile',
+    therapist: 'Anna',
+    problemBehaviors: [],
+    notes: '',
     date,
     createdAt: date,
     levels: [],
@@ -48,10 +51,10 @@ describe('foodProgress', () => {
     expect(progress.mela.lastDate).toBe('2026-05-04T10:00:00.000Z');
   });
 
-  it('resolves legacy sessions saved before foodId existed via their label', () => {
+  it('groups by food id, so a renamed label stays one programme', () => {
     const progress = foodProgress([
-      session(3, { food: 'Banana' }),
-      session(4, { food: 'Banana', foodId: 'banana' }),
+      session(3, { food: 'Banana', foodId: 'banana' }),
+      session(4, { food: 'Banana matura', foodId: 'banana' }),
     ]);
 
     expect(progress.banana).toEqual({
@@ -59,11 +62,6 @@ describe('foodProgress', () => {
       lastDate: '2026-07-04T10:00:00.000Z',
       total: 2,
     });
-  });
-
-  it('falls back to the raw label for foods no longer in the catalogue', () => {
-    const progress = foodProgress([session(1, { food: 'Cibo sconosciuto' })]);
-    expect(progress['Cibo sconosciuto'].lastSessionNumber).toBe(1);
   });
 
   it('returns nothing for an empty history', () => {

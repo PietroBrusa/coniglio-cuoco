@@ -9,7 +9,6 @@
  */
 
 import type { SavedSession } from '@/api/client';
-import { FOODS } from './foods';
 
 /** A che punto è il programma su un singolo alimento. */
 export interface FoodProgress {
@@ -24,18 +23,12 @@ export interface FoodProgress {
 /** Avanzamento per ogni alimento usato, indicizzato per identificativo. */
 export type ProgressByFood = Record<string, FoodProgress>;
 
-const ID_BY_LABEL = new Map(FOODS.map((f) => [f.label.toLowerCase(), f.id]));
-
-/**
- * Le sessioni salvate prima che esistesse `foodId` portano solo l'etichetta:
- * viene risolta all'indietro verso l'identificativo, altrimenti lo storico di
- * uno stesso alimento si spezzerebbe in due gruppi distinti.
- */
-const foodKeyOf = (session: SavedSession): string =>
-  session.foodId ?? ID_BY_LABEL.get(session.food.toLowerCase()) ?? session.food;
-
 /**
  * Riassume, alimento per alimento, a che punto è il bambino.
+ *
+ * Il raggruppamento usa `foodId` e non l'etichetta: l'identificativo è imposto
+ * dall'API, mentre l'etichetta è testo che potrebbe cambiare senza che le
+ * sessioni già salvate ne sappiano nulla.
  *
  * @param sessions - Tutte le sessioni salvate del bambino, in qualsiasi ordine.
  * @returns L'avanzamento indicizzato per identificativo di alimento.
@@ -44,11 +37,10 @@ export function foodProgress(sessions: SavedSession[]): ProgressByFood {
   const byFood: ProgressByFood = {};
 
   for (const session of sessions) {
-    const key = foodKeyOf(session);
-    const current = byFood[key];
+    const current = byFood[session.foodId];
 
     if (!current) {
-      byFood[key] = {
+      byFood[session.foodId] = {
         lastSessionNumber: session.sessionNumber,
         lastDate: session.date,
         total: 1,

@@ -89,16 +89,13 @@ const initialState: GameState = {
 function reducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'START': {
-      const session = {
-        ...createSession({
-          childId: action.childId,
-          sessionNumber: action.sessionNumber,
-          foodLabel: getFood(action.foodId).label,
-          difficulty: action.difficulty,
-          therapist: action.therapist,
-        }),
+      const session = createSession({
+        childId: action.childId,
+        sessionNumber: action.sessionNumber,
         foodId: action.foodId,
-      };
+        difficulty: action.difficulty,
+        therapist: action.therapist,
+      });
       return { ...initialState, session };
     }
     case 'COMPLETE':

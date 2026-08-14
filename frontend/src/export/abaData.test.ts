@@ -19,7 +19,12 @@ function session(
     levels?: { levelId: number; engagementRatio: number }[];
   } = {},
 ): SavedSession {
-  const { food = 'Mela', foodId, difficulty = 'facile', levels = [{ levelId: 1, engagementRatio: 50 }] } = opts;
+  const {
+    food = 'Mela',
+    foodId = food.toLowerCase(),
+    difficulty = 'facile',
+    levels = [{ levelId: 1, engagementRatio: 50 }],
+  } = opts;
   return {
     _id: `id-${sessionNumber}`,
     childId: 'John Doe',
@@ -27,6 +32,9 @@ function session(
     food,
     foodId,
     difficulty,
+    therapist: 'Anna',
+    problemBehaviors: [],
+    notes: '',
     date: `2026-07-${String(sessionNumber).padStart(2, '0')}T10:00:00.000Z`,
     createdAt: '2026-07-01T10:00:00.000Z',
     levels: levels.map((l) => ({
@@ -70,21 +78,15 @@ describe('groupByFood', () => {
     expect(groups).toHaveLength(2);
   });
 
-  it('groups by food id when present, so a renamed label stays one programme', () => {
+  it('groups by food id, so a renamed label stays one programme', () => {
     const groups = groupByFood([
       session(1, { food: 'Mela', foodId: 'mela' }),
       session(2, { food: 'Mela rossa', foodId: 'mela' }),
     ]);
 
     expect(groups).toHaveLength(1);
+    expect(groups[0].foodId).toBe('mela');
     expect(groups[0].sessions).toHaveLength(2);
-  });
-
-  it('falls back to the label for sessions saved before food ids existed', () => {
-    const groups = groupByFood([session(1, { food: 'Mela' }), session(2, { food: 'Mela' })]);
-
-    expect(groups).toHaveLength(1);
-    expect(groups[0].key).toBe('Mela');
   });
 
   it('returns no groups for no sessions', () => {

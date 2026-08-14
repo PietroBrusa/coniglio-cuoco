@@ -36,8 +36,10 @@ export const PROBLEM_BEHAVIORS: ProblemBehavior[] = [
  * Cerca un comportamento problema per identificativo.
  *
  * @param id - Identificativo salvato nel record della sessione.
- * @returns Il comportamento, oppure `undefined` se l'identificativo non è più
- * fra quelli previsti (può accadere rileggendo sessioni vecchie).
+ * @returns Il comportamento, oppure `undefined` se l'identificativo non è fra
+ * quelli previsti — il che accade se il catalogo venisse modificato mentre
+ * esistono sedute che citano una voce tolta. Chi chiama mostra allora
+ * l'identificativo grezzo, invece di far sparire l'informazione.
  */
 export const getProblemBehavior = (id: string): ProblemBehavior | undefined =>
   PROBLEM_BEHAVIORS.find((b) => b.id === id);

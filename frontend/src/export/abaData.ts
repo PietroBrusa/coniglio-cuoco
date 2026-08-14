@@ -27,12 +27,10 @@ export interface AbaPoint {
 
 /** Le sessioni svolte con uno stesso alimento: una scheda, un grafico. */
 export interface FoodGroup {
-  /** Chiave di raggruppamento: l'identificativo dell'alimento, o il nome se manca. */
-  key: string;
+  /** Identificativo dell'alimento, chiave del raggruppamento. */
+  foodId: string;
   /** Nome dell'alimento da mostrare. */
   food: string;
-  /** Identificativo dell'alimento, assente nelle sessioni più vecchie. */
-  foodId?: string;
   /** Le sessioni del gruppo, ordinate per numero crescente. */
   sessions: SavedSession[];
 }
@@ -73,7 +71,7 @@ export const DEFAULT_INTERVAL_MS = 1000;
  * @returns L'etichetta della condizione, es. `Carota · facile`.
  */
 export const conditionOf = (session: SavedSession): string =>
-  `${session.food} · ${session.difficulty ?? 'facile'}`;
+  `${session.food} · ${session.difficulty}`;
 
 /**
  * Raggruppa le sessioni per alimento.
@@ -82,6 +80,10 @@ export const conditionOf = (session: SavedSession): string =>
  * stesso grafico non avrebbe senso clinico. Da qui nascono le linguette della
  * dashboard e i fogli del file Excel.
  *
+ * Il raggruppamento è per `foodId` e non per etichetta, come nello storico del
+ * setup: due sessioni dello stesso alimento restano insieme anche se il nome
+ * mostrato è nel frattempo cambiato.
+ *
  * @param sessions - Sessioni salvate, in qualsiasi ordine.
  * @returns Un gruppo per alimento, con le sessioni già ordinate per numero.
  */
@@ -89,11 +91,10 @@ export function groupByFood(sessions: SavedSession[]): FoodGroup[] {
   const groups = new Map<string, FoodGroup>();
 
   for (const session of sortedByNumber(sessions)) {
-    const key = session.foodId ?? session.food;
-    let group = groups.get(key);
+    let group = groups.get(session.foodId);
     if (!group) {
-      group = { key, food: session.food, foodId: session.foodId, sessions: [] };
-      groups.set(key, group);
+      group = { foodId: session.foodId, food: session.food, sessions: [] };
+      groups.set(session.foodId, group);
     }
     group.sessions.push(session);
   }

@@ -38,11 +38,12 @@ describe('createSession', () => {
     const s = createSession({
       childId: 'B001',
       sessionNumber: 3,
-      foodLabel: 'Carota',
+      foodId: 'carota',
       difficulty: 'facile',
     });
     expect(s.childId).toBe('B001');
     expect(s.sessionNumber).toBe(3);
+    expect(s.foodId).toBe('carota');
     expect(s.food).toBe('Carota');
     expect(s.difficulty).toBe('facile');
     expect(s.levels).toEqual([]);
@@ -53,7 +54,7 @@ describe('createSession', () => {
     const s = createSession({
       childId: '',
       sessionNumber: 0,
-      foodLabel: 'Mela',
+      foodId: 'mela',
       difficulty: 'difficile',
     });
     expect(s.childId).toBe('anonimo');
@@ -66,7 +67,7 @@ describe('addLevelResult', () => {
     const base = createSession({
       childId: 'B001',
       sessionNumber: 1,
-      foodLabel: 'Carota',
+      foodId: 'carota',
       difficulty: 'facile',
     });
 
@@ -85,7 +86,7 @@ describe('addLevelResult', () => {
     const base: Session = createSession({
       childId: 'B001',
       sessionNumber: 1,
-      foodLabel: 'Carota',
+      foodId: 'carota',
       difficulty: 'facile',
     });
 

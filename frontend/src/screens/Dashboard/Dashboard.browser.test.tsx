@@ -24,7 +24,7 @@ const savedSession = {
       levelId: 1,
       levelName: 'La Raccolta',
       behavior: 'Approccio e contatto con le dita',
-      mode: 'count',
+      mode: 'hold',
       target: 5,
       metrics: {
         n: 3,
@@ -139,13 +139,13 @@ describe('Dashboard', () => {
     await expect.element(screen.getByText('Bambino stanco a fine sessione.')).toBeInTheDocument();
   });
 
-  it('marks legacy sessions saved before these fields existed', async () => {
-    const legacy = { ...savedSession } as Record<string, unknown>;
-    delete legacy.therapist;
-    delete legacy.problemBehaviors;
-    delete legacy.notes;
+  // I campi ci sono sempre, ma possono essere vuoti: un terapista che ha digitato
+  // solo spazi, una seduta senza comportamenti problema. Il vuoto va dichiarato a
+  // schermo, perché una cella lasciata in bianco non distingue «non osservato» da
+  // «non registrato».
+  it('spells out the empty fields instead of leaving them blank', async () => {
     vi.spyOn(sessionsApi, 'sessionsControllerFindAll').mockResolvedValue({
-      data: [legacy],
+      data: [{ ...savedSession, therapist: '', problemBehaviors: [], notes: '' }],
     } as never);
 
     const screen = await renderDashboard();

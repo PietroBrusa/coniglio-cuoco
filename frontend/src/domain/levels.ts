@@ -89,10 +89,11 @@ export const LEVELS: Level[] = [
 /**
  * Cerca un alimento per identificativo.
  *
- * @param foodId - Identificativo dell'alimento, eventualmente assente nelle
- * sessioni salvate prima della sua introduzione.
- * @returns L'alimento richiesto, o il primo del catalogo se non viene trovato:
- * l'interfaccia ha sempre qualcosa da mostrare e non si rompe su un dato vecchio.
+ * @param foodId - Identificativo dell'alimento, oppure `undefined` quando non
+ * c'è ancora nessuna sessione aperta da cui leggerlo.
+ * @returns L'alimento richiesto, o il primo del catalogo se non viene trovato —
+ * il che accade se un alimento venisse tolto dal catalogo mentre esistono sedute
+ * che lo citano: l'interfaccia ha comunque qualcosa da mostrare.
  */
 export function getFood(foodId: string | undefined): Food {
   return FOODS.find((f) => f.id === foodId) ?? FOODS[0];

@@ -39,8 +39,8 @@ async function bootstrap() {
   );
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Rabbit Cook API')
-    .setDescription('Game session persistence and child authentication.')
+    .setTitle('API Coniglio Cuoco')
+    .setDescription('Persistenza delle sessioni di gioco e autenticazione dei bambini.')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

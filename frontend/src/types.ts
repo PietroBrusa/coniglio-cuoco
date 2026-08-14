@@ -19,13 +19,13 @@ export interface Food {
 }
 
 /**
- * Meccanica del livello.
+ * Meccanica del livello: `hold` conta il tempo di contatto mantenuto.
  *
- * - `hold`: conta il tempo di contatto mantenuto (tutti i livelli attuali);
- * - `count`: conta il numero di tocchi. Non usato dai livelli odierni, resta
- *   perché il database contiene sessioni salvate quando esisteva.
+ * È un tipo a un valore solo, e resta un tipo perché il valore viene copiato in
+ * ogni esito salvato: dice a chi rileggerà i dati in quali termini quella misura
+ * è stata raccolta, senza doverlo dedurre dal nome del livello.
  */
-export type LevelMode = 'count' | 'hold';
+export type LevelMode = 'hold';
 
 /**
  * Modalità scelta a inizio sessione.
@@ -37,8 +37,9 @@ export type LevelMode = 'count' | 'hold';
  *   salvata e non compare in grafici ed esportazioni (vedi
  *   {@link domain/sessionRecord.collectsData}).
  *
- * Nelle sessioni salvate prima di questa scelta il valore può essere
- * `difficile`: erano una condizione sperimentale e restano nei grafici come tali.
+ * Nei record salvati il valore è quindi sempre `facile`. Viene comunque scritto:
+ * una scheda ABA che non dice in quale condizione il dato è stato raccolto non è
+ * interpretabile, nemmeno quando la condizione è una sola.
  */
 export type Difficulty = 'facile' | 'difficile';
 
@@ -183,16 +184,16 @@ export interface Session {
   sessionNumber: number;
   /** Nome dell'alimento, come mostrato nell'interfaccia. */
   food: string;
-  /** Identificativo dell'alimento; assente nelle sessioni salvate prima della sua introduzione. */
-  foodId?: string;
-  /** Condizione sperimentale della sessione. */
-  difficulty?: Difficulty;
-  /** Nome dell'operatore che ha condotto la sessione. */
-  therapist?: string;
+  /** Identificativo dell'alimento: è la chiave con cui se ne raggruppa lo storico. */
+  foodId: string;
+  /** Condizione sperimentale della sessione; nei record salvati sempre `facile`. */
+  difficulty: Difficulty;
+  /** Nome dell'operatore; stringa vuota se non registrato. */
+  therapist: string;
   /** Identificativi dei comportamenti problema osservati (vedi `PROBLEM_BEHAVIORS`). */
-  problemBehaviors?: string[];
-  /** Osservazioni libere del terapista. */
-  notes?: string;
+  problemBehaviors: string[];
+  /** Osservazioni libere del terapista; stringa vuota se non ne ha scritte. */
+  notes: string;
   /** Data e ora di inizio, in formato ISO 8601. */
   date: string;
   /** Esito di ogni livello completato, nell'ordine in cui è stato eseguito. */

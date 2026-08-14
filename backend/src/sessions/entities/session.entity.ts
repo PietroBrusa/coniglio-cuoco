@@ -45,8 +45,8 @@ export interface LevelResult {
   levelName: string;
   /** Definizione operazionale del comportamento misurato. */
   behavior: string;
-  /** Meccanica del livello. */
-  mode: 'count' | 'hold';
+  /** Meccanica del livello: si misura il tempo di contatto mantenuto. */
+  mode: 'hold';
   /** Obiettivo del livello, in secondi. */
   target: number;
   /** Misurazioni ottenute. */

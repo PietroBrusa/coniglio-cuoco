@@ -125,7 +125,7 @@ function buildFoodSheet(
     const row: SheetRow = [];
     row[COL_DATE] = formatDate(session.date);
     row[COL_SESSION] = ordinal;
-    row[COL_THERAPIST] = session.therapist ?? '';
+    row[COL_THERAPIST] = session.therapist;
     row[COL_CONDITION] = conditionOf(session);
 
     levels.forEach((level, i) => {
@@ -137,7 +137,7 @@ function buildFoodSheet(
 
     row[colCriterion] = criterion;
     row[colBehaviors] = problemBehaviorLabels(session.problemBehaviors).join(', ');
-    row[colNotes] = session.notes ?? '';
+    row[colNotes] = session.notes;
 
     rows.push(row);
   });
@@ -234,7 +234,7 @@ function listTherapists(sessions: SavedSession[]): string {
  * Scarta il segnaposto «nessuno», che non è un comportamento.
  */
 function listBehaviors(sessions: SavedSession[]): string {
-  const ids = sessions.flatMap((s) => s.problemBehaviors ?? []).filter((id) => id !== NO_PROBLEM_ID);
+  const ids = sessions.flatMap((s) => s.problemBehaviors).filter((id) => id !== NO_PROBLEM_ID);
   const labels = problemBehaviorLabels([...new Set(ids)]);
   return labels.length ? labels.join(', ') : 'nessuno rilevato';
 }

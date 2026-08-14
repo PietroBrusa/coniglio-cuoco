@@ -13,13 +13,16 @@ describe('Backend E2E (auth + sessions)', () => {
     food: 'Carota',
     foodId: 'carota',
     difficulty: 'facile',
+    therapist: 'Mary Major',
+    problemBehaviors: ['rifiuto-cibo'],
+    notes: 'Bambino collaborativo.',
     date: new Date().toISOString(),
     levels: [
       {
         levelId: 1,
         levelName: 'La Raccolta',
         behavior: 'Approccio e contatto con le dita',
-        mode: 'count',
+        mode: 'hold',
         target: 5,
         metrics: {
           n: 3,
@@ -110,11 +113,38 @@ describe('Backend E2E (auth + sessions)', () => {
         .expect(201);
 
       expect(res.body).toEqual(
-        expect.objectContaining({ childId: 'John Doe', food: 'Carota', sessionNumber: 1 }),
+        expect.objectContaining({
+          childId: 'John Doe',
+          food: 'Carota',
+          foodId: 'carota',
+          sessionNumber: 1,
+          difficulty: 'facile',
+          therapist: 'Mary Major',
+          problemBehaviors: ['rifiuto-cibo'],
+          notes: 'Bambino collaborativo.',
+        }),
       );
       sessionId = res.body._id;
       expect(sessionId).toBeDefined();
     });
+
+    // Ogni campo del record è obbligatorio: il contratto lo dichiara e questa
+    // verifica lo controlla sul filo, non solo sul DTO isolato. È la prova che
+    // un client disallineato riceve un rifiuto invece di scrivere un documento
+    // a cui manca un pezzo.
+    it.each(['foodId', 'difficulty', 'therapist', 'problemBehaviors', 'notes'])(
+      'POST /sessions rejects a payload without %s',
+      async (field) => {
+        const incomplete = { ...sessionPayload };
+        delete (incomplete as Record<string, unknown>)[field];
+
+        await request(app.getHttpServer())
+          .post('/sessions')
+          .set('Authorization', `Bearer ${userToken}`)
+          .send(incomplete)
+          .expect(400);
+      },
+    );
 
     it('GET /sessions returns the child\'s sessions', async () => {
       const res = await request(app.getHttpServer())

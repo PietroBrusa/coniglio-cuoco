@@ -97,9 +97,15 @@ export class LevelResultDto {
   @IsString()
   behavior!: string;
 
-  /** Meccanica del livello. */
-  @IsIn(['count', 'hold'])
-  mode!: 'count' | 'hold';
+  /**
+   * Meccanica del livello: si misura il tempo di contatto mantenuto.
+   *
+   * Il campo esiste per dire, a chi rileggerà il record, in quali termini quella
+   * misura è stata raccolta. Oggi ammette un valore solo, ed è giusto che il
+   * contratto lo dica invece di lasciar credere che ce ne sia un altro.
+   */
+  @IsIn(['hold'])
+  mode!: 'hold';
 
   /** Obiettivo del livello, in secondi. */
   @IsNumber()
@@ -133,31 +139,47 @@ export class CreateSessionDto {
   @IsString()
   food!: string;
 
-  /** Identificativo dell'alimento; assente nelle versioni più vecchie del client. */
-  @IsOptional()
+  /**
+   * Identificativo dell'alimento.
+   *
+   * È la chiave con cui il client raggruppa lo storico per alimento, e quindi
+   * con cui propone il numero della sessione successiva: senza, le sessioni di
+   * uno stesso alimento non si riconoscerebbero fra loro e la numerazione
+   * ripartirebbe da capo. Per questo è obbligatorio, e un payload che lo omette
+   * viene rifiutato invece di essere salvato a metà.
+   */
   @IsString()
-  foodId?: string;
+  foodId!: string;
 
-  /** Condizione sperimentale della sessione. */
-  @IsOptional()
+  /**
+   * Condizione sperimentale della sessione.
+   *
+   * In pratica sempre `facile`: la modalità difficile è solo gioco e non arriva
+   * mai qui. Il valore viene comunque registrato, perché una scheda ABA senza la
+   * condizione in cui il dato è stato raccolto non è interpretabile.
+   */
   @IsIn(['facile', 'difficile'])
-  difficulty?: 'facile' | 'difficile';
+  difficulty!: 'facile' | 'difficile';
 
-  /** Operatore che ha condotto la sessione. */
-  @IsOptional()
+  /**
+   * Operatore che ha condotto la sessione.
+   *
+   * Può essere una stringa vuota — il modulo la impone, ma un nome fatto di soli
+   * spazi si riduce a niente — e in quel caso la dashboard mostra «non
+   * registrato». Assente e vuoto direbbero la stessa cosa: si ammette solo il
+   * secondo, così il record ha sempre la stessa forma.
+   */
   @IsString()
-  therapist?: string;
+  therapist!: string;
 
-  /** Identificativi dei comportamenti problema osservati. */
-  @IsOptional()
+  /** Identificativi dei comportamenti problema osservati; lista vuota se nessuno. */
   @IsArray()
   @IsString({ each: true })
-  problemBehaviors?: string[];
+  problemBehaviors!: string[];
 
-  /** Osservazioni libere del terapista. */
-  @IsOptional()
+  /** Osservazioni libere del terapista; stringa vuota se non ne ha scritte. */
   @IsString()
-  notes?: string;
+  notes!: string;
 
   /**
    * Data e ora di inizio, in formato ISO 8601.

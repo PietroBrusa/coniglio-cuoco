@@ -35,11 +35,11 @@ export interface CreateSessionDto {
     'childId'?: string;
     'sessionNumber': number;
     'food': string;
-    'foodId'?: string;
-    'difficulty'?: CreateSessionDtoDifficultyEnum;
-    'therapist'?: string;
-    'problemBehaviors'?: Array<string>;
-    'notes'?: string;
+    'foodId': string;
+    'difficulty': CreateSessionDtoDifficultyEnum;
+    'therapist': string;
+    'problemBehaviors': Array<string>;
+    'notes': string;
     'date': string;
     'levels': Array<LevelResultDto>;
 }
@@ -65,7 +65,6 @@ export interface LevelResultDto {
 }
 
 export const LevelResultDtoModeEnum = {
-    Count: 'count',
     Hold: 'hold'
 } as const;
 
@@ -86,11 +85,11 @@ export interface SessionDto {
     'childId': string;
     'sessionNumber': number;
     'food': string;
-    'foodId'?: string;
-    'difficulty'?: SessionDtoDifficultyEnum;
-    'therapist'?: string;
-    'problemBehaviors'?: Array<string>;
-    'notes'?: string;
+    'foodId': string;
+    'difficulty': SessionDtoDifficultyEnum;
+    'therapist': string;
+    'problemBehaviors': Array<string>;
+    'notes': string;
     'date': string;
     'levels': Array<LevelResultDto>;
     'createdAt': string;

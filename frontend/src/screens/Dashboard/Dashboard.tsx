@@ -46,7 +46,7 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
   const criterion = loadSettings().holdEngagementPct;
 
   const groups = useMemo(() => groupByFood(sessions), [sessions]);
-  const group = groups.find((g) => g.key === selectedFood) ?? groups[0];
+  const group = groups.find((g) => g.foodId === selectedFood) ?? groups[0];
 
   const series = useMemo(() => (group ? buildAbaSeries(group.sessions) : []), [group]);
 
@@ -99,16 +99,16 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
       {groups.length > 1 && (
         <div className={c.foodTabs} role="tablist" aria-label="Alimento">
           {groups.map((g) => {
-            const selected = g.key === group?.key;
+            const selected = g.foodId === group?.foodId;
             return (
               <button
-                key={g.key}
+                key={g.foodId}
                 type="button"
                 role="tab"
                 aria-selected={selected}
                 className={`${c.foodTab} ${selected ? c.foodTabActive : ''}`}
                 onClick={() => {
-                  setSelectedFood(g.key);
+                  setSelectedFood(g.foodId);
                   setExpandedId(null);
                 }}
               >
@@ -167,12 +167,12 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
                   </div>
                   <div>
                     <dt>Difficoltà</dt>
-                    <dd>{session.difficulty ?? 'facile'}</dd>
+                    <dd>{session.difficulty}</dd>
                   </div>
                   <div className={c.sessionInfoWide}>
                     <dt>Comportamenti osservati</dt>
                     <dd>
-                      {session.problemBehaviors?.length ? (
+                      {session.problemBehaviors.length ? (
                         <span className={c.behaviorTags}>
                           {session.problemBehaviors.map((id) => {
                             const b = getProblemBehavior(id);

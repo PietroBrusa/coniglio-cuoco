@@ -24,20 +24,20 @@ export class SessionDto {
   /** Nome dell'alimento. */
   food!: string;
 
-  /** Identificativo dell'alimento; assente nelle sessioni più vecchie. */
-  foodId?: string;
+  /** Identificativo dell'alimento, chiave dello storico per alimento. */
+  foodId!: string;
 
-  /** Condizione sperimentale della sessione. */
-  difficulty?: 'facile' | 'difficile';
+  /** Condizione sperimentale della sessione; in pratica sempre `facile`. */
+  difficulty!: 'facile' | 'difficile';
 
-  /** Operatore che ha condotto la sessione. */
-  therapist?: string;
+  /** Operatore che ha condotto la sessione; stringa vuota se non registrato. */
+  therapist!: string;
 
-  /** Identificativi dei comportamenti problema osservati. */
-  problemBehaviors?: string[];
+  /** Identificativi dei comportamenti problema osservati; lista vuota se nessuno. */
+  problemBehaviors!: string[];
 
-  /** Osservazioni libere del terapista. */
-  notes?: string;
+  /** Osservazioni libere del terapista; stringa vuota se non ne ha scritte. */
+  notes!: string;
 
   /** Data e ora di inizio dichiarate dal client, in formato ISO 8601. */
   date!: string;

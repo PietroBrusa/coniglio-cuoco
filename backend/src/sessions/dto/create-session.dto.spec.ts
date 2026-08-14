@@ -16,7 +16,7 @@ const validPayload = {
       levelId: 1,
       levelName: 'La Raccolta',
       behavior: 'Approccio e contatto con le dita',
-      mode: 'count',
+      mode: 'hold',
       target: 5,
       metrics: {
         n: 3,
@@ -82,19 +82,32 @@ describe('CreateSessionDto', () => {
     expect(errors.map((e) => e.property)).toContain('levels');
   });
 
-  it('treats optional metadata (foodId, difficulty) as omittable', async () => {
-    const { foodId, difficulty, ...rest } = validPayload;
-    void foodId;
-    void difficulty;
-    expect(await validateDto(rest)).toHaveLength(0);
+  it('rejects a mode other than the one the levels use', async () => {
+    const bad = {
+      ...validPayload,
+      levels: [{ ...validPayload.levels[0], mode: 'count' }],
+    };
+    const errors = await validateDto(bad);
+    expect(errors.map((e) => e.property)).toContain('levels');
   });
 
-  it('accepts a session recorded without therapist or problem behaviours', async () => {
-    const { therapist, problemBehaviors, notes, ...rest } = validPayload;
-    void therapist;
-    void problemBehaviors;
-    void notes;
-    expect(await validateDto(rest)).toHaveLength(0);
+  // Ogni campo del record è obbligatorio: un'assenza e un valore vuoto direbbero
+  // la stessa cosa, e ammettere solo il secondo tiene tutte le sessioni della
+  // stessa forma. Chi rilegge i dati non deve chiedersi se un campo mancante
+  // significhi «non osservato» o «salvato da una versione che non lo aveva».
+  it.each(['foodId', 'difficulty', 'therapist', 'problemBehaviors', 'notes'])(
+    'rejects a payload without %s',
+    async (field) => {
+      const rest = { ...validPayload };
+      delete (rest as Record<string, unknown>)[field];
+      const errors = await validateDto(rest);
+      expect(errors.map((e) => e.property)).toContain(field);
+    },
+  );
+
+  it('accepts an empty therapist, no problem behaviours and no notes', async () => {
+    const payload = { ...validPayload, therapist: '', problemBehaviors: [], notes: '' };
+    expect(await validateDto(payload)).toHaveLength(0);
   });
 
   it('rejects problem behaviours that are not a list of strings', async () => {

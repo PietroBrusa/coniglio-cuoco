@@ -9,6 +9,7 @@
  */
 
 import type { Difficulty, Level, Metrics, Session } from '@/types';
+import { getFood } from './levels';
 
 /**
  * Stabilisce se una sessione produce dati da registrare.
@@ -21,8 +22,9 @@ import type { Difficulty, Level, Metrics, Session } from '@/types';
  * di meccanica. Per questo una partita in difficile non viene registrata, non
  * viene salvata e non entra in grafici ed esportazioni.
  *
- * @param difficulty - Condizione della sessione; assente nelle sessioni salvate
- * prima che la scelta esistesse, che erano tutte in facile.
+ * @param difficulty - Condizione della sessione, oppure `undefined` quando non
+ * c'è ancora nessuna sessione aperta: prima della partenza non c'è niente da
+ * escludere, quindi il caso vale come `facile`.
  * @returns `true` se gli esiti dei livelli vanno raccolti e salvati.
  */
 export const collectsData = (difficulty: Difficulty | undefined): boolean =>
@@ -34,13 +36,17 @@ export const collectsData = (difficulty: Difficulty | undefined): boolean =>
  * La data è fissata qui, all'avvio: è il momento in cui il lavoro con il bambino
  * comincia davvero.
  *
+ * Dell'alimento arriva il solo identificativo, da cui l'etichetta viene
+ * ricavata: così non esiste un modo di costruire una sessione in cui il nome
+ * mostrato e la chiave dello storico si riferiscono a due alimenti diversi.
+ *
  * @param params - Dati raccolti nella schermata di setup.
  * @returns Una sessione vuota, pronta a raccogliere gli esiti dei livelli.
  */
 export function createSession({
   childId,
   sessionNumber,
-  foodLabel,
+  foodId,
   difficulty,
   therapist,
 }: {
@@ -48,8 +54,8 @@ export function createSession({
   childId: string;
   /** Numero progressivo proposto dal setup, o corretto a mano dal terapista. */
   sessionNumber: number;
-  /** Nome dell'alimento scelto. */
-  foodLabel: string;
+  /** Identificativo dell'alimento scelto. */
+  foodId: string;
   /** Condizione sperimentale scelta. */
   difficulty: Difficulty;
   /** Operatore che conduce la sessione. */
@@ -58,9 +64,10 @@ export function createSession({
   return {
     childId: childId || 'anonimo',
     sessionNumber: sessionNumber || 1,
-    food: foodLabel,
+    food: getFood(foodId).label,
+    foodId,
     difficulty,
-    therapist: therapist?.trim() || undefined,
+    therapist: therapist?.trim() ?? '',
     problemBehaviors: [],
     notes: '',
     date: new Date().toISOString(),
