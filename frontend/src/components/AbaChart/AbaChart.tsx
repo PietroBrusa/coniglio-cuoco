@@ -11,28 +11,12 @@ const PLOT_H = H - M.top - M.bottom;
 
 const Y_TICKS = [0, 25, 50, 75, 100];
 
-/** Dati da rappresentare nel grafico. */
 interface AbaChartProps {
-  /** Una linea per livello, con i suoi punti. */
   series: AbaSeries[];
-  /** Percentuale obiettivo, disegnata come linea orizzontale di riferimento. */
   criterion: number;
-  /** Alimento a cui il grafico si riferisce, citato nella descrizione accessibile. */
   foodLabel?: string;
 }
 
-/**
- * Grafico ABA dell'andamento del programma: percentuale di contatto per
- * sessione, una linea per livello.
- *
- * È SVG scritto a mano e non una libreria di grafici: le esigenze sono precise
- * (asse verticale fisso da 0 a 100, linea di criterio etichettata, progressivo
- * denso sull'asse orizzontale) e così il progetto non dipende da nessun
- * pacchetto per disegnare un dato clinico.
- *
- * L'area sensibile attorno a ogni punto è molto più larga del punto stesso,
- * altrimenti su tablet sarebbe impossibile centrarlo.
- */
 const AbaChart = ({ series, criterion, foodLabel }: AbaChartProps) => {
   const titleId = useId();
   const [hover, setHover] = useState<{

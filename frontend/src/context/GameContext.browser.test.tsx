@@ -77,7 +77,7 @@ describe('GameContext', () => {
 
     result.current.next();
     await vi.waitFor(() => expect(result.current.session!.levels).toHaveLength(1));
-    expect(result.current.session!.levels[0].metrics.n).toBe(9);
+    expect(result.current.session!.levels[0].metrics.count).toBe(9);
   });
 
   it('records nothing in a "difficile" session, which is play only', async () => {

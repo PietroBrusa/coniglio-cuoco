@@ -71,7 +71,7 @@ export const LevelResultDtoModeEnum = {
 export type LevelResultDtoModeEnum = typeof LevelResultDtoModeEnum[keyof typeof LevelResultDtoModeEnum];
 
 export interface LevelResultMetricsDto {
-    'n': number;
+    'count': number;
     'latencyMs': number | null;
     'totalContactMs': number;
     'meanTouchMs': number | null;

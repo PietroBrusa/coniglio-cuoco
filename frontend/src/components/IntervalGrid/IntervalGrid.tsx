@@ -1,21 +1,11 @@
 import type { IntervalRecord } from '@/export/abaData';
 import c from './IntervalGrid.module.scss';
 
-/** Dati della griglia a intervalli. */
 interface IntervalGridProps {
-  /** Esito della registrazione a intervalli da rappresentare. */
   record: IntervalRecord;
-  /** Titolo della tabella, es. «Whole interval recording». */
   caption: string;
 }
 
-/**
- * Griglia dei segni `+` e `−`, un intervallo per colonna, con la percentuale
- * finale.
- *
- * Riproduce la griglia del modulo cartaceo, che il terapista riconosce a colpo
- * d'occhio.
- */
 const IntervalGrid = ({ record, caption }: IntervalGridProps) => (
   <table className={c.grid}>
     <caption className={c.caption}>

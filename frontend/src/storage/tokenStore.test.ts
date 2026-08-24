@@ -69,6 +69,45 @@ describe('tokenStore', () => {
   });
 });
 
+function createThrowingLocalStorage(): Storage {
+  const boom = () => {
+    throw new Error('storage unavailable');
+  };
+  return {
+    get length() {
+      return boom();
+    },
+    clear: boom,
+    getItem: boom,
+    setItem: boom,
+    removeItem: boom,
+    key: boom,
+  };
+}
+
+describe('when localStorage throws (e.g. private browsing, a locked-down device)', () => {
+  it('reads and writes without crashing', () => {
+    vi.stubGlobal('localStorage', createThrowingLocalStorage());
+
+    expect(() => getToken()).not.toThrow();
+    expect(getToken()).toBeNull();
+    expect(() => getStoredChild()).not.toThrow();
+    expect(getStoredChild()).toBeNull();
+    expect(() => setAuth('jwt.token.value', 'B001')).not.toThrow();
+  });
+
+  it('still notifies subscribers on clearAuth even though the storage removal fails', () => {
+    vi.stubGlobal('localStorage', createThrowingLocalStorage());
+    const listener = vi.fn();
+    const unsubscribe = onAuthCleared(listener);
+
+    expect(() => clearAuth()).not.toThrow();
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    unsubscribe();
+  });
+});
+
 describe('isSessionExpired', () => {
   it('is expired when no token is stored', () => {
     expect(isSessionExpired()).toBe(true);

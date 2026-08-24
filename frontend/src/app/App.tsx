@@ -9,12 +9,6 @@ import DashboardRoute from '@/app/routes/DashboardRoute';
 import SettingsRoute from '@/app/routes/SettingsRoute';
 import s from '@/app/styles/shared.module.scss';
 
-/**
- * Mappa delle rotte dell'applicazione.
- *
- * Tutto ciò che riguarda un bambino sta dietro {@link app/routes/ProtectedRoute};
- * un indirizzo sconosciuto riporta al setup invece di mostrare una pagina vuota.
- */
 const App = () => (
   <div className={s.wrapper}>
     <Routes>

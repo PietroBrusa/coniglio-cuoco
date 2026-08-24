@@ -14,26 +14,11 @@ import type { SavedSession } from '@/api/client';
 import s from '@/app/styles/shared.module.scss';
 import c from './Dashboard.module.scss';
 
-/** Che cosa serve alla dashboard. */
 interface DashboardProps {
-  /** Bambino di cui mostrare le sessioni. */
   childId: string;
-  /** Richiamata del pulsante di ritorno al setup. */
   onBack: () => void;
 }
 
-/**
- * Dashboard delle sessioni salvate: grafico dell'andamento, dettaglio di ogni
- * sessione ed esportazione delle schede ABA.
- *
- * Le sessioni sono divise per alimento, una linguetta ciascuno: ogni alimento è
- * un programma a sé e ha il suo grafico. La linea di criterio del grafico è la
- * stessa soglia configurata per la terza stella, così l'obiettivo del gioco e
- * quello del programma coincidono.
- *
- * L'esportazione avviene interamente nel browser: i dati non vengono inviati a
- * nessun servizio per produrre il file.
- */
 const Dashboard = ({ childId, onBack }: DashboardProps) => {
   const { data, isLoading, isError, error, refetch, isFetching } = useSessions(childId);
   const deleteMutation = useDeleteSession();
@@ -51,8 +36,6 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
   const series = useMemo(() => (group ? buildAbaSeries(group.sessions) : []), [group]);
 
   const listed = useMemo(() => (group ? [...group.sessions].reverse() : []), [group]);
-  // La stessa numerazione dell'asse X del grafico: se l'elenco la ricavasse per
-  // conto suo, le due letture divergerebbero con numeri di sessione ripetuti.
   const ordinalOf = useMemo(() => ordinalsFor(group?.sessions ?? []), [group]);
 
   const handleExport = () => {

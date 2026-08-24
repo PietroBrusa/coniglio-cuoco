@@ -9,15 +9,10 @@ import type { Difficulty } from '@/types';
 import s from '@/app/styles/shared.module.scss';
 import c from './SetupScreen.module.scss';
 
-/** Scelte con cui si apre una sessione. */
 export interface StartParams {
-  /** Numero progressivo della sessione, proposto in automatico e correggibile. */
   sessionNumber: number;
-  /** Alimento su cui si lavora. */
   foodId: string;
-  /** Condizione sperimentale scelta. */
   difficulty: Difficulty;
-  /** Operatore che conduce la sessione. */
   therapist: string;
 }
 
@@ -26,36 +21,16 @@ const DIFFICULTIES: { id: Difficulty; emoji: string; label: string; hint: string
   { id: 'difficile', emoji: '🎵', label: 'Difficile', hint: 'tocchi a tempo, solo gioco' },
 ];
 
-/** Che cosa serve alla schermata di setup. */
 interface SetupScreenProps {
-  /** Bambino autenticato. */
   childId: string;
-  /** Storico per alimento, da cui si ricava il numero di sessione da proporre. */
   progressByFood?: ProgressByFood;
-  /** Lo storico è ancora in caricamento. */
   progressLoading?: boolean;
-  /** Richiamata di avvio della sessione. */
   onStart: (params: StartParams) => void;
-  /** Apre la dashboard delle sessioni salvate. */
   onOpenDashboard: () => void;
-  /** Apre le impostazioni. */
   onOpenSettings: () => void;
-  /** Chiude la sessione di accesso e cambia bambino. */
   onLogout: () => void;
 }
 
-/**
- * Schermata di apertura: si scelgono terapista, numero di sessione, alimento e
- * difficoltà.
- *
- * Il numero di sessione segue l'alimento selezionato — è quello successivo
- * all'ultima sessione svolta con quell'alimento — finché il terapista non lo
- * corregge a mano, nel qual caso la correzione ha la precedenza.
- *
- * La difficoltà non è solo una meccanica: scegliendo *difficile* si gioca e
- * basta, senza raccolta dati. Va detto qui, prima di iniziare, perché è dopo che
- * non si può più rimediare.
- */
 const SetupScreen = ({
   childId,
   progressByFood = {},
@@ -76,11 +51,11 @@ const SetupScreen = ({
     ? FOODS.filter((f) => f.label.toLowerCase().includes(query))
     : FOODS;
 
-  // The proposed number follows the selected food until the therapist overrides it.
   const food = getFood(foodId);
   const progress = progressByFood[foodId];
   const sessionNumber = manualNumber ?? nextSessionNumber(progress);
 
+  //Resetta sempre il numero del cibo
   const selectFood = (id: string) => {
     setFoodId(id);
     setManualNumber(null);

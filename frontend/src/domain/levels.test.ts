@@ -23,7 +23,7 @@ describe('LEVELS data integrity', () => {
   });
 
   it('names the second step of the hierarchy', () => {
-    expect(LEVELS[1].name).toBe("L'Annusata");
+    expect(LEVELS[1].name).toBe('Sono buone?');
   });
 
   it('exposes intro and progressLabel as functions of the game state', () => {

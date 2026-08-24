@@ -19,7 +19,7 @@ const validPayload = {
       mode: 'hold',
       target: 5,
       metrics: {
-        n: 3,
+        count: 3,
         latencyMs: 800,
         totalContactMs: 1200,
         meanTouchMs: 400,
@@ -118,5 +118,18 @@ describe('CreateSessionDto', () => {
   it('rejects a non-string therapist', async () => {
     const errors = await validateDto({ ...validPayload, therapist: 42 });
     expect(errors.map((e) => e.property)).toContain('therapist');
+  });
+
+  // A differenza del terapista, food e foodId identificano il cibo lavorato:
+  // una stringa vuota qui non è un dato mancante dichiarato, è un record senza
+  // la sua chiave, e rompe il raggruppamento a valle (dashboard, export).
+  it('rejects an empty food', async () => {
+    const errors = await validateDto({ ...validPayload, food: '' });
+    expect(errors.map((e) => e.property)).toContain('food');
+  });
+
+  it('rejects an empty foodId', async () => {
+    const errors = await validateDto({ ...validPayload, foodId: '' });
+    expect(errors.map((e) => e.property)).toContain('foodId');
   });
 });

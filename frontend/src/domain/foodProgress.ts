@@ -1,44 +1,28 @@
-/**
- * Storico del bambino su ciascun alimento.
- *
- * Serve a proporre automaticamente il numero della sessione successiva: prima
- * era il terapista a doverlo ricordare, ed era una fonte ricorrente di errori di
- * numerazione.
- *
- * @module
- */
-
 import type { SavedSession } from '@/api/client';
 
-/** A che punto è il programma su un singolo alimento. */
+//Statistiche di ogni singolo cibo
 export interface FoodProgress {
-  /** Numero della sessione più recente svolta con quell'alimento. */
+  //numero dell'ultima sessione
   lastSessionNumber: number;
-  /** Data ISO di quella sessione. */
+  //data dell'ultima sessione
   lastDate: string;
-  /** Quante sessioni sono state svolte in tutto con quell'alimento. */
+  //sessioni totali
   total: number;
 }
 
-/** Avanzamento per ogni alimento usato, indicizzato per identificativo. */
+//Mappa con tutti i cibi con i quali il bambino ha lavorato
 export type ProgressByFood = Record<string, FoodProgress>;
 
-/**
- * Riassume, alimento per alimento, a che punto è il bambino.
- *
- * Il raggruppamento usa `foodId` e non l'etichetta: l'identificativo è imposto
- * dall'API, mentre l'etichetta è testo che potrebbe cambiare senza che le
- * sessioni già salvate ne sappiano nulla.
- *
- * @param sessions - Tutte le sessioni salvate del bambino, in qualsiasi ordine.
- * @returns L'avanzamento indicizzato per identificativo di alimento.
- */
+
 export function foodProgress(sessions: SavedSession[]): ProgressByFood {
   const byFood: ProgressByFood = {};
 
+  //prende tutte le sessioni, le raggruppa per cibo
   for (const session of sessions) {
+    //legge le sessioni del cibo
     const current = byFood[session.foodId];
 
+    //se non ce ne sono, ne crea una
     if (!current) {
       byFood[session.foodId] = {
         lastSessionNumber: session.sessionNumber,
@@ -48,8 +32,14 @@ export function foodProgress(sessions: SavedSession[]): ProgressByFood {
       continue;
     }
 
+    //aggiorna il conteggio, se il numero sessione è il più grande aggiorna data e numero;
+    //a parità di numero (es. una correzione re-inserita) vince la data più recente,
+    //non l'ordine con cui l'API le ha restituite
     current.total += 1;
-    if (session.sessionNumber >= current.lastSessionNumber) {
+    const isNewer =
+      session.sessionNumber > current.lastSessionNumber ||
+      (session.sessionNumber === current.lastSessionNumber && session.date > current.lastDate);
+    if (isNewer) {
       current.lastSessionNumber = session.sessionNumber;
       current.lastDate = session.date;
     }
@@ -58,12 +48,6 @@ export function foodProgress(sessions: SavedSession[]): ProgressByFood {
   return byFood;
 }
 
-/**
- * Numero da proporre per la prossima sessione con un alimento.
- *
- * @param progress - Avanzamento sull'alimento scelto, assente se mai usato.
- * @returns L'ultimo numero più uno, quindi `1` alla prima sessione. Resta una
- * proposta: il terapista può sempre sovrascriverla.
- */
+//Calcolo del prossimo numero della sessione da assegnare
 export const nextSessionNumber = (progress?: FoodProgress): number =>
   (progress?.lastSessionNumber ?? 0) + 1;

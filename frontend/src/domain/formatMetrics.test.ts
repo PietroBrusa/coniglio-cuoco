@@ -9,7 +9,7 @@ const level: LevelResult = {
   mode: 'hold',
   target: 6,
   metrics: {
-    n: 3,
+    count: 3,
     latencyMs: 800,
     totalContactMs: 1500,
     meanTouchMs: 500,
@@ -37,19 +37,5 @@ describe('formatMetrics', () => {
 
     expect(byLabel['Latenza 1° tocco']).toBe('—');
     expect(byLabel['IRT medio']).toBe('—');
-  });
-
-  it('accepts live metrics that use "count" instead of "n"', () => {
-    const rows = formatMetrics({
-      count: 7,
-      latencyMs: 0,
-      totalContactMs: 0,
-      meanTouchMs: null,
-      meanIrtMs: null,
-      sessionDurationMs: 0,
-      engagementRatio: 0,
-    });
-    const byLabel = Object.fromEntries(rows.map((r) => [r.label, r.value]));
-    expect(byLabel['Tocchi (n)']).toBe(7);
   });
 });

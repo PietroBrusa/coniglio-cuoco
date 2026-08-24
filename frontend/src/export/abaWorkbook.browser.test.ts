@@ -32,7 +32,7 @@ const session = (
       mode: 'hold' as const,
       target: 6,
       metrics: {
-        n: 1,
+        count: 1,
         latencyMs: 100,
         totalContactMs: 1000,
         meanTouchMs: 1000,

@@ -63,7 +63,7 @@ describe('createSession', () => {
 });
 
 describe('addLevelResult', () => {
-  it('appends a level result, mapping live "count" to persisted "n"', () => {
+  it('appends a level result, keeping "count" and dropping "liveContactMs"', () => {
     const base = createSession({
       childId: 'B001',
       sessionNumber: 1,
@@ -77,8 +77,7 @@ describe('addLevelResult', () => {
     const result = next.levels[0];
     expect(result.levelId).toBe(2);
     expect(result.levelName).toBe("L'Annusata");
-    expect(result.metrics.n).toBe(4);
-    expect(result.metrics).not.toHaveProperty('count');
+    expect(result.metrics.count).toBe(4);
     expect(result.metrics).not.toHaveProperty('liveContactMs');
   });
 

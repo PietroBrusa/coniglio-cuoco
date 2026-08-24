@@ -27,7 +27,7 @@ const savedSession = {
       mode: 'hold',
       target: 5,
       metrics: {
-        n: 3,
+        count: 3,
         latencyMs: 800,
         totalContactMs: 1200,
         meanTouchMs: 400,

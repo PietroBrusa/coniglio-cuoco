@@ -1,43 +1,14 @@
-/**
- * La gerarchia di esposizione all'alimento, un livello per passo.
- *
- * I tre livelli riproducono l'avvicinamento per approssimazioni successive usato
- * nell'intervento sulla selettività alimentare: prima toccare, poi annusare,
- * infine assaggiare. Ogni passo è appena più impegnativo del precedente e viene
- * rinforzato.
- *
- * Sono dati, non codice: aggiungere un passo alla gerarchia significa aggiungere
- * un elemento all'array, senza toccare nessuna schermata.
- *
- * @module
- */
-
 import type { Food, Level } from '@/types';
 import { FOODS } from './foods';
 
 export { FOODS };
 
-/**
- * I livelli nell'ordine in cui vengono proposti.
- *
- * Hanno tutti `target: 6`, cioè una finestra di misura di sei secondi: lunga
- * abbastanza da produrre una misura stabile, breve abbastanza da restare
- * sostenibile per un bambino con selettività, in cui una richiesta prolungata
- * aumenta rifiuto e comportamenti problema.
- *
- * Il campo `hardBeat` cresce di livello in livello: al primo il ritmo è fisso e
- * basta toccare, dal secondo diventa variabile e bisogna mantenere il contatto.
- *
- * `beatTarget` scende mentre le finestre si allungano, perché in sei secondi ne
- * entrano sempre meno: al primo livello se ne aprono circa cinque, al terzo due.
- * È fissato a circa due terzi di quelle attese, non a tutte: il rinforzo segue
- * la partecipazione, non la prestazione perfetta.
- */
+//Livelli per ora implementati
 export const LEVELS: Level[] = [
   {
     id: 1,
     name: 'La Raccolta',
-    behavior: 'Approccio e contatto con le dita',
+    behavior: "Toccare l' alimento con un dito",
     mode: 'hold',
     target: 6,
     hardBeat: { onMs: [600, 600], offMs: [700, 700], score: 'tap', beatTarget: 3 },
@@ -53,7 +24,7 @@ export const LEVELS: Level[] = [
   },
   {
     id: 2,
-    name: "L'Annusata",
+    name: "Sono buone?",
     behavior: 'Sollevare e avvicinare al viso, annusare',
     mode: 'hold',
     target: 6,
@@ -86,15 +57,7 @@ export const LEVELS: Level[] = [
   },
 ];
 
-/**
- * Cerca un alimento per identificativo.
- *
- * @param foodId - Identificativo dell'alimento, oppure `undefined` quando non
- * c'è ancora nessuna sessione aperta da cui leggerlo.
- * @returns L'alimento richiesto, o il primo del catalogo se non viene trovato —
- * il che accade se un alimento venisse tolto dal catalogo mentre esistono sedute
- * che lo citano: l'interfaccia ha comunque qualcosa da mostrare.
- */
+//Funzione per cercare il cibo per Id, se non trovato torna il primo di default
 export function getFood(foodId: string | undefined): Food {
   return FOODS.find((f) => f.id === foodId) ?? FOODS[0];
 }

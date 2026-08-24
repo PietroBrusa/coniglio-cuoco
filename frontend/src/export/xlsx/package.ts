@@ -1,47 +1,29 @@
-/**
- * Assemblaggio del pacchetto .xlsx.
- *
- * Un file Excel è un archivio ZIP di parti XML legate fra loro da relazioni:
- * nessuna parte cita un'altra per percorso, ma tramite un identificativo
- * risolto dal file `.rels` corrispondente. Qui quella catena viene ricostruita
- * per intero.
- *
- * @module
- */
-
 import { zipSync, strToU8 } from 'fflate';
 import { XML_DECL, esc } from './xml';
 import { stylesXml } from './sheet';
 
-/** Dove sta il grafico sul suo foglio, in coordinate di cella a partire da 0. */
+//dove va ancorato il grafico
 export interface ChartAnchor {
-  /** Colonna dell'angolo in alto a sinistra. */
   fromCol: number;
-  /** Riga dell'angolo in alto a sinistra. */
   fromRow: number;
-  /** Colonna dell'angolo in basso a destra. */
   toCol: number;
-  /** Riga dell'angolo in basso a destra. */
   toRow: number;
 }
 
-/** Un foglio pronto da impacchettare, con il suo eventuale grafico. */
 export interface XlsxSheet {
-  /** Nome del foglio, già ripulito e reso univoco. */
   name: string;
-  /** Contenuto XML del foglio. */
   sheetXml: string;
-  /** Grafico da ancorare al foglio; assente se il foglio non ne ha. */
   chart?: {
-    /** Contenuto XML del grafico. */
     xml: string;
-    /** Celle fra cui il grafico va ancorato. */
     anchor: ChartAnchor;
   };
 }
 
+//nomi standard
 const PKG_RELS = 'http://schemas.openxmlformats.org/package/2006/relationships';
 const DOC_RELS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+
+//mappa tipo di parte -> MIME type
 const CT = {
   workbook: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml',
   styles: 'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml',
@@ -50,28 +32,20 @@ const CT = {
   chart: 'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
 };
 
-/**
- * Dispone le parti del pacchetto .xlsx, indicizzate per percorso dentro l'archivio.
- *
- * Volutamente priva di `docProps`, la parte che normalmente contiene autore,
- * organizzazione e percorsi locali: il file esportato non porta con sé metadati
- * sull'operatore o sulla macchina che lo ha prodotto.
- *
- * @param sheets - I fogli da impacchettare, nell'ordine in cui compariranno.
- * @returns Le parti del pacchetto, pronte per {@link zipXlsx}.
- * @throws Error se non viene passato nessun foglio.
- */
+//costruzione xml
 export function buildXlsxParts(sheets: XlsxSheet[]): Record<string, string> {
   if (sheets.length === 0) throw new Error('Un workbook deve avere almeno un foglio');
 
   const parts: Record<string, string> = {};
 
   parts['[Content_Types].xml'] = contentTypesXml(sheets);
+  //punto di inizio che indica il nome del workbook in target
   parts['_rels/.rels'] =
     `${XML_DECL}<Relationships xmlns="${PKG_RELS}">` +
     `<Relationship Id="rId1" Type="${DOC_RELS}/officeDocument" Target="xl/workbook.xml"/>` +
     `</Relationships>`;
 
+  //dichiara quale rId usa ogni foglio
   parts['xl/workbook.xml'] =
     `${XML_DECL}<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"` +
     ` xmlns:r="${DOC_RELS}"><sheets>` +
@@ -79,7 +53,7 @@ export function buildXlsxParts(sheets: XlsxSheet[]): Record<string, string> {
       .map((s, i) => `<sheet name="${esc(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`)
       .join('') +
     `</sheets></workbook>`;
-
+  //collegamento rId -> file reale
   parts['xl/_rels/workbook.xml.rels'] =
     `${XML_DECL}<Relationships xmlns="${PKG_RELS}">` +
     sheets
@@ -98,12 +72,14 @@ export function buildXlsxParts(sheets: XlsxSheet[]): Record<string, string> {
     parts[`xl/worksheets/sheet${n}.xml`] = sheet.sheetXml;
     if (!sheet.chart) return;
 
+    //se il foglio ha un grafico collega il foglio a un file drawing, decide dove sulla pagina va collegato qualcosa
     parts[`xl/worksheets/_rels/sheet${n}.xml.rels`] =
       `${XML_DECL}<Relationships xmlns="${PKG_RELS}">` +
       `<Relationship Id="rId1" Type="${DOC_RELS}/drawing" Target="../drawings/drawing${n}.xml"/>` +
       `</Relationships>`;
-
+    //contenuto del drawing
     parts[`xl/drawings/drawing${n}.xml`] = drawingXml(sheet.chart.anchor);
+    //collegamento file al grafico
     parts[`xl/drawings/_rels/drawing${n}.xml.rels`] =
       `${XML_DECL}<Relationships xmlns="${PKG_RELS}">` +
       `<Relationship Id="rId1" Type="${DOC_RELS}/chart" Target="../charts/chart${n}.xml"/>` +
@@ -115,10 +91,12 @@ export function buildXlsxParts(sheets: XlsxSheet[]): Record<string, string> {
   return parts;
 }
 
+//assegnazione di ogni tipo a ogni parte
 function contentTypesXml(sheets: XlsxSheet[]): string {
   const overrides = sheets
     .map((sheet, i) => {
       const n = i + 1;
+      //ContentType dice di che tipo è il file
       const worksheet = `<Override PartName="/xl/worksheets/sheet${n}.xml" ContentType="${CT.worksheet}"/>`;
       if (!sheet.chart) return worksheet;
       return (
@@ -140,6 +118,7 @@ function contentTypesXml(sheets: XlsxSheet[]): string {
   );
 }
 
+//costruzione dell'xml che indica dove costruire il grafico (celle)
 function drawingXml(anchor: ChartAnchor): string {
   const at = (col: number, row: number) =>
     `<xdr:col>${col}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${row}</xdr:row><xdr:rowOff>0</xdr:rowOff>`;
@@ -168,15 +147,9 @@ function drawingXml(anchor: ChartAnchor): string {
   );
 }
 
-/**
- * Comprime le parti nell'archivio ZIP che costituisce il file .xlsx.
- *
- * @param parts - Parti del pacchetto, indicizzate per percorso interno.
- * @returns I byte del file, pronti da consegnare al browser come download.
- */
+//crea lo zip di xml
 export function zipXlsx(parts: Record<string, string>): Uint8Array<ArrayBuffer> {
   const files: Record<string, Uint8Array> = {};
   for (const [path, xml] of Object.entries(parts)) files[path] = strToU8(xml);
-  // fflate alloca sempre un ArrayBuffer semplice, quello che serve a Blob, ma la tipizzazione lo nasconde.
   return zipSync(files, { level: 6 }) as Uint8Array<ArrayBuffer>;
 }

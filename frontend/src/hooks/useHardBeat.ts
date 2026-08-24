@@ -1,69 +1,23 @@
-/**
- * Il ritmo della modalità difficile: finestre che si accendono e si spengono, e
- * assegnazione del punto.
- *
- * Sta fuori dalla schermata di gioco perché riguarda **solo il gioco**: la
- * modalità difficile non raccoglie dati (vedi
- * {@link domain/sessionRecord.collectsData}), quindi niente di ciò che accade
- * qui finisce in una misurazione. Tenendolo separato, la schermata di gioco
- * resta il posto dove si conduce il livello e si misura, e la meccanica a tempo
- * non si mescola con la registrazione dei contatti.
- *
- * Le regole che decidono se un tentativo vale un punto sono a loro volta isolate
- * in {@link domain/hardBeat}, che è codice puro e verificabile senza timer.
- *
- * @module
- */
-
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { sampleBeatMs, isHeldThrough } from '@/domain/hardBeat';
 import { useMakeyKey } from './useMakeyKey';
 import type { HardBeat } from '@/types';
 
-/** Attesa prima della prima finestra utile, per non cogliere di sorpresa il bambino. */
+//Tempo che passa prima della prima finestra
 const FIRST_BEAT_MS = 800;
 
-/** Durata del lampeggio rosso che segnala un errore: breve, segnala senza punire. */
+//Quanto rimane acceso il lampeggio rosso d'errore
 const MISS_FLASH_MS = 250;
 
-/** Ciò che il ritmo espone alla schermata di gioco. */
+
 export interface HardBeatState {
-  /** `true` mentre la finestra utile è accesa: illumina l'alimento. */
   windowOpen: boolean;
-  /** Finestre centrate finora, per la barra di avanzamento. */
   scored: number;
-  /** `true` durante il lampeggio che segnala un errore. */
   miss: boolean;
-  /**
-   * Legge le finestre centrate senza passare da un render.
-   *
-   * La usa il timer di fine livello, che legge una volta sola allo scadere del
-   * tempo: se dipendesse dallo stato, ogni punto ne farebbe ripartire il conto
-   * alla rovescia.
-   */
   getScored: () => number;
 }
 
-/**
- * Conduce il ciclo delle finestre utili e conta quelle centrate.
- *
- * Il ciclo è: attesa iniziale, finestra accesa per una durata estratta in
- * `beat.onMs`, pausa estratta in `beat.offMs`, di nuovo accesa, e così via. Con
- * estremi uguali il ritmo è fisso e prevedibile; con estremi diversi cambia a
- * ogni battuta, così non si può anticipare a memoria e bisogna guardare
- * l'alimento.
- *
- * Il punto si assegna in due modi, secondo `beat.score`:
- *
- * - `tap`: basta toccare mentre la finestra è accesa, e il punto scatta subito;
- * - `hold`: bisogna mantenere il contatto fino alla chiusura, quindi la verifica
- *   avviene **alla chiusura** della finestra — prima non si può sapere se il
- *   contatto è stato mantenuto.
- *
- * @param beat - Parametri del ritmo del livello in corso.
- * @param active - `true` durante la fase di gioco in modalità difficile.
- * @returns Stato della finestra corrente, punteggio e lampeggio di errore.
- */
+//Ref per le misure, state per i disegni
 export function useHardBeat(beat: HardBeat, active: boolean): HardBeatState {
   const [windowOpen, setWindowOpen] = useState(false);
   const [scored, setScored] = useState(0);
@@ -92,8 +46,10 @@ export function useHardBeat(beat: HardBeat, active: boolean): HardBeatState {
     setScored(scoredRef.current);
   }, []);
 
+  //openWindow e closeWindow si richiamano a vicenda con setTimeout, creando il ciclo di finestre
   useEffect(() => {
     if (!active) return undefined;
+    //timer viene riassegnato a ogni ciclo: il cleanup cancella sempre quello in attesa in quel momento
     let timer: number;
 
     const closeWindow = () => {
@@ -103,11 +59,6 @@ export function useHardBeat(beat: HardBeat, active: boolean): HardBeatState {
 
       if (beat.score === 'hold') {
         if (isHeldThrough(openedAt, pressStartRef.current)) scoreBeat();
-        // Il contatto già in corso da prima dell'accensione non vale il punto:
-        // senza questo lampeggio il bambino che tiene il dito appoggiato non
-        // riceverebbe alcun riscontro, né positivo né negativo, per tutto il
-        // livello. Chi invece non sta toccando non viene segnalato: aspettare la
-        // finestra è il comportamento corretto, non un errore.
         else if (touchedRef.current || pressStartRef.current !== null) triggerMiss();
       } else if (!scoredInWindowRef.current && pressStartRef.current !== null) {
         triggerMiss();
@@ -134,15 +85,20 @@ export function useHardBeat(beat: HardBeat, active: boolean): HardBeatState {
     onPress: () => {
       if (pressStartRef.current !== null) return;
       pressStartRef.current = performance.now();
+      //finestra chiusa -> errore, tocco arrivato al momento sbagliato
       if (!windowOpenRef.current) triggerMiss();
+      //tap: segna subito il punto; hold: segna solo il contatto, il punto si decide alla chiusura
       else if (beat.score === 'tap') {
         scoreBeat();
         scoredInWindowRef.current = true;
       } else touchedRef.current = true;
     },
+
     onRelease: () => {
       if (pressStartRef.current === null) return;
+
       pressStartRef.current = null;
+      //in hold, lasciare il dito mentre la finestra è ancora aperta è errore immediato
       if (beat.score === 'hold' && windowOpenRef.current && touchedRef.current) {
         touchedRef.current = false;
         triggerMiss();

@@ -51,6 +51,16 @@ describe('foodProgress', () => {
     expect(progress.mela.lastDate).toBe('2026-05-04T10:00:00.000Z');
   });
 
+  it('on a tie in session number, keeps the most recent date regardless of array order', () => {
+    const progress = foodProgress([
+      session(5, { foodId: 'mela', date: '2026-05-10T10:00:00.000Z' }),
+      session(5, { foodId: 'mela', date: '2026-05-04T10:00:00.000Z' }),
+    ]);
+
+    expect(progress.mela.lastSessionNumber).toBe(5);
+    expect(progress.mela.lastDate).toBe('2026-05-10T10:00:00.000Z');
+  });
+
   it('groups by food id, so a renamed label stays one programme', () => {
     const progress = foodProgress([
       session(3, { food: 'Banana', foodId: 'banana' }),

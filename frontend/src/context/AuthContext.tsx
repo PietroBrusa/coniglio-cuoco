@@ -1,9 +1,3 @@
-/**
- * Stato di autenticazione: chi sta giocando e come si entra o si esce.
- *
- * @module
- */
-
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import * as api from '@/api/client';
@@ -15,37 +9,21 @@ import {
   setAuth,
 } from '@/storage/tokenStore';
 
-/** Ciò che il contesto di autenticazione mette a disposizione delle schermate. */
 interface AuthContextType {
-  /** Nome del bambino autenticato, `null` se non c'è nessuna sessione attiva. */
   childId: string | null;
-  /** Scorciatoia per `childId !== null`, letta dalla rotta protetta. */
   isLoggedIn: boolean;
-  /** Autentica un bambino già registrato. */
   login: (name: string, password: string) => Promise<void>;
-  /** Registra un nuovo bambino e lo autentica. */
   register: (name: string, password: string) => Promise<void>;
-  /** Chiude la sessione e cancella il token dal dispositivo. */
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-/**
- * Rende disponibile lo stato di autenticazione a tutta l'applicazione.
- *
- * All'avvio la scadenza del token viene controllata in locale, decodificandone
- * il contenuto, senza interpellare il server: se è scaduto la sessione viene
- * chiusa subito. Un 401 ricevuto da una qualsiasi chiamata provoca la stessa
- * pulizia attraverso {@link storage/tokenStore.onAuthCleared}, così il codice di
- * rete non ha bisogno di conoscere React.
- *
- * Le chiamate passano da {@link api/client}, come quelle delle sessioni: il
- * contesto non conosce né Axios né i codici HTTP, e i messaggi d'errore del
- * server vengono tradotti in un punto solo per tutta l'applicazione.
- */
 export function AuthProvider({ children }: { children: ReactNode }) {
+
+  //gira una volta sola
   const [childId, setChildId] = useState<string | null>(() => {
+    //controllo scadenza token, controllo una volta perchè è inutile controllarlo a ogni render
     if (isSessionExpired()) {
       clearAuth();
       return null;
@@ -53,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return getStoredChild();
   });
 
+  //se avviene clearAuth (autenticazione azzerata), setta il childId a null
   useEffect(() => onAuthCleared(() => setChildId(null)), []);
 
   const authenticate = useCallback(
@@ -81,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setChildId(null);
   }, []);
 
+  //quando childId/login/register/logout cambia, ricalcola value
   const value = useMemo(
     () => ({ childId, isLoggedIn: childId !== null, login, register, logout }),
     [childId, login, register, logout],
@@ -89,12 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-/**
- * Accede allo stato di autenticazione.
- *
- * @returns Il contesto di autenticazione.
- * @throws Error se usato fuori da `<AuthProvider>`.
- */
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);

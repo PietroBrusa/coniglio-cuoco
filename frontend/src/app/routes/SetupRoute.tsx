@@ -6,12 +6,6 @@ import { useGame } from '@/context/GameContext';
 import { useSessions } from '@/hooks/useSessions';
 import { foodProgress } from '@/domain/foodProgress';
 
-/**
- * Collega la schermata di setup ai contesti e allo storico del bambino.
- *
- * Le sessioni già salvate servono a proporre il numero della prossima sessione
- * sull'alimento scelto.
- */
 export default function SetupRoute() {
   const navigate = useNavigate();
   const { childId, logout } = useAuth();

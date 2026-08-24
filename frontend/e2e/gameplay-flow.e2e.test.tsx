@@ -87,7 +87,7 @@ describe('Gameplay journey (E2E)', () => {
 
     await expect.element(screen.getByText('Sessione completata')).toBeInTheDocument();
     await expect.element(screen.getByText(/Livello 1 · La Raccolta/)).toBeInTheDocument();
-    await expect.element(screen.getByText(/Livello 2 · L'Annusata/)).toBeInTheDocument();
+    await expect.element(screen.getByText(/Livello 2 · Sono buone\?/)).toBeInTheDocument();
     await expect.element(screen.getByText(/Livello 3 · L'Assaggio/)).toBeInTheDocument();
     await expect.element(screen.getByText('John Doe')).toBeInTheDocument();
   }, 45_000);

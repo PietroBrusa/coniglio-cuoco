@@ -5,20 +5,6 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
-/**
- * Avvia il server HTTP.
- *
- * Tre configurazioni valgono la pena di essere notate:
- *
- * - **CORS**: in sviluppo accetta qualunque porta locale, in produzione solo le
- *   origini elencate in `CORS_ORIGIN`;
- * - **validazione globale**: `whitelist` elimina i campi non dichiarati nei DTO
- *   e `forbidNonWhitelisted` fa rispondere 400 invece di ignorarli in silenzio,
- *   mentre `transform` istanzia le classi così che le regole valgano anche per
- *   gli oggetti annidati;
- * - **Swagger** su `/api`: da lì si esporta lo spec OpenAPI con cui viene
- *   generato il client TypeScript del frontend.
- */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);

@@ -9,42 +9,16 @@ import type { Difficulty, Level, Metrics } from '@/types';
 import s from '@/app/styles/shared.module.scss';
 import c from './RewardScreen.module.scss';
 
-/** Che cosa serve alla schermata del premio. */
 interface RewardScreenProps {
-  /** Livello appena concluso. */
   level: Level;
-  /** Misurazioni ottenute. */
   metrics: Metrics;
-  /** Condizione della sessione: decide se mostrare le misurazioni. */
   difficulty: Difficulty;
-  /**
-   * Finestre centrate in modalità difficile, `null` in facile: è il criterio
-   * della terza stella quando si è giocato a tempo.
-   */
   beatsScored: number | null;
-  /** Il livello concluso era l'ultimo: cambia l'etichetta del pulsante di avanzamento. */
   isLastLevel: boolean;
-  /** Passa al livello successivo, o al riepilogo se era l'ultimo. */
   onNext: () => void;
-  /** Ripete lo stesso livello. */
   onRepeat: () => void;
 }
 
-/**
- * Schermata di rinforzo: stelle guadagnate e riepilogo delle misurazioni del
- * livello.
- *
- * Le stelle sono il rinforzo per il bambino, le misurazioni l'informazione per
- * il terapista: stanno nella stessa schermata perché il momento in cui si
- * osservano è lo stesso.
- *
- * In modalità difficile le misurazioni non compaiono: la partita non raccoglie
- * dati (vedi {@link domain/sessionRecord.collectsData}) e mostrare numeri che
- * nessuno registrerà inviterebbe a leggerli come se fossero misure del
- * comportamento target. Al loro posto si vedono le finestre centrate, che lì
- * sono il criterio della terza stella: il rinforzo resta, ma segue il compito
- * che il bambino ha effettivamente svolto.
- */
 const RewardScreen = ({
   level,
   metrics,
@@ -55,8 +29,10 @@ const RewardScreen = ({
   onRepeat,
 }: RewardScreenProps) => {
   const settings = loadSettings();
+  //Calcolo delle stelle
   const stars = computeStars(metrics, level, settings, beatsScored);
 
+  //Esegue il suono
   useEffect(() => {
     if (settings.soundEnabled) playVictory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -75,6 +51,9 @@ const RewardScreen = ({
         ))}
       </div>
 
+      {
+        //se facile mostra il riepilogo, se difficile mostra che non ci sono misurazioni effettuate
+      }
       {collectsData(difficulty) ? (
         <div className={`${s.card} ${s.metricsSummary}`}>
           <h3>Riepilogo misurazioni</h3>

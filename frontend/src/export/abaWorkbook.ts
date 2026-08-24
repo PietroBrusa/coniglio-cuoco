@@ -1,10 +1,3 @@
-/**
- * Costruisce le schede ABA: un foglio per alimento, ognuno con il grafico che
- * porta il modulo cartaceo — una linea per livello e la linea di criterio.
- *
- * @module
- */
-
 import type { SavedSession } from '@/api/client';
 import { buildAbaSeries, conditionOf, groupByFood } from './abaData';
 import { NO_PROBLEM_ID, problemBehaviorLabels } from '@/domain/problemBehaviors';
@@ -16,29 +9,26 @@ import { buildSheetXml, columnRange, sanitizeSheetName } from './xlsx/sheet';
 import type { ChartAnchor, XlsxSheet } from './xlsx/package';
 import { buildXlsxParts, zipXlsx } from './xlsx/package';
 
-/** Dati di partenza dell'esportazione. */
 export interface AbaExportInput {
-  /** Bambino a cui appartengono le sessioni; finisce nell'intestazione della scheda. */
   childId: string;
-  /** Tutte le sue sessioni salvate: vengono raggruppate per alimento, un foglio ciascuno. */
   sessions: SavedSession[];
-  /** Percentuale di contatto che il programma si pone come obiettivo, dalle impostazioni dell'app. */
   criterion: number;
 }
 
-/** Righe del blocco di intestazione ricopiato dal modulo cartaceo, sopra la tabella. */
+//posizioni dei dati, calcolate a mano: devono restare sincronizzate col
+//numero di righe scritte davvero più sotto (riga 72-82), altrimenti puntano
+//alla cella sbagliata senza che nulla lo segnali
 const HEADER_ROWS = 8;
-/** Riga (da 1) delle intestazioni di colonna; la riga 9 vuota le stacca dal blocco. */
 const HEADER_ROW = HEADER_ROWS + 2;
 const FIRST_DATA_ROW = HEADER_ROW + 1;
 
+//indici colonna  
 const COL_DATE = 0;
 const COL_SESSION = 1;
 const COL_THERAPIST = 2;
 const COL_CONDITION = 3;
 const COL_LEVELS = 4;
 
-/** Verde, fuori dalla palette dei livelli: il criterio si legge come obiettivo e non come dato. */
 const CRITERION_COLOR = '2E7D32';
 const MARKERS = ['circle', 'square', 'diamond', 'triangle'] as const;
 
@@ -46,27 +36,16 @@ const Y_MAX = 100;
 const CHART_ROWS = 24;
 const CHART_COLS = 10;
 
-/** Un foglio già pronto: contenuto della tabella, larghezze, grafico e sua collocazione. */
+//un foglio per alimento
 export interface FoodSheet {
-  /** Nome del foglio, ripulito dei caratteri che Excel vieta. */
   name: string;
-  /** Righe della scheda: blocco di intestazione, riga vuota, intestazioni di colonna, dati. */
   rows: SheetRow[];
-  /** Larghezza delle colonne in caratteri. */
   columnWidths: number[];
-  /** Definizione del grafico da disegnare sotto la tabella. */
   chart: ChartSpec;
-  /** Celle fra cui il grafico è ancorato. */
   anchor: ChartAnchor;
 }
 
-/**
- * Prepara un foglio per ogni alimento presente nelle sessioni.
- *
- * @param input - Bambino, sessioni e criterio del programma.
- * @returns I fogli nell'ordine in cui gli alimenti compaiono, con i nomi già resi
- * univoci fra loro.
- */
+//costruisce un foglio per alimento
 export function buildFoodSheets({ childId, sessions, criterion }: AbaExportInput): FoodSheet[] {
   const taken: string[] = [];
 
@@ -84,12 +63,14 @@ function buildFoodSheet(
   sessions: SavedSession[],
   criterion: number,
 ): FoodSheet {
+  //le colonne si adattano al numero di livelli
   const levels = buildAbaSeries(sessions).map((s) => ({ id: s.levelId, name: s.levelName }));
 
   const colCriterion = COL_LEVELS + levels.length;
   const colBehaviors = colCriterion + 1;
   const colNotes = colBehaviors + 1;
 
+  //le righe seguono un ordine fisso
   const rows: SheetRow[] = [
     [{ value: 'Nome studente', bold: true }, childId],
     [{ value: 'Programma', bold: true }, `Selettività alimentare · ${food}`],
@@ -102,6 +83,7 @@ function buildFoodSheet(
     [],
   ];
 
+  //l'indice nell'array è quello nella colonna
   const header: SheetRow = [];
   header[COL_DATE] = { value: 'Data', bold: true };
   header[COL_SESSION] = { value: 'Sessione', bold: true };
@@ -115,6 +97,7 @@ function buildFoodSheet(
   header[colNotes] = { value: 'Note', bold: true };
   rows.push(header);
 
+  //riempie con le informazioni mentre si costruisce il grafico
   const levelValues: (number | null)[][] = levels.map(() => []);
   const ordinals: number[] = [];
 
@@ -122,6 +105,7 @@ function buildFoodSheet(
     const ordinal = index + 1;
     ordinals.push(ordinal);
 
+    //come sopra: l'indice nell'array è la colonna
     const row: SheetRow = [];
     row[COL_DATE] = formatDate(session.date);
     row[COL_SESSION] = ordinal;
@@ -145,6 +129,8 @@ function buildFoodSheet(
   const lastDataRow = FIRST_DATA_ROW + sessions.length - 1;
   const dataRange = (column: number) => columnRange(name, column, FIRST_DATA_ROW, lastDataRow);
 
+  //xRef e yRef -> dice quali sono le celle del foglio collegate al grafico
+  //xValues e yValues -> copia dei numeri nel file XML
   const series: ChartSeries[] = levels.map((level, i) => ({
     name: `L${level.id} · ${level.name}`,
     xRef: dataRange(COL_SESSION),
@@ -166,7 +152,9 @@ function buildFoodSheet(
     labelLastPoint: true,
   });
 
+  //larghezze colonne, i livelli hanno una lunghezza uguale tra loro
   const columnWidths = [12, 10, 18, 24, ...levels.map(() => 16), 10, 30, 32];
+  //posizione grafico
   const anchorRow = lastDataRow + 1;
 
   return {
@@ -190,17 +178,13 @@ function buildFoodSheet(
   };
 }
 
-/**
- * Genera il file .xlsx completo delle schede ABA.
- *
- * @param input - Bambino, sessioni e criterio del programma.
- * @returns I byte del file, pronti da consegnare al browser come download.
- * @throws Error se non c'è nessuna sessione da esportare.
- */
+//trasforma FoodSheet in xlsxSheet
 export function buildAbaWorkbook(input: AbaExportInput): Uint8Array<ArrayBuffer> {
   const sheets: XlsxSheet[] = buildFoodSheets(input).map((sheet) => ({
     name: sheet.name,
+    //costruisce il file xlsx
     sheetXml: buildSheetXml(sheet.rows, { columnWidths: sheet.columnWidths, hasDrawing: true }),
+    //costruisce il grafico xlsx
     chart: { xml: buildChartXml(sheet.chart), anchor: sheet.anchor },
   }));
 
@@ -208,31 +192,16 @@ export function buildAbaWorkbook(input: AbaExportInput): Uint8Array<ArrayBuffer>
   return zipXlsx(buildXlsxParts(sheets));
 }
 
-/**
- * Nome del file da scaricare, es. `schede-aba_B001_2026-08-05.xlsx`.
- *
- * Il nome del bambino viene ridotto a lettere e cifre (accenti compresi): il
- * risultato è un nome di file valido su Windows, macOS e Linux.
- *
- * @param childId - Bambino a cui appartengono le schede.
- * @param at - Data da riportare nel nome; per impostazione predefinita oggi.
- * @returns Il nome del file, con estensione.
- */
 export function abaWorkbookFileName(childId: string, at: Date = new Date()): string {
   const name = childId.trim().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'bambino';
   const day = `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`;
   return `schede-aba_${name}_${day}.xlsx`;
 }
 
-/** Elenca senza ripetizioni gli operatori che hanno condotto le sessioni, per la voce STAFF. */
 function listTherapists(sessions: SavedSession[]): string {
   return [...new Set(sessions.map((s) => s.therapist?.trim()).filter(Boolean))].join(', ');
 }
 
-/**
- * Elenca i comportamenti problema emersi almeno una volta, per la voce CP.
- * Scarta il segnaposto «nessuno», che non è un comportamento.
- */
 function listBehaviors(sessions: SavedSession[]): string {
   const ids = sessions.flatMap((s) => s.problemBehaviors).filter((id) => id !== NO_PROBLEM_ID);
   const labels = problemBehaviorLabels([...new Set(ids)]);

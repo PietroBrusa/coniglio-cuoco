@@ -33,24 +33,11 @@ const SPARKLE_SPOTS = [
   { x: 180, y: 108 },
 ];
 
-/** Stato del coniglio da rappresentare. */
 interface RabbitProps {
-  /** Espressione e animazione; per impostazione predefinita è in attesa. */
   mood?: RabbitMood;
-  /** Testo del fumetto; se assente si usa la frase prevista per l'umore. */
   message?: string;
 }
 
-/**
- * Il coniglio cuoco: personaggio guida dell'applicazione.
- *
- * È un disegno SVG animato in CSS e non un'emoji, per tre motivi: le emoji
- * cambiano aspetto da un sistema operativo all'altro, non si possono animare per
- * parti (orecchie, occhi, salto) e non permettono di distinguere «annusa» da
- * «mangia», che sono i due comportamenti target dei livelli 2 e 3.
- *
- * Ogni umore porta una descrizione testuale per i lettori di schermo.
- */
 const Rabbit = ({ mood = 'idle', message }: RabbitProps) => {
   return (
     <div className={[s.rabbit, MOOD_CLASS[mood]].filter(Boolean).join(' ')}>

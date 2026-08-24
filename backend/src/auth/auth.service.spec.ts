@@ -34,10 +34,6 @@ describe('AuthService', () => {
     service = module.get<AuthService>(AuthService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('register', () => {
     it('hashes the password, creates the child and returns a token', async () => {
       children.findByName.mockResolvedValue(null);
@@ -61,6 +57,26 @@ describe('AuthService', () => {
         service.register({ name: 'John Doe', password: 'x' }),
       ).rejects.toBeInstanceOf(ConflictException);
       expect(children.create).not.toHaveBeenCalled();
+    });
+
+    it('throws 409 Conflict, not 500, when the insert loses a registration race', async () => {
+      children.findByName.mockResolvedValue(null);
+      children.create.mockRejectedValue(
+        Object.assign(new Error('E11000 duplicate key error'), { code: 11000 }),
+      );
+
+      await expect(
+        service.register({ name: 'John Doe', password: 'password123' }),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('lets an unrelated insert failure propagate', async () => {
+      children.findByName.mockResolvedValue(null);
+      children.create.mockRejectedValue(new Error('Mongo is down'));
+
+      await expect(
+        service.register({ name: 'John Doe', password: 'password123' }),
+      ).rejects.toThrow('Mongo is down');
     });
   });
 
@@ -88,6 +104,17 @@ describe('AuthService', () => {
 
       await expect(
         service.login({ name: 'Richard Roe', password: 'wrong' }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+    it('throws 401, not 500, when the stored password hash is missing or corrupt', async () => {
+      children.findByName.mockResolvedValue({
+        name: 'Richard Roe',
+        passwordHash: undefined,
+      } as unknown as ChildEntity);
+
+      await expect(
+        service.login({ name: 'Richard Roe', password: 'secret456' }),
       ).rejects.toBeInstanceOf(UnauthorizedException);
     });
   });

@@ -1,77 +1,36 @@
-/**
- * Grafico a dispersione DrawingML scritto a mano.
- *
- * Nessuna libreria JavaScript di uso comune produce grafici Excel, quindi la
- * parte del grafico viene costruita qui elemento per elemento. L'ordine dei
- * figli è vincolante: se sbagliato, Excel dichiara il file danneggiato e si
- * offre di ripararlo invece di aprirlo.
- *
- * È un grafico *scatter* e non *line* perché solo il primo ha un asse X
- * numerico: le sessioni sono numeri, non categorie, e su un asse numerico si
- * possono fissare gli estremi (mezzo passo prima della prima sessione e mezzo
- * dopo l'ultima) invece di lasciarli decidere a Excel.
- *
- * @module
- */
-
 import { XML_DECL, esc } from './xml';
 
+//id assi
 const X_AXIS_ID = 111111111;
 const Y_AXIS_ID = 222222222;
 
-/** Spessore delle linee, in EMU (1 pt = 12.700 EMU). */
 const LINE_WEIGHT = 22225;
 
-/** Simbolo con cui vengono marcati i punti di una serie. */
 export type MarkerSymbol = 'circle' | 'square' | 'diamond' | 'triangle' | 'none';
 
-/** Tratteggio della linea, nei nomi previsti da OOXML. */
 export type DashStyle = 'dash' | 'lgDash' | 'sysDash' | 'dot';
 
-/** Una linea del grafico. */
 export interface ChartSeries {
-  /** Nome mostrato in legenda. */
   name: string;
-  /** Formula che punta alla colonna delle ascisse, es. `'Mela'!$B$11:$B$20`. */
   xRef: string;
-  /** Ascisse, scritte anche nella cache così il grafico si vede senza ricalcolo. */
   xValues: number[];
-  /** Formula che punta alla colonna delle ordinate. */
   yRef: string;
-  /** `null` lascia un buco nella linea: livello non eseguito in quella sessione. */
   yValues: (number | null)[];
-  /** Sei cifre esadecimali, senza cancelletto iniziale. */
   color: string;
-  /** Simbolo dei punti; assente equivale a nessun marcatore. */
   marker?: MarkerSymbol;
-  /** Tratteggio; assente disegna una linea continua. */
   dash?: DashStyle;
-  /** Scrive il nome della serie sul suo ultimo punto, come il modulo cartaceo etichetta le linee. */
   labelLastPoint?: boolean;
 }
 
-/** Definizione completa del grafico da scrivere nel file. */
 export interface ChartSpec {
-  /** Titolo in cima al grafico. */
   title: string;
-  /** Titolo dell'asse orizzontale. */
   xTitle: string;
-  /** Titolo dell'asse verticale. */
   yTitle: string;
-  /** Ascissa massima rappresentata; l'asse viene allargato di mezzo passo per lato. */
   xMax: number;
-  /** Ordinata massima: 100, perché il dato è una percentuale. */
   yMax: number;
-  /** Le linee da disegnare, nell'ordine in cui compaiono in legenda. */
   series: ChartSeries[];
 }
 
-/**
- * Costruisce la parte XML del grafico.
- *
- * @param spec - Titoli, scale e serie da rappresentare.
- * @returns Il contenuto di `xl/charts/chartN.xml`.
- */
 export function buildChartXml(spec: ChartSpec): string {
   const series = spec.series.map(seriesXml).join('');
 
@@ -133,16 +92,10 @@ function seriesXml(s: ChartSeries, index: number): string {
   );
 }
 
-/** Tutti i flag richiesti da `CT_DLbls`, nell'ordine fissato dallo schema. */
 const SHOW = (serName: boolean): string =>
   `<c:showLegendKey val="0"/><c:showVal val="0"/><c:showCatName val="0"/>` +
   `<c:showSerName val="${serName ? 1 : 0}"/><c:showPercent val="0"/><c:showBubbleSize val="0"/>`;
 
-/**
- * Scrive il nome della linea dove finisce, così una linea di riferimento resta
- * riconoscibile anche quando una serie di dati le corre sopra e la legenda da
- * sola non basta a distinguerle.
- */
 function lastPointLabel(s: ChartSeries): string {
   const idx = s.yValues.reduce<number>((last, v, i) => (v === null ? last : i), -1);
   if (idx < 0) return '';
@@ -162,11 +115,6 @@ function lastPointLabel(s: ChartSeries): string {
   );
 }
 
-/**
- * Excel ricalcola la cache dalla formula all'apertura, ma scriverla significa
- * che il grafico si vede anche nei visualizzatori che non ricalcolano mai:
- * anteprime, LibreOffice, applicazioni mobili.
- */
 function numRef(formula: string, values: (number | null)[]): string {
   const points = values
     .map((v, i) => (v === null || !Number.isFinite(v) ? '' : `<c:pt idx="${i}"><c:v>${v}</c:v></c:pt>`))

@@ -8,36 +8,24 @@ import type { Session } from '@/types';
 import s from '@/app/styles/shared.module.scss';
 import c from './SessionSummary.module.scss';
 
-/** Che cosa serve alla schermata di riepilogo. */
 interface SessionSummaryProps {
-  /** Sessione conclusa, con i risultati di tutti i livelli. */
   session: Session;
-  /** La sessione è già stata scritta nel database. */
   alreadySaved?: boolean;
-  /** Richiamata a salvataggio riuscito. */
   onSaved?: () => void;
-  /** Chiude la sessione e torna al setup. */
   onNewSession: () => void;
 }
 
-/**
- * Riepilogo di fine sessione: misurazioni di ogni livello, comportamenti
- * problema osservati, note e salvataggio.
- *
- * È il punto in cui il record diventa completo. I comportamenti problema si
- * raccolgono qui e non durante il gioco perché richiedono uno sguardo
- * d'insieme; solo dopo la sessione viene scritta nel database, una volta sola e
- * con una sola richiesta.
- */
 const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: SessionSummaryProps) => {
   const [problemBehaviors, setProblemBehaviors] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
 
+  //sessione ricalcolata quando cambiano le note o il comportamento selezionato dal terapista
   const annotated = useMemo(
     () => annotateSession(session, { problemBehaviors, notes }),
     [session, problemBehaviors, notes],
   );
 
+  //hook per il salvataggio della sessione, evita che se l'utente salva, torna indietro e torna avanti il pulsante di salva sessione ricompare
   const { save, status, error } = useSaveSession(annotated, { alreadySaved, onSaved });
   const saved = status === 'success';
 
@@ -80,6 +68,9 @@ const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: Sessio
         </div>
       ))}
 
+      {
+        //disabled per bloccare dopo il salvataggio e non avere duplicati
+      }
       <fieldset className={`${s.card} ${c.behaviors}`} disabled={saved}>
         <legend>Comportamenti osservati</legend>
         <p className={c.behaviorsHint}>
@@ -117,10 +108,10 @@ const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: Sessio
       <p
         className={`${s.saveStatus} ${saved ? s.saveOk : ''} ${status === 'error' ? s.saveErr : ''}`}
       >
-        {status === 'idle' && '📝 Compila i comportamenti osservati, poi salva la sessione'}
-        {status === 'pending' && '💾 Salvataggio in corso...'}
+        {status === 'idle' && 'Compila i comportamenti osservati, poi salva la sessione'}
+        {status === 'pending' && 'Salvataggio in corso...'}
         {saved && '✅ Sessione salvata nel database'}
-        {status === 'error' && `⚠️ Salvataggio non riuscito: ${error}`}
+        {status === 'error' && `Salvataggio non riuscito: ${error}`}
       </p>
 
       <div className={s.rewardActions}>
