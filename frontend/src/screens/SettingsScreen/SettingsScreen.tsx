@@ -34,7 +34,7 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
       <h1>Impostazioni</h1>
 
       <div className={`${s.card} ${c.form}`}>
-        <h3>Stelle ⭐</h3>
+        <h3>Stelle</h3>
         <p className={c.intro}>
           Ogni livello completato vale <strong>1 stella</strong>. Le altre due si
           guadagnano con un approccio pronto e con un contatto prolungato: qui
@@ -82,7 +82,7 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
           </span>
         </label>
 
-        <h3>Suoni 🔊</h3>
+        <h3>Suoni</h3>
         <label className={c.toggle}>
           <input
             type="checkbox"
@@ -100,11 +100,11 @@ const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             Salva
           </button>
         </div>
-        {saved && <p className={c.savedMsg}>Impostazioni salvate ✓</p>}
+        {saved && <p className={c.savedMsg}>Impostazioni salvate</p>}
       </div>
 
       <button type="button" className={s.btn} onClick={onBack}>
-        ← Torna indietro
+        Torna indietro
       </button>
     </div>
   );

@@ -39,7 +39,7 @@ describe('Settings user journey (E2E)', () => {
     await promptInput.fill('1.5');
 
     await screen.getByRole('button', { name: 'Salva' }).click();
-    await expect.element(screen.getByText('Impostazioni salvate ✓')).toBeInTheDocument();
+    await expect.element(screen.getByText('Impostazioni salvate')).toBeInTheDocument();
 
     const stored = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}');
     expect(stored.promptLatencyMs).toBe(1500);

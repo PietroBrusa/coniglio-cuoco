@@ -65,7 +65,7 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
     ? Math.min(100, (rhythm.scored / beat.beatTarget) * 100)
     : Math.min(100, (contactSeconds / level.target) * 100);
   const progressText = isHard
-    ? `🎵 Ritmo ${Math.min(rhythm.scored, beat.beatTarget)}/${beat.beatTarget}`
+    ? `Ritmo ${Math.min(rhythm.scored, beat.beatTarget)}/${beat.beatTarget}`
     : level.progressLabel(contactSeconds, level.target);
   const remainingSeconds = hasStarted
     ? Math.max(0, (windowMs - metrics.sessionDurationMs) / 1000)
@@ -88,7 +88,7 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
     <div className={s.screen}>
       <div className={c.levelTag}>
         Livello {level.id} · {level.name}
-        {isHard && <span className={c.diffBadge}>🎵 Difficile</span>}
+        {isHard && <span className={c.diffBadge}>Difficile</span>}
       </div>
 
       <Rabbit mood={mood} />
@@ -100,8 +100,8 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
             <p className={c.starterHint}>
               {beat.score === 'hold'
                 ? `Modalità a tempo: quando ${food.label.toLowerCase()} si illumina tocca subito e ` +
-                `tieni premuto finché resta accesa! Ogni volta l'attesa e la durata cambiano. 🎵`
-                : `Modalità a tempo: tocca ${food.label.toLowerCase()} solo quando si illumina! 🎵`}
+                `tieni premuto finché resta accesa! Ogni volta l'attesa e la durata cambiano.`
+                : `Modalità a tempo: tocca ${food.label.toLowerCase()} solo quando si illumina!`}
             </p>
           )}
           <p className={c.starterHint}>
@@ -120,9 +120,9 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
             <div className={c.progressBarFill} style={{ width: `${progressPct}%` }} />
           </div>
           <div className={c.liveMetrics}>
-            <span>👆 {metrics.count}</span>
-            <span>⏱ {contactSeconds.toFixed(1)}s</span>
-            <span>⏳ {remainingSeconds.toFixed(1)}s</span>
+            <span>Tocchi: {metrics.count}</span>
+            <span>Contatto: {contactSeconds.toFixed(1)}s</span>
+            <span>Resta: {remainingSeconds.toFixed(1)}s</span>
           </div>
         </div>
       )}
@@ -141,8 +141,8 @@ const LevelPlay = ({ level, food, difficulty, onComplete }: LevelPlayProps) => {
             ? !rhythm.windowOpen
               ? 'Aspetta che si illumini…'
               : beat.score === 'hold'
-                ? '🎵 Tieni premuto!'
-                : '🎵 Tocca ora!'
+                ? 'Tieni premuto!'
+                : 'Tocca ora!'
             : !hasStarted
               ? 'Tocca il cibo: il tempo parte da lì!'
               : level.hint}

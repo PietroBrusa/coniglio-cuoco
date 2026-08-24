@@ -16,9 +16,9 @@ export interface StartParams {
   therapist: string;
 }
 
-const DIFFICULTIES: { id: Difficulty; emoji: string; label: string; hint: string }[] = [
-  { id: 'facile', emoji: '🌱', label: 'Facile', hint: 'tocchi liberi, con raccolta dati' },
-  { id: 'difficile', emoji: '🎵', label: 'Difficile', hint: 'tocchi a tempo, solo gioco' },
+const DIFFICULTIES: { id: Difficulty; label: string; hint: string }[] = [
+  { id: 'facile', label: 'Facile', hint: 'tocchi liberi, con raccolta dati' },
+  { id: 'difficile', label: 'Difficile', hint: 'tocchi a tempo, solo gioco' },
 ];
 
 interface SetupScreenProps {
@@ -151,26 +151,25 @@ const SetupScreen = ({
                 onClick={() => setDifficulty(d.id)}
                 title={d.hint}
               >
-                <span className={s.foodChipEmoji}>{d.emoji}</span>
                 {d.label}
               </button>
             ))}
           </div>
           {!collectsData(difficulty) && (
             <p className={c.progressHint}>
-              🎵 Solo gioco: la partita non viene salvata e non entra nei grafici.
+              Solo gioco: la partita non viene salvata e non entra nei grafici.
             </p>
           )}
         </label>
 
         <button type="submit" className={`${s.btn} ${s.btnPrimary}`}>
-          Inizia la storia ▶
+          Inizia la storia
         </button>
         <button type="button" className={s.btn} onClick={onOpenDashboard}>
-          📊 Sessioni salvate
+          Sessioni salvate
         </button>
         <button type="button" className={s.btn} onClick={onOpenSettings}>
-          ⚙️ Impostazioni
+          Impostazioni
         </button>
       </form>
     </div>

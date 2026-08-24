@@ -12,7 +12,7 @@ const PracticeSummary = ({ onNewSession }: PracticeSummaryProps) => (
 
     <div className={s.card}>
       <p>
-        🎵 <strong>Modalità difficile</strong>: è solo una partita, senza raccolta dati.
+        <strong>Modalità difficile</strong>: è solo una partita, senza raccolta dati.
       </p>
       <p>
         Non è stata registrata nessuna misurazione: questa partita non viene salvata e non
@@ -23,7 +23,7 @@ const PracticeSummary = ({ onNewSession }: PracticeSummaryProps) => (
 
     <div className={s.rewardActions}>
       <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={onNewSession}>
-        Nuova sessione 🔄
+        Nuova sessione
       </button>
     </div>
   </div>

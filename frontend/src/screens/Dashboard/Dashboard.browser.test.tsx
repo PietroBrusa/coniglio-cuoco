@@ -134,8 +134,8 @@ describe('Dashboard', () => {
     await screen.getByRole('button', { name: /sessione 1 · Carota/ }).click();
 
     await expect.element(screen.getByText('Mary Major')).toBeInTheDocument();
-    await expect.element(screen.getByText('🚫 Rifiuto del cibo')).toBeInTheDocument();
-    await expect.element(screen.getByText('😢 Pianto o lamento')).toBeInTheDocument();
+    await expect.element(screen.getByText('Rifiuto del cibo')).toBeInTheDocument();
+    await expect.element(screen.getByText('Pianto o lamento')).toBeInTheDocument();
     await expect.element(screen.getByText('Bambino stanco a fine sessione.')).toBeInTheDocument();
   });
 

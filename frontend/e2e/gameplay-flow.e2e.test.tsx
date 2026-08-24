@@ -99,7 +99,7 @@ describe('Gameplay journey (E2E)', () => {
 
     // In difficile la barra conta le finestre centrate, non i secondi di
     // contatto: è l'etichetta stessa a dire su che cosa si è valutati.
-    await enterPlay(screen, '🎵 Ritmo 0/3');
+    await enterPlay(screen, 'Ritmo 0/3');
     await holdUntilComplete(screen, 'Livello 1 completato!', 12_000);
     // No measurements on the reward screen either: the run is play, not data.
     expect(screen.getByText('Riepilogo misurazioni').elements()).toHaveLength(0);
@@ -108,11 +108,11 @@ describe('Gameplay journey (E2E)', () => {
     await expect.element(screen.getByLabelText(/[12] stelle su 3/)).toBeInTheDocument();
     await screen.getByRole('button', { name: /Prossimo livello/ }).click();
 
-    await enterPlay(screen, '🎵 Ritmo 0/2');
+    await enterPlay(screen, 'Ritmo 0/2');
     await holdUntilComplete(screen, 'Livello 2 completato!', 12_000);
     await screen.getByRole('button', { name: /Prossimo livello/ }).click();
 
-    await enterPlay(screen, '🎵 Ritmo 0/1');
+    await enterPlay(screen, 'Ritmo 0/1');
     await holdUntilComplete(screen, 'Livello 3 completato!', 11_000);
 
     await screen.getByRole('button', { name: /Fine sessione/ }).click();

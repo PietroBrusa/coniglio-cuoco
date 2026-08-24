@@ -139,7 +139,7 @@ describe('LevelPlay', () => {
     const screen = await render(
       <LevelPlay level={quickLevel} food={food} difficulty="difficile" onComplete={vi.fn()} />,
     );
-    await expect.element(screen.getByText('🎵 Difficile')).toBeInTheDocument();
+    await expect.element(screen.getByText('Difficile')).toBeInTheDocument();
     await expect.element(screen.getByText(/solo quando si illumina/)).toBeInTheDocument();
   });
 });
@@ -150,7 +150,7 @@ describe('LevelPlay in hard mode on a hold level', () => {
       <LevelPlay level={holdLevel} food={food} difficulty="difficile" onComplete={onComplete} />,
     );
     await startPlay(screen);
-    await expect.element(screen.getByText('🎵 Tieni premuto!')).toBeInTheDocument();
+    await expect.element(screen.getByText('Tieni premuto!')).toBeInTheDocument();
     return screen;
   }
 
@@ -167,7 +167,7 @@ describe('LevelPlay in hard mode on a hold level', () => {
     press();
     await wait(1200);
 
-    await expect.element(screen.getByText('🎵 Ritmo 1/2')).toBeInTheDocument();
+    await expect.element(screen.getByText('Ritmo 1/2')).toBeInTheDocument();
   });
 
   it('does not score the beat when the contact is released too early', async () => {
@@ -178,7 +178,7 @@ describe('LevelPlay in hard mode on a hold level', () => {
     release();
     await wait(1200);
 
-    await expect.element(screen.getByText('🎵 Ritmo 0/2')).toBeInTheDocument();
+    await expect.element(screen.getByText('Ritmo 0/2')).toBeInTheDocument();
   });
 
   it('scores nothing when the contact is simply held from before the window opens', async () => {
@@ -192,7 +192,7 @@ describe('LevelPlay in hard mode on a hold level', () => {
     press();
     await wait(2200);
 
-    await expect.element(screen.getByText('🎵 Ritmo 0/2')).toBeInTheDocument();
+    await expect.element(screen.getByText('Ritmo 0/2')).toBeInTheDocument();
     release();
   });
 

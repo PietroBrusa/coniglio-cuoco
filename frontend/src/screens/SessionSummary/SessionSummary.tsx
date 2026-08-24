@@ -68,49 +68,52 @@ const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: Sessio
         </div>
       ))}
 
-      {
-        //disabled per bloccare dopo il salvataggio e non avere duplicati
-      }
-      <fieldset className={`${s.card} ${c.behaviors}`} disabled={saved}>
-        <legend>Comportamenti osservati</legend>
-        <p className={c.behaviorsHint}>
-          Seleziona i comportamenti problema emersi durante la sessione.
-        </p>
+      <div className={`${s.card} ${c.behaviors}`}>
+        {
+          //disabled per bloccare dopo il salvataggio e non avere duplicati
+        }
+        <fieldset className={c.fieldset} disabled={saved}>
+          <legend>Comportamenti osservati</legend>
+          <p className={c.behaviorsHint}>
+            Seleziona i comportamenti problema emersi durante la sessione.
+          </p>
 
-        <div className={c.behaviorList}>
-          {PROBLEM_BEHAVIORS.map((b) => {
-            const checked = problemBehaviors.includes(b.id);
-            return (
-              <label key={b.id} className={`${c.behavior} ${checked ? c.behaviorChecked : ''}`}>
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => setProblemBehaviors((prev) => toggleProblemBehavior(prev, b.id))}
-                />
-                <span className={s.foodChipEmoji}>{b.emoji}</span>
-                {b.label}
-              </label>
-            );
-          })}
-        </div>
+          <div className={c.behaviorList}>
+            {PROBLEM_BEHAVIORS.map((b) => {
+              const checked = problemBehaviors.includes(b.id);
+              return (
+                <label key={b.id} className={`${c.behavior} ${checked ? c.behaviorChecked : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() =>
+                      setProblemBehaviors((prev) => toggleProblemBehavior(prev, b.id))
+                    }
+                  />
+                  {b.label}
+                </label>
+              );
+            })}
+          </div>
 
-        <label className={c.notesLabel}>
-          Note
-          <textarea
-            rows={3}
-            placeholder="Osservazioni aggiuntive (facoltativo)"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
-        </label>
-      </fieldset>
+          <label className={c.notesLabel}>
+            Note
+            <textarea
+              rows={3}
+              placeholder="Osservazioni aggiuntive (facoltativo)"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </label>
+        </fieldset>
+      </div>
 
       <p
         className={`${s.saveStatus} ${saved ? s.saveOk : ''} ${status === 'error' ? s.saveErr : ''}`}
       >
         {status === 'idle' && 'Compila i comportamenti osservati, poi salva la sessione'}
         {status === 'pending' && 'Salvataggio in corso...'}
-        {saved && '✅ Sessione salvata nel database'}
+        {saved && 'Sessione salvata nel database'}
         {status === 'error' && `Salvataggio non riuscito: ${error}`}
       </p>
 
@@ -122,7 +125,7 @@ const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: Sessio
             onClick={save}
             disabled={status === 'pending'}
           >
-            {status === 'error' ? 'Riprova salvataggio ↻' : '💾 Salva sessione'}
+            {status === 'error' ? 'Riprova salvataggio' : 'Salva sessione'}
           </button>
         )}
         <button
@@ -130,7 +133,7 @@ const SessionSummary = ({ session, alreadySaved, onSaved, onNewSession }: Sessio
           className={`${s.btn} ${saved ? s.btnPrimary : ''}`}
           onClick={onNewSession}
         >
-          Nuova sessione 🔄
+          Nuova sessione
         </button>
       </div>
     </div>

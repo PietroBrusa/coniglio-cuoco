@@ -108,7 +108,7 @@ describe('SessionSummary', () => {
     const page = await renderSummary();
     await page.getByRole('button', { name: /Salva sessione/ }).click();
 
-    await expect.element(page.getByText('✅ Sessione salvata nel database')).toBeInTheDocument();
+    await expect.element(page.getByText('Sessione salvata nel database')).toBeInTheDocument();
     expect(page.getByRole('button', { name: /Salva sessione/ }).elements()).toHaveLength(0);
   });
 

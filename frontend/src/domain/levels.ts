@@ -30,7 +30,7 @@ export const LEVELS: Level[] = [
     target: 6,
     hardBeat: { onMs: [600, 1400], offMs: [700, 1500], score: 'hold', beatTarget: 2 },
     intro: ({ foodLabel }) =>
-      `Il coniglietto ha raccolto ${foodLabel.toLowerCase()}! 👃\n\n` +
+      `Il coniglietto ha raccolto ${foodLabel.toLowerCase()}!\n\n` +
       `Ora deve controllare che vada bene. Avvicina ${foodLabel.toLowerCase()} al naso ` +
       `e annusala con calma.\n\n` +
       `Mantieni il contatto per riempire la barra: prima tocchi brevi, poi più lunghi.`,

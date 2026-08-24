@@ -1,20 +1,19 @@
 export interface ProblemBehavior {
   id: string;
-  emoji: string;
   label: string;
 }
 
 export const NO_PROBLEM_ID = 'nessuno';
 //Lista di comportamenti problematici
 export const PROBLEM_BEHAVIORS: ProblemBehavior[] = [
-  { id: 'rifiuto-cibo', emoji: '🚫', label: 'Rifiuto del cibo' },
-  { id: 'avversione-sessione', emoji: '😖', label: 'Avversione alla sessione' },
-  { id: 'pianto', emoji: '😢', label: 'Pianto o lamento' },
-  { id: 'allontanamento', emoji: '🏃', label: 'Allontanamento dal tavolo' },
-  { id: 'conati', emoji: '🤢', label: 'Conati o espulsione del cibo' },
-  { id: 'opposizione', emoji: '✋', label: 'Opposizione o rigidità' },
+  { id: 'rifiuto-cibo', label: 'Rifiuto del cibo' },
+  { id: 'avversione-sessione', label: 'Avversione alla sessione' },
+  { id: 'pianto', label: 'Pianto o lamento' },
+  { id: 'allontanamento', label: 'Allontanamento dal tavolo' },
+  { id: 'conati', label: 'Conati o espulsione del cibo' },
+  { id: 'opposizione', label: 'Opposizione o rigidità' },
   //Nessun problema
-  { id: NO_PROBLEM_ID, emoji: '✅', label: 'Nessun comportamento problema' },
+  { id: NO_PROBLEM_ID, label: 'Nessun comportamento problema' },
 ];
 
 //Restituisce unndefined se l'id non è in catalogo

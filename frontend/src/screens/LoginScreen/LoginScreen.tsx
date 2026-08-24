@@ -64,11 +64,11 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
           />
         </label>
 
-        {error && <p className={s.saveErr}>⚠️ {error}</p>}
+        {error && <p className={s.saveErr}>{error}</p>}
 
         <div className={s.rewardActions}>
           <button type="submit" className={`${s.btn} ${s.btnPrimary}`} disabled={!canSubmit}>
-            {busy ? '…' : 'Accedi ▶'}
+            {busy ? '…' : 'Accedi'}
           </button>
           <button
             type="button"

@@ -68,17 +68,17 @@ const RewardScreen = ({
         </div>
       ) : (
         <p className={c.practiceNote}>
-          🎵 Ritmo: {beatsScored ?? 0} finestre centrate su {level.hardBeat.beatTarget}. Partita
+          Ritmo: {beatsScored ?? 0} finestre centrate su {level.hardBeat.beatTarget}. Partita
           libera, nessuna misurazione registrata.
         </p>
       )}
 
       <div className={s.rewardActions}>
         <button type="button" className={s.btn} onClick={onRepeat}>
-          Ripeti livello 🔁
+          Ripeti livello
         </button>
         <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={onNext}>
-          {isLastLevel ? 'Fine sessione 🏁' : 'Prossimo livello ▶'}
+          {isLastLevel ? 'Fine sessione' : 'Prossimo livello'}
         </button>
       </div>
     </div>

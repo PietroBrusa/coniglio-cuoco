@@ -65,7 +65,7 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
 
       <div className={c.dashHeader}>
         <button type="button" className={s.btn} onClick={() => refetch()} disabled={isFetching}>
-          {isFetching ? '⏳' : '↻'} Aggiorna
+          Aggiorna
         </button>
         <button
           type="button"
@@ -74,10 +74,10 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
           disabled={sessions.length === 0}
           title="Scarica le schede ABA, un foglio per alimento con il suo grafico"
         >
-          ⬇ Esporta Excel
+          Esporta Excel
         </button>
       </div>
-      {exportError && <p className={s.saveErr}>⚠️ Esportazione non riuscita: {exportError}</p>}
+      {exportError && <p className={s.saveErr}>Esportazione non riuscita: {exportError}</p>}
 
       {groups.length > 1 && (
         <div className={c.foodTabs} role="tablist" aria-label="Alimento">
@@ -114,7 +114,7 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
       {isLoading && <p className={c.muted}>Caricamento…</p>}
       {isError && (
         <p className={s.saveErr}>
-          ⚠️ Impossibile caricare le sessioni: {error instanceof Error ? error.message : 'errore'}
+          Impossibile caricare le sessioni: {error instanceof Error ? error.message : 'errore'}
         </p>
       )}
       {!isLoading && !isError && sessions.length === 0 && (
@@ -136,8 +136,11 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
                 sessione {ordinalOf(session.sessionNumber)} · {session.food}
               </span>
               <span className={c.sessionRowMeta}>
-                {session.levels.length} livelli ·{' '}
-                {new Date(session.date).toLocaleString('it-IT')} {open ? '▲' : '▼'}
+                {session.levels.length} livelli · {new Date(session.date).toLocaleString('it-IT')}
+                <span
+                  className={`${c.chevron} ${open ? c.chevronOpen : ''}`}
+                  aria-hidden="true"
+                />
               </span>
             </button>
 
@@ -161,7 +164,7 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
                             const b = getProblemBehavior(id);
                             return (
                               <span key={id} className={c.behaviorTag}>
-                                {b ? `${b.emoji} ${b.label}` : id}
+                                {b ? b.label : id}
                               </span>
                             );
                           })}
@@ -208,7 +211,7 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
                     onClick={() => handleDelete(session)}
                     disabled={deleteMutation.isPending}
                   >
-                    Elimina 🗑
+                    Elimina
                   </button>
                 </div>
               </div>
@@ -218,7 +221,7 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
       })}
 
       <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={onBack}>
-        ← Torna all'inizio
+        Torna all'inizio
       </button>
     </div>
   );
