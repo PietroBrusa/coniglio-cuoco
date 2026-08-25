@@ -38,12 +38,14 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
   const listed = useMemo(() => (group ? [...group.sessions].reverse() : []), [group]);
   const ordinalOf = useMemo(() => ordinalsFor(group?.sessions ?? []), [group]);
 
+  //esporta solo l'alimento aperto in questo momento, non l'intero storico
   const handleExport = () => {
+    if (!group) return;
     try {
       setExportError(null);
       downloadFile(
-        buildAbaWorkbook({ childId, sessions, criterion }),
-        abaWorkbookFileName(childId),
+        buildAbaWorkbook({ childId, sessions: group.sessions, criterion }),
+        abaWorkbookFileName(childId, group.food),
         XLSX_MIME,
       );
     } catch (e) {
@@ -71,10 +73,14 @@ const Dashboard = ({ childId, onBack }: DashboardProps) => {
           type="button"
           className={s.btn}
           onClick={handleExport}
-          disabled={sessions.length === 0}
-          title="Scarica le schede ABA, un foglio per alimento con il suo grafico"
+          disabled={!group}
+          title={
+            group
+              ? `Scarica la scheda ABA di ${group.food}, con il suo grafico`
+              : 'Nessuna sessione da esportare'
+          }
         >
-          Esporta Excel
+          {group ? `Esporta Excel · ${group.food}` : 'Esporta Excel'}
         </button>
       </div>
       {exportError && <p className={s.saveErr}>Esportazione non riuscita: {exportError}</p>}

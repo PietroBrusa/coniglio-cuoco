@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ReactNode } from 'react';
 import { render } from 'vitest-browser-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { unzipSync } from 'fflate';
+import { strFromU8, unzipSync } from 'fflate';
 import Dashboard from './Dashboard';
 import { sessionsApi } from '@/api/apiClient';
 import type { SavedSession } from '@/api/client';
@@ -155,7 +155,9 @@ describe('Dashboard', () => {
     await expect.element(screen.getByText('nessuno registrato')).toBeInTheDocument();
   });
 
-  it('downloads the ABA sheets, one per food, when exporting', async () => {
+  // L'esportazione segue la scheda aperta: chi guarda la Carota si aspetta il file
+  // della Carota, non lo storico di tutti gli alimenti.
+  it('downloads only the ABA sheet of the selected food when exporting', async () => {
     vi.spyOn(sessionsApi, 'sessionsControllerFindAll').mockResolvedValue({
       data: [savedSession, otherFoodSession],
     } as never);
@@ -176,13 +178,25 @@ describe('Dashboard', () => {
     const screen = await renderDashboard();
     await screen.getByRole('button', { name: /Esporta Excel/ }).click();
 
-    expect(clicks).toEqual([expect.stringMatching(/^schede-aba_John-Doe_\d{4}-\d{2}-\d{2}\.xlsx$/)]);
+    expect(clicks).toEqual([
+      expect.stringMatching(/^schede-aba_John-Doe_Carota_\d{4}-\d{2}-\d{2}\.xlsx$/),
+    ]);
     expect(blobs).toHaveLength(1);
 
-    const bytes = new Uint8Array(await blobs[0].arrayBuffer());
-    const files = unzipSync(bytes);
-    expect(files['xl/charts/chart2.xml']).toBeDefined();
+    const files = unzipSync(new Uint8Array(await blobs[0].arrayBuffer()));
+    expect(files['xl/charts/chart1.xml']).toBeDefined();
+    expect(files['xl/charts/chart2.xml']).toBeUndefined();
+    expect(strFromU8(files['xl/worksheets/sheet1.xml'])).toContain('Carota');
+    expect(strFromU8(files['xl/worksheets/sheet1.xml'])).not.toContain('Mela');
     expect(screen.container.textContent).not.toContain('Esportazione non riuscita');
+
+    await screen.getByRole('tab', { name: /Mela/ }).click();
+    await screen.getByRole('button', { name: /Esporta Excel/ }).click();
+
+    expect(clicks[1]).toMatch(/^schede-aba_John-Doe_Mela_\d{4}-\d{2}-\d{2}\.xlsx$/);
+    const melaFiles = unzipSync(new Uint8Array(await blobs[1].arrayBuffer()));
+    expect(strFromU8(melaFiles['xl/worksheets/sheet1.xml'])).toContain('Mela');
+    expect(melaFiles['xl/charts/chart2.xml']).toBeUndefined();
   });
 
   it('cannot export when there is nothing to export', async () => {

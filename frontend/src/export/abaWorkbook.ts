@@ -9,6 +9,9 @@ import { buildSheetXml, columnRange, sanitizeSheetName } from './xlsx/sheet';
 import type { ChartAnchor, XlsxSheet } from './xlsx/package';
 import { buildXlsxParts, zipXlsx } from './xlsx/package';
 
+//sessions è già l'insieme da esportare: la dashboard passa solo le sedute
+//dell'alimento selezionato, quindi il raggruppamento qui sotto produce
+//normalmente un foglio solo
 export interface AbaExportInput {
   childId: string;
   sessions: SavedSession[];
@@ -192,11 +195,20 @@ export function buildAbaWorkbook(input: AbaExportInput): Uint8Array<ArrayBuffer>
   return zipXlsx(buildXlsxParts(sheets));
 }
 
-export function abaWorkbookFileName(childId: string, at: Date = new Date()): string {
-  const name = childId.trim().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'bambino';
+export function abaWorkbookFileName(
+  childId: string,
+  food: string,
+  at: Date = new Date(),
+): string {
+  const name = slug(childId) || 'bambino';
+  const dish = slug(food) || 'alimento';
   const day = `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`;
-  return `schede-aba_${name}_${day}.xlsx`;
+  return `schede-aba_${name}_${dish}_${day}.xlsx`;
 }
+
+//via tutto quello che un file system rifiuterebbe
+const slug = (text: string): string =>
+  text.trim().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '');
 
 function listTherapists(sessions: SavedSession[]): string {
   return [...new Set(sessions.map((s) => s.therapist?.trim()).filter(Boolean))].join(', ');

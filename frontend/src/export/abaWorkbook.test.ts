@@ -238,21 +238,21 @@ describe('buildAbaWorkbook', () => {
 });
 
 describe('abaWorkbookFileName', () => {
-  it('names the file after the child and the day', () => {
-    expect(abaWorkbookFileName('John Doe', new Date(2026, 6, 26))).toBe(
-      'schede-aba_John-Doe_2026-07-26.xlsx',
+  it('names the file after the child, the food and the day', () => {
+    expect(abaWorkbookFileName('John Doe', 'Mela', new Date(2026, 6, 26))).toBe(
+      'schede-aba_John-Doe_Mela_2026-07-26.xlsx',
     );
   });
 
   it('strips whatever a file system would object to', () => {
-    expect(abaWorkbookFileName('../John/Doe?', new Date(2026, 0, 5))).toBe(
-      'schede-aba_John-Doe_2026-01-05.xlsx',
+    expect(abaWorkbookFileName('../John/Doe?', 'Purè/di patate', new Date(2026, 0, 5))).toBe(
+      'schede-aba_John-Doe_Purè-di-patate_2026-01-05.xlsx',
     );
   });
 
-  it('falls back when the name has nothing usable left', () => {
-    expect(abaWorkbookFileName('///', new Date(2026, 0, 5))).toBe(
-      'schede-aba_bambino_2026-01-05.xlsx',
+  it('falls back when the names have nothing usable left', () => {
+    expect(abaWorkbookFileName('///', '???', new Date(2026, 0, 5))).toBe(
+      'schede-aba_bambino_alimento_2026-01-05.xlsx',
     );
   });
 });
